@@ -1,111 +1,83 @@
 # UniversalMailCleaner
 
-Desktop-Tool zum regelbasierten Aufräumen von IMAP-Postfächern mit Safe-Mode, Mehrordner-Support und Undo für Papierkorb-Aktionen.
 Desktop tool for cleaning IMAP mailboxes with rule-based filters, safe trash mode, multi-folder support, and undo for trash operations.
 
-![UniversalMailCleaner Vorschau](README/screenshots/main.png)
+> **Deutsche Dokumentation:** [README-DE.md](README-DE.md)
 
-## Überblick
+![UniversalMailCleaner Preview](README/screenshots/main.png)
 
-UniversalMailCleaner ist für lokale Mail-Aufräumroutinen gedacht: mehrere Konten verwalten, Regeln definieren, große Mails finden und Löschaktionen standardmäßig sicher über den Papierkorb ausführen.
+## Features
 
-## Funktionen / Features
+- Multi-account IMAP support for GMX, Gmail, and Outlook
+- Secure password storage via `keyring` with session-only fallback
+- Rule-based filters for age, sender, subject, and size
+- Multi-folder support beyond INBOX-only processing
+- Safe mode (trash) plus unsafe mode for permanent deletion
+- Undo for safe-mode deletions
+- Large-mail scanner with tabular selection
+- Configurable logging via `UMAIL_CLEANER_LOG_LEVEL`
+- Modular architecture: `imap_client.py`, `models.py`, `workers.py`
 
-- Multi-Account-Management für IMAP-Provider wie GMX, Gmail und Outlook
-- Sichere Passwortspeicherung via `keyring` mit Fallback ohne Persistenz
-- Regelbasierte Filter für Alter, Absender, Betreff und Größe
-- Mehrordner-Support statt reiner INBOX-Verarbeitung
-- Safe-Mode per Papierkorb und Unsafe-Mode für endgültiges Löschen
-- Undo für Safe-Mode-Löschaktionen
-- Scanner für große Mails mit tabellarischer Auswahl
-- Konfigurierbares Logging über `UMAIL_CLEANER_LOG_LEVEL`
-- Modulare Struktur mit `imap_client.py`, `models.py` und `workers.py`
-
-## Start / Run
+## Run
 
 ### Windows
 
-- `START.bat` ausführen
+Double-click `START.bat`
 
-### Manuell / Manual
+### Manual
 
 ```bash
 pip install -r requirements.txt
 python mail_imap_cleaner_v1.py
 ```
 
-## Typischer Workflow
+## Typical Workflow
 
-1. IMAP-Konto anlegen
-2. Papierkorb-Ordner prüfen oder auto-erkennen lassen
-3. Regel definieren oder Scanner für große Mails nutzen
-4. Zielordner für die Regelausführung auswählen
-5. Aktion im Safe-Mode ausführen
-6. Falls nötig letzte Löschung rückgängig machen
+1. Add an IMAP account
+2. Check or auto-detect the trash folder
+3. Define a rule or use the large-mail scanner
+4. Select the target folder
+5. Execute in safe mode
+6. Undo the last deletion if needed
 
-## Konfiguration
+## Configuration
 
-- Lokale Konfigurationsdatei: `%USERPROFILE%\.mail_cleaner\config.json`
-- Passwörter werden nicht in der JSON-Datei gespeichert
-- Safe-Mode ist standardmäßig aktiv
+- Config file: `%USERPROFILE%\.mail_cleaner\config.json`
+- Passwords are not stored in the JSON file
+- Safe mode is active by default
 
 ## Tests
 
 ```bash
 pytest tests -v
-python -m unittest discover tests
 ```
 
-Aktuell vorhanden:
+## Safety
 
-- Unit-Tests für `ImapService.get_search_criteria()`
-- Tests für den modularisierten IMAP-Service
+- IMAP uses encrypted connections (`IMAP4_SSL`)
+- Safe mode moves mails to trash by default
+- Undo available for all safe-mode actions
+- Without `keyring`, passwords are held in the current session only
 
-## Sicherheit / Safety
-
-- IMAP läuft über verschlüsselte Verbindungen (`IMAP4_SSL`)
-- Safe-Mode verschiebt Mails standardmäßig in den Papierkorb
-- Undo steht für Safe-Mode-Aktionen zur Verfügung
-- Ohne `keyring` werden Passwörter nur für die aktuelle Session gehalten
-
-## Unterstützte Provider
+## Supported Providers
 
 - GMX (`imap.gmx.net:993`)
-- Gmail (`imap.gmail.com:993`) mit App-Passwort
+- Gmail (`imap.gmail.com:993`) with App Password
 - Outlook (`outlook.office365.com:993`)
-- Weitere IMAP4-Provider mit Standard-SSL-Setup
-
-## Lizenz / License
-
-[MIT](LICENSE)
-
-## English
-
-UniversalMailCleaner is a desktop application for cleaning IMAP mailboxes with rule-based filters, large-mail scanning, multi-folder execution, and safe trash-first deletion.
-
-### Highlights
-
-- Multi-account IMAP support
-- Folder-aware rule execution
-- Safe mode plus undo for trash operations
-- Optional OS keyring integration
-- Configurable logging
-
-### License
-
-MIT License
+- Any IMAP4 provider with standard SSL
 
 ## FAQ
 
-### Gmail login fails?
-
-Enable two-factor authentication and create an app password:
+**Gmail login fails?**
+Enable two-factor authentication and create an App Password at
 [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
 
-### Keyring is missing?
+**Keyring is missing?**
+Install via `pip install keyring`.
 
-Install it via `pip install keyring`.
+**Trash folder not detected?**
+Set it manually in the account dialog.
 
-### Trash folder was not detected?
+## License
 
-Set the trash folder manually in the account dialog.
+[MIT](LICENSE)
