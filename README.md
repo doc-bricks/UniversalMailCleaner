@@ -78,6 +78,16 @@ Install via `pip install keyring`.
 **Trash folder not detected?**
 Set it manually in the account dialog.
 
+## Related Tools
+
+Part of the [doc-bricks](https://github.com/doc-bricks) mail suite:
+
+| Tool | Description |
+|------|-------------|
+| [MailProcessor](https://github.com/doc-bricks/MailProcessor) | System tray launcher for all Universal Mail Tools |
+| [UniversalDocsGrabber](https://github.com/doc-bricks/UniversalDocsGrabber) | Download documents and attachments from IMAP mail |
+| [UniversalInvoiceMail](https://github.com/doc-bricks/UniversalInvoiceMail) | Extract invoices and receipts from IMAP mail |
+
 ## License
 
 [MIT](LICENSE)

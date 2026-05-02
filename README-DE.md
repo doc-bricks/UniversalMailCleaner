@@ -82,6 +82,16 @@ Installation via `pip install keyring`.
 **Papierkorb-Ordner nicht erkannt?**
 Im Konto-Dialog manuell setzen.
 
+## Verwandte Tools
+
+Teil der [doc-bricks](https://github.com/doc-bricks) Mail-Suite:
+
+| Tool | Beschreibung |
+|------|--------------|
+| [MailProcessor](https://github.com/doc-bricks/MailProcessor) | System-Tray-Launcher für alle Universal Mail Tools |
+| [UniversalDocsGrabber](https://github.com/doc-bricks/UniversalDocsGrabber) | Dokumente und Anhänge aus IMAP-Mails herunterladen |
+| [UniversalInvoiceMail](https://github.com/doc-bricks/UniversalInvoiceMail) | Rechnungen und Belege automatisch aus Mails extrahieren |
+
 ## Lizenz
 
 [MIT](LICENSE)
