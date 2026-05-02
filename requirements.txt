@@ -1,0 +1,13 @@
+# UniversalMailCleaner - Dependencies
+# Python 3.9+
+
+# GUI Framework
+PySide6>=6.5.0
+
+# Optional: Secure password storage (OS credential store)
+# Falls nicht verfügbar: Passwörter werden nicht persistent gespeichert
+keyring>=23.0.0
+
+# Optional: Gmail API Backend (nur benötigt wenn Gmail API-Accounts verwendet werden)
+google-auth-oauthlib>=1.0.0
+google-api-python-client>=2.0.0

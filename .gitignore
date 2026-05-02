@@ -1,0 +1,66 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+.pytest_cache/
+
+# ---- Virtuelle Umgebungen ----
+venv/
+.venv/
+env/
+.env/
+
+# ---- Interne Steuerungsdateien ----
+AUFGABEN.txt
+TEST.txt
+TESTS.txt
+TESTERGEBNISSE.txt
+BUGREPORT.md
+DIAGNOSE_REPORT.md
+SKILL.md
+tmpclaude-*
+
+# ---- Sensible Daten ----
+_USER/
+.env
+.env.*
+credentials.json
+client_secret*.json
+token.json
+*.pem
+*.key
+keyring/
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# ---- Build-Artefakte ----
+releases/
+*.exe
+*.msi
+*.msix
+*.appx
+*.spec
+logs/
+*.log
+
+# ---- IDE / Editor ----
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- Betriebssystem ----
+desktop.ini
+Thumbs.db
+.DS_Store
+ehthumbs.db
