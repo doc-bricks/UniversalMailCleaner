@@ -1,9 +1,24 @@
-# Changelog / Aenderungsprotokoll
+# Changelog / Änderungsprotokoll
 
-Alle wesentlichen Aenderungen an diesem Projekt werden hier dokumentiert.
+Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- Gmail cleanup rules now run against Gmail API accounts in addition to IMAP accounts
+- Large-mail scan, delete, and undo now work for Gmail API accounts
+- Large-item scan now optionally includes Google Drive files for Gmail API accounts
+- Regression tests for Gmail backend routing, Gmail service helpers, and scheduler behavior
+
+### Changed
+- Large-mail account selection now includes Gmail API accounts
+- Folder selection dialog is limited to IMAP accounts because Gmail rules do not use IMAP folders
+- IMAP large-mail deletion now respects the original folder of each selected mail
+- Gmail OAuth now requests full Drive access and discards cached tokens that only have the old read-only Drive scope
+
 ## [1.2.0] - 2026-05-02
+
 ### Added
 - Gmail API Backend als zweiter Account-Typ (google-auth-oauthlib)
 - Scheduler-Tab für automatische periodische Bereinigung (QTimer)
@@ -12,29 +27,29 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [1.1.0] - 2026-04-29
 
-### Hinzugefuegt / Added
-- Multiple-Folder-Support fuer Regelausfuehrung und Large-Mail-Scan
-- Undo fuer Safe-Mode-Loeschaktionen
+### Hinzugefügt / Added
+- Multiple-Folder-Support für Regelausführung und Large-Mail-Scan
+- Undo für Safe-Mode-Löschaktionen
 - Folder-Auswahldialog im Regeln-Tab
 
-### Geaendert / Changed
+### Geändert / Changed
 - Modularisierung in `imap_client.py`, `models.py` und `workers.py`
-- Logging-Level jetzt ueber `UMAIL_CLEANER_LOG_LEVEL` steuerbar
+- Logging-Level jetzt über `UMAIL_CLEANER_LOG_LEVEL` steuerbar
 - README an aktuellen Funktionsstand angepasst
 
 ### Behoben / Fixed
-- IMAP-Injection-Schutz fuer FROM- und SUBJECT-Filter
+- IMAP-Injection-Schutz für FROM- und SUBJECT-Filter
 - Mehrere generische `except`-Stellen durch Logging und gezielteres Verhalten ersetzt
 
 ## [1.0.0] - 2026-02-21
 
-### Hinzugefuegt / Added
-- Erstveroeffentlichung / Initial release
+### Hinzugefügt / Added
+- Erstveröffentlichung / Initial release
 - IMAP4_SSL Multi-Account-Management mit Keyring-Integration
-- Regelbasiertes Aufraeumsystem (Alter, Absender, Betreff, Groesse)
-- Safe-Mode (Papierkorb) und Unsafe-Mode (endgueltig loeschen)
-- Grosser-Mails-Scanner mit Sortierung
+- Regelbasiertes Aufräumsystem (Alter, Absender, Betreff, Größe)
+- Safe-Mode (Papierkorb) und Unsafe-Mode (endgültig löschen)
+- Großer-Mails-Scanner mit Sortierung
 - Dark Theme (Qt-Stylesheet)
 - Logging-Level konfigurierbar via UMAIL_CLEANER_LOG_LEVEL
-- Unit-Tests fuer ImapService.get_search_criteria() (9 Tests)
-- Docstrings und Type Hints fuer ImapService und Worker
+- Unit-Tests für ImapService.get_search_criteria() (9 Tests)
+- Docstrings und Type Hints für ImapService und Worker

@@ -1,6 +1,6 @@
 # UniversalMailCleaner
 
-Desktop tool for cleaning IMAP mailboxes with rule-based filters, safe trash mode, multi-folder support, and undo for trash operations.
+Desktop tool for cleaning IMAP and Gmail mailboxes with rule-based filters, safe trash mode, multi-folder support, and undo for trash operations.
 
 > **Deutsche Dokumentation:** [README-DE.md](README-DE.md)
 
@@ -8,13 +8,14 @@ Desktop tool for cleaning IMAP mailboxes with rule-based filters, safe trash mod
 
 ## Features
 
-- Multi-account IMAP support for GMX, Gmail, and Outlook
+- Multi-account support for IMAP providers plus Gmail API via OAuth2
 - Secure password storage via `keyring` with session-only fallback
 - Rule-based filters for age, sender, subject, and size
 - Multi-folder support beyond INBOX-only processing
 - Safe mode (trash) plus unsafe mode for permanent deletion
 - Undo for safe-mode deletions
-- Large-mail scanner with tabular selection
+- Large-item scanner with tabular selection for Gmail, IMAP, and optional Drive cleanup
+- Gmail-specific tabs for storage statistics and label-based cleanup
 - Configurable logging via `UMAIL_CLEANER_LOG_LEVEL`
 - Modular architecture: `imap_client.py`, `models.py`, `workers.py`
 
@@ -33,12 +34,13 @@ python mail_imap_cleaner_v1.py
 
 ## Typical Workflow
 
-1. Add an IMAP account
-2. Check or auto-detect the trash folder
-3. Define a rule or use the large-mail scanner
-4. Select the target folder
-5. Execute in safe mode
-6. Undo the last deletion if needed
+1. Add an IMAP account or a Gmail API account
+2. Check or auto-detect the trash folder for IMAP accounts
+3. Define a rule or use the large-item scanner
+4. Enable Drive file scanning for Gmail API accounts if needed
+5. Select the target folder for IMAP rule runs if needed
+6. Execute in safe mode
+7. Undo the last deletion if needed
 
 ## Configuration
 
@@ -62,15 +64,21 @@ pytest tests -v
 ## Supported Providers
 
 - GMX (`imap.gmx.net:993`)
-- Gmail (`imap.gmail.com:993`) with App Password
+- Gmail via IMAP (`imap.gmail.com:993`) with App Password
+- Gmail via Gmail API account with OAuth2 (`credentials.json` required)
 - Outlook (`outlook.office365.com:993`)
 - Any IMAP4 provider with standard SSL
 
 ## FAQ
 
 **Gmail login fails?**
-Enable two-factor authentication and create an App Password at
+For IMAP, enable two-factor authentication and create an App Password:
 [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+
+For Gmail API accounts, place `credentials.json` next to the application and complete the OAuth2 browser login.
+
+If you upgrade from an older Gmail-only token and Drive cleanup stays unavailable, delete
+`%LOCALAPPDATA%\\UniversalMailCleaner\\gmail_token.json` once and authenticate again so the new Drive scope can be granted.
 
 **Keyring is missing?**
 Install via `pip install keyring`.

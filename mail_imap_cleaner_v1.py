@@ -123,7 +123,7 @@ class GmailAccountDialog(QDialog):
             parent: Parent widget.
         """
         super().__init__(parent)
-        self.setWindowTitle("Gmail API Account bearbeiten" if acc else "Gmail API Account hinzufuegen")
+        self.setWindowTitle("Gmail API Account bearbeiten" if acc else "Gmail API Account hinzufügen")
         l = QFormLayout(self)
 
         self.n = QLineEdit(acc.name if acc else "")
@@ -372,13 +372,18 @@ class MainWindow(QMainWindow):
         cl = QHBoxLayout(conf_grp)
         self.spin_mb = QSpinBox(); self.spin_mb.setRange(1, 1000); self.spin_mb.setValue(10); self.spin_mb.setSuffix(" MB")
         self.cb_scan_acc = QComboBox()
+        self.chk_scan_mail = QCheckBox("Emails")
+        self.chk_scan_mail.setChecked(True)
+        self.chk_scan_drive = QCheckBox("Drive files (Gmail API)")
+        self.chk_scan_drive.setToolTip("Only Gmail API accounts can scan Google Drive files.")
         btn_scan = QPushButton("🔍 Start Scan"); btn_scan.clicked.connect(self.start_large_scan)
         cl.addWidget(QLabel("Account:")); cl.addWidget(self.cb_scan_acc)
         cl.addWidget(QLabel("Larger than:")); cl.addWidget(self.spin_mb)
+        cl.addWidget(QLabel("Sources:")); cl.addWidget(self.chk_scan_mail); cl.addWidget(self.chk_scan_drive)
         cl.addWidget(btn_scan)
         l2.addWidget(conf_grp)
         self.table_large = QTableWidget(0, 5)
-        self.table_large.setHorizontalHeaderLabels(["", "Account", "Subject", "Size (MB)", "Date"])
+        self.table_large.setHorizontalHeaderLabels(["", "Account", "Subject / File", "Size (MB)", "Date"])
         self.table_large.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         l2.addWidget(self.table_large)
         btn_row = QHBoxLayout()
@@ -392,7 +397,7 @@ class MainWindow(QMainWindow):
         btn_row.addStretch()
         l2.addLayout(btn_row)
         self._undo_history: list = []
-        tabs.addTab(t2, "Large Emails")
+        tabs.addTab(t2, "Large Items")
 
         # TAB 4: SETTINGS
         t3 = QWidget(); l3 = QVBoxLayout(t3)
@@ -426,7 +431,7 @@ class MainWindow(QMainWindow):
         # TAB 6: STATISTIKEN (Gmail)
         t_stats = QWidget(); l_stats = QVBoxLayout(t_stats)
         h_stats_top = QHBoxLayout()
-        h_stats_top.addWidget(QLabel("Gmail-Account waehlen:"))
+        h_stats_top.addWidget(QLabel("Gmail-Account wählen:"))
         self.cb_gmail_stats = QComboBox()
         h_stats_top.addWidget(self.cb_gmail_stats)
         b_load_stats = QPushButton("Statistiken laden")
@@ -452,18 +457,22 @@ class MainWindow(QMainWindow):
         # TAB 7: LABELS (Gmail)
         t_labels = QWidget(); l_labels = QVBoxLayout(t_labels)
         h_labels_top = QHBoxLayout()
-        h_labels_top.addWidget(QLabel("Gmail-Account waehlen:"))
+        h_labels_top.addWidget(QLabel("Gmail-Account wählen:"))
         self.cb_gmail_labels = QComboBox()
         h_labels_top.addWidget(self.cb_gmail_labels)
         b_load_labels = QPushButton("Labels laden")
         b_load_labels.clicked.connect(self._on_load_labels)
         h_labels_top.addWidget(b_load_labels)
+        b_create_label = QPushButton("Label erstellen")
+        b_create_label.clicked.connect(self._on_create_label)
+        h_labels_top.addWidget(b_create_label)
         h_labels_top.addStretch()
         l_labels.addLayout(h_labels_top)
 
         self.table_labels = QTableWidget(0, 3)
         self.table_labels.setHorizontalHeaderLabels(["Name", "Typ", "Aktionen"])
         self.table_labels.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.table_labels.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         l_labels.addWidget(self.table_labels)
         tabs.addTab(t_labels, "Labels")
 
@@ -491,9 +500,8 @@ class MainWindow(QMainWindow):
             proto = getattr(a, "protocol", "IMAP")
             self.list_acc.setItem(r, 1, QTableWidgetItem(f"{a.host} [{proto}]" if a.host else f"[{proto}]"))
             self.list_acc.setItem(r, 2, QTableWidgetItem(a.user))
-            if proto == "IMAP":
-                self.cb_scan_acc.addItem(a.name)
-            else:
+            self.cb_scan_acc.addItem(a.name)
+            if proto != "IMAP":
                 self.cb_gmail_stats.addItem(a.name)
                 self.cb_gmail_labels.addItem(a.name)
 
@@ -570,7 +578,15 @@ class MainWindow(QMainWindow):
         if not self.accounts:
             QMessageBox.warning(self, "No Accounts", "Please add an account first.")
             return
-        d = FolderSelectDialog(self.accounts, parent=self)
+        imap_accounts = [a for a in self.accounts if getattr(a, "protocol", "IMAP") == "IMAP"]
+        if not imap_accounts:
+            QMessageBox.information(
+                self,
+                "Keine IMAP-Konten",
+                "Die Ordnerauswahl gilt nur für IMAP-Konten. Gmail API-Regeln verwenden keine IMAP-Ordner.",
+            )
+            return
+        d = FolderSelectDialog(imap_accounts, parent=self)
         if d.exec():
             self.selected_rule_folders = d.get_selected_folders() or ["INBOX"]
             self.status.setText(f"Folders: {', '.join(self.selected_rule_folders)}")
@@ -594,15 +610,31 @@ class MainWindow(QMainWindow):
             })
 
     def start_large_scan(self):
-        """Starts a scan for emails larger than the configured threshold."""
+        """Starts a scan for large Gmail/Drive items or IMAP emails."""
+        if not self.chk_scan_mail.isChecked() and not self.chk_scan_drive.isChecked():
+            QMessageBox.information(
+                self,
+                "Keine Quelle",
+                "Bitte mindestens E-Mails oder Drive-Dateien für den Scan auswählen.",
+            )
+            return
+
         self.table_large.setRowCount(0); self.status.setText("Scanning...")
-        self.run_worker("scan_large", {"threshold": self.spin_mb.value(), "target_account": self.cb_scan_acc.currentText()})
+        self.run_worker(
+            "scan_large",
+            {
+                "threshold": self.spin_mb.value(),
+                "target_account": self.cb_scan_acc.currentText(),
+                "scan_mail": self.chk_scan_mail.isChecked(),
+                "scan_drive": self.chk_scan_drive.isChecked(),
+            },
+        )
 
     def fill_large(self, items):
-        """Populates the large emails table with scan results.
+        """Populates the large-items table with scan results.
 
         Args:
-            items: List of dicts with account, id, subject, size, and date.
+            items: List of dicts with account, id, subject/file name, size, and date.
         """
         for row, item in enumerate(items):
             r = self.table_large.rowCount(); self.table_large.insertRow(r)
@@ -616,7 +648,7 @@ class MainWindow(QMainWindow):
         self.status.setText("Scan complete.")
 
     def delete_selected(self):
-        """Moves checked emails to trash (safe mode on) or permanently deletes them.
+        """Moves checked items to trash (safe mode on) or permanently deletes them.
 
         After a successful delete action the items are added to the undo history
         so they can be restored from the trash via undo_last_action().
@@ -626,17 +658,17 @@ class MainWindow(QMainWindow):
             if self.table_large.item(r, 0).checkState() == Qt.CheckState.Checked:
                 to_del.append(self.table_large.item(r, 0).data(Qt.ItemDataRole.UserRole))
         if to_del:
-            if QMessageBox.question(self, "Delete", f"Delete {len(to_del)} emails?") == QMessageBox.StandardButton.Yes:
+            if QMessageBox.question(self, "Delete", f"Delete {len(to_del)} item(s)?") == QMessageBox.StandardButton.Yes:
                 safe = self.settings["safe_mode"]
                 self.run_worker("delete", {"items": to_del, "safe_mode": safe})
                 if safe:
-                    # Undo ist nur im Safe Mode (Trash) moeglich
+                    # Undo ist nur im Safe Mode (Trash) möglich
                     self._undo_history.append({"items": to_del, "timestamp": datetime.now().isoformat()})
                     self.b_undo.setEnabled(True)
-                    self.b_undo.setText(f"↩️ Rückgängig ({len(to_del)} Mails)")
+                    self.b_undo.setText(f"↩️ Rückgängig ({len(to_del)} Elemente)")
 
     def undo_last_action(self):
-        """Restores emails from the last delete action from the trash back to INBOX."""
+        """Restores items from the last delete action from the trash."""
         if not self._undo_history:
             QMessageBox.information(self, "Undo", "Keine rückgängig zu machende Aktion vorhanden.")
             return
@@ -644,7 +676,7 @@ class MainWindow(QMainWindow):
         items = last["items"]
         if QMessageBox.question(
             self, "Undo",
-            f"Letzte Aktion rückgängig machen?\n{len(items)} Mail(s) aus dem Papierkorb zurückverschoben."
+            f"Letzte Aktion rückgängig machen?\n{len(items)} Element(e) aus dem Papierkorb wiederherstellen."
         ) == QMessageBox.StandardButton.Yes:
             self.run_worker("undo", {"items": items, "safe_mode": True})
         else:
@@ -677,7 +709,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _on_scheduler_run(self):
-        """Triggered by the scheduler timer or manual 'Jetzt ausfuehren' click."""
+        """Triggered by the scheduler timer or manual 'Jetzt ausführen' click."""
         self.log.appendPlainText(f"[Scheduler] Automatischer Lauf gestartet ({datetime.now().strftime('%H:%M:%S')})")
         self.run_all_rules()
         # Persist updated last_run / next_run in settings
@@ -721,7 +753,7 @@ class MainWindow(QMainWindow):
             return None
         svc = GmailService()
         if not svc.auth():
-            QMessageBox.critical(self, "Auth fehlgeschlagen", "Gmail OAuth2-Login fehlgeschlagen.\nSiehe Log fuer Details.")
+            QMessageBox.critical(self, "Auth fehlgeschlagen", "Gmail OAuth2-Login fehlgeschlagen.\nSiehe Log für Details.")
             return None
         return svc
 
@@ -808,27 +840,11 @@ class MainWindow(QMainWindow):
                     self.error.emit(str(exc))
 
         self._labels_worker = LabelsWorker(svc)
-        self._labels_svc = svc  # keep reference so delete buttons can use it
+        self._labels_svc = svc
+        self._labels_account_name = account_name
 
         def _on_done(labels):
-            self.table_labels.setRowCount(0)
-            for label in labels:
-                row = self.table_labels.rowCount()
-                self.table_labels.insertRow(row)
-                self.table_labels.setItem(row, 0, QTableWidgetItem(label.get("name", "")))
-                ltype = label.get("type", "user")
-                self.table_labels.setItem(row, 1, QTableWidgetItem(ltype))
-                if ltype == "user":
-                    btn = QPushButton("Alle Mails loeschen")
-                    label_id = label.get("id", "")
-
-                    def _make_handler(lid, lname):
-                        def _handler():
-                            self._delete_by_label(lid, lname)
-                        return _handler
-
-                    btn.clicked.connect(_make_handler(label_id, label.get("name", label_id)))
-                    self.table_labels.setCellWidget(row, 2, btn)
+            self._populate_labels_table(labels)
             self.status.setText(f"{len(labels)} Labels geladen.")
 
         def _on_error(msg):
@@ -838,6 +854,190 @@ class MainWindow(QMainWindow):
         self._labels_worker.done.connect(_on_done)
         self._labels_worker.error.connect(_on_error)
         self._labels_worker.start()
+
+    def _populate_labels_table(self, labels):
+        """Render the labels table for the Gmail labels tab."""
+        self.table_labels.setRowCount(0)
+        for label in labels:
+            row = self.table_labels.rowCount()
+            self.table_labels.insertRow(row)
+            self.table_labels.setItem(row, 0, QTableWidgetItem(label.get("name", "")))
+            ltype = label.get("type", "user")
+            self.table_labels.setItem(row, 1, QTableWidgetItem(ltype))
+            actions_widget = self._build_label_actions(label)
+            if actions_widget is not None:
+                self.table_labels.setCellWidget(row, 2, actions_widget)
+
+    def _build_label_actions(self, label):
+        """Create the action buttons for one label row."""
+        if label.get("type", "user") != "user":
+            return None
+
+        label_id = label.get("id", "")
+        label_name = label.get("name", label_id)
+
+        actions = QWidget(self.table_labels)
+        layout = QHBoxLayout(actions)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+
+        b_clear = QPushButton("Leeren")
+        b_clear.setToolTip("Alle Mails mit diesem Label in den Papierkorb verschieben.")
+        b_clear.clicked.connect(lambda: self._delete_by_label(label_id, label_name))
+        layout.addWidget(b_clear)
+
+        b_rename = QPushButton("Umbenennen")
+        b_rename.clicked.connect(lambda: self._rename_label(label_id, label_name))
+        layout.addWidget(b_rename)
+
+        b_delete = QPushButton("Löschen")
+        b_delete.setToolTip("Nur das Label löschen, nicht die enthaltenen Mails.")
+        b_delete.clicked.connect(lambda: self._delete_label_definition(label_id, label_name))
+        layout.addWidget(b_delete)
+
+        return actions
+
+    def _ensure_labels_service(self):
+        """Return an authenticated GmailService for the selected labels account."""
+        account_name = self.cb_gmail_labels.currentText()
+        if not account_name:
+            QMessageBox.information(self, "Kein Account", "Kein Gmail API-Account vorhanden.")
+            return None
+
+        svc = getattr(self, "_labels_svc", None)
+        if svc is not None and getattr(self, "_labels_account_name", None) == account_name:
+            return svc
+
+        svc = self._get_gmail_service_for(account_name)
+        if svc is None:
+            return None
+
+        self._labels_svc = svc
+        self._labels_account_name = account_name
+        return svc
+
+    def _run_label_service_task(self, action, on_done, error_prefix):
+        """Run a Gmail label action in the background."""
+        class LabelActionWorker(QThread):
+            done = Signal(object)
+            error = Signal(str)
+
+            def __init__(self, task):
+                super().__init__()
+                self._task = task
+
+            def run(self):
+                try:
+                    self.done.emit(self._task())
+                except Exception as exc:
+                    self.error.emit(str(exc))
+
+        self._label_action_worker = LabelActionWorker(action)
+
+        def _on_error(msg):
+            self.log.appendPlainText(f"[Labels] {error_prefix}: {msg}")
+            self.status.setText("Labels: Fehler")
+
+        self._label_action_worker.done.connect(on_done)
+        self._label_action_worker.error.connect(_on_error)
+        self._label_action_worker.start()
+
+    def _prompt_label_name(self, title: str, prompt: str, initial: str = "") -> Optional[str]:
+        """Prompt the user for a label name and return a trimmed value."""
+        text, ok = QInputDialog.getText(self, title, prompt, text=initial)
+        if not ok:
+            return None
+
+        label_name = text.strip()
+        if not label_name:
+            QMessageBox.information(self, title, "Bitte einen Label-Namen eingeben.")
+            return None
+        return label_name
+
+    def _on_create_label(self):
+        """Create a new Gmail user label for the selected account."""
+        svc = self._ensure_labels_service()
+        if svc is None:
+            return
+
+        label_name = self._prompt_label_name("Label erstellen", "Name des neuen Labels:")
+        if label_name is None:
+            return
+
+        self.status.setText("Erstelle Label...")
+
+        def _on_done(label):
+            created_name = label.get("name", label_name)
+            self.log.appendPlainText(f"[Labels] Label '{created_name}' erstellt.")
+            self.status.setText(f"Label '{created_name}' erstellt.")
+            self._on_load_labels()
+
+        self._run_label_service_task(
+            lambda: svc.create_label(label_name),
+            _on_done,
+            "Fehler beim Erstellen",
+        )
+
+    def _rename_label(self, label_id: str, current_name: str):
+        """Rename an existing Gmail user label."""
+        svc = self._ensure_labels_service()
+        if svc is None:
+            return
+
+        new_name = self._prompt_label_name(
+            "Label umbenennen",
+            "Neuer Name für das Label:",
+            current_name,
+        )
+        if new_name is None or new_name == current_name:
+            return
+
+        self.status.setText("Benenne Label um...")
+
+        def _on_done(label):
+            updated_name = label.get("name", new_name)
+            self.log.appendPlainText(
+                f"[Labels] Label '{current_name}' in '{updated_name}' umbenannt."
+            )
+            self.status.setText(f"Label '{updated_name}' umbenannt.")
+            self._on_load_labels()
+
+        self._run_label_service_task(
+            lambda: svc.rename_label(label_id, new_name),
+            _on_done,
+            "Fehler beim Umbenennen",
+        )
+
+    def _delete_label_definition(self, label_id: str, label_name: str):
+        """Delete a Gmail user label without deleting the contained mails."""
+        reply = QMessageBox.question(
+            self,
+            "Label löschen",
+            (
+                f"Label '{label_name}' löschen?\n"
+                "Das Label wird von den verknüpften Mails entfernt, "
+                "die Mails selbst bleiben erhalten."
+            ),
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        svc = self._ensure_labels_service()
+        if svc is None:
+            return
+
+        self.status.setText("Lösche Label...")
+
+        def _on_done(_result):
+            self.log.appendPlainText(f"[Labels] Label '{label_name}' gelöscht.")
+            self.status.setText(f"Label '{label_name}' gelöscht.")
+            self._on_load_labels()
+
+        self._run_label_service_task(
+            lambda: svc.delete_label(label_id),
+            _on_done,
+            "Fehler beim Löschen",
+        )
 
     def _delete_by_label(self, label_id: str, label_name: str):
         """Move all messages with the given label to Trash (background thread)."""
@@ -873,10 +1073,10 @@ class MainWindow(QMainWindow):
 
         def _on_done(count):
             self.log.appendPlainText(f"[Labels] {count} Mail(s) von Label '{label_name}' in Papierkorb verschoben.")
-            self.status.setText(f"Label '{label_name}': {count} Mails geloescht.")
+            self.status.setText(f"Label '{label_name}': {count} Mails gelöscht.")
 
         def _on_error(msg):
-            self.log.appendPlainText(f"[Labels] Fehler beim Loeschen: {msg}")
+            self.log.appendPlainText(f"[Labels] Fehler beim Löschen: {msg}")
             self.status.setText("Labels: Fehler")
 
         self._del_label_worker.done.connect(_on_done)

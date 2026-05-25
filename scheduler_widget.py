@@ -45,7 +45,7 @@ class SchedulerWidget(QWidget):
     """QWidget that lets the user configure and manually trigger a schedule.
 
     Emits ``run_requested`` whenever the timer fires or the user clicks
-    "Jetzt ausfuehren". The owner connects to this signal and performs
+    "Jetzt ausführen". The owner connects to this signal and performs
     the actual work.
 
     Usage::
@@ -96,7 +96,7 @@ class SchedulerWidget(QWidget):
         h_interval.addStretch()
         fl.addRow(h_interval)
 
-        self.chk_startup = QCheckBox("Bei Programmstart pruefen")
+        self.chk_startup = QCheckBox("Bei Programmstart prüfen")
         fl.addRow(self.chk_startup)
 
         lay.addWidget(g_cfg)
@@ -111,14 +111,14 @@ class SchedulerWidget(QWidget):
         self.lbl_status.setStyleSheet("color: gray;")
 
         fl2.addRow("Letzter Lauf:", self.lbl_last)
-        fl2.addRow("Naechster Lauf:", self.lbl_next)
+        fl2.addRow("Nächster Lauf:", self.lbl_next)
         fl2.addRow("Status:", self.lbl_status)
 
         lay.addWidget(g_status)
 
         # --- Buttons ---
         h_btn = QHBoxLayout()
-        self.btn_run = QPushButton("Jetzt ausfuehren")
+        self.btn_run = QPushButton("Jetzt ausführen")
         self.btn_run.clicked.connect(self._manual_run)
         h_btn.addWidget(self.btn_run)
         h_btn.addStretch()
@@ -192,7 +192,7 @@ class SchedulerWidget(QWidget):
         self.run_requested.emit()
 
     def _manual_run(self) -> None:
-        """Called when the user clicks 'Jetzt ausfuehren'."""
+        """Called when the user clicks 'Jetzt ausführen'."""
         self.config.last_run = datetime.now().isoformat()
         self.lbl_last.setText(self.config.last_run[:16])
         self.run_requested.emit()

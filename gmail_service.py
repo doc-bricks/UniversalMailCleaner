@@ -5,9 +5,14 @@ operations: storage statistics, label listing, label-based deletion,
 and trash restoration.
 """
 
+import json
 import os
+import math
 import logging
 from pathlib import Path
+from typing import Callable, Optional
+
+from models import CleanRule
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +27,7 @@ CREDS_PATH_FALLBACK = _LOCALAPPDATA / "UniversalMailCleaner" / "credentials.json
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.modify",
-    "https://www.googleapis.com/auth/drive.metadata.readonly",
+    "https://www.googleapis.com/auth/drive",
 ]
 
 try:
@@ -47,6 +52,7 @@ class GmailService:
         self,
         token_path: Path = TOKEN_PATH,
         creds_path: Path = CREDS_PATH_LOCAL,
+        log_func: Optional[Callable[[str], None]] = None,
     ):
         """Initialise GmailService.
 
@@ -61,6 +67,36 @@ class GmailService:
         self.gmail = None
         self.drive = None
         self.creds = None
+        self.log = log_func or (lambda _msg: None)
+
+    def _delete_token_file(self) -> None:
+        """Delete the cached OAuth token if it exists."""
+        try:
+            os.remove(self.token_path)
+        except OSError as exc:
+            logger.warning("Could not delete token file: %s", exc)
+
+    def _stored_token_has_required_scopes(self) -> bool:
+        """Check whether the cached OAuth token already covers all scopes."""
+        try:
+            payload = json.loads(self.token_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            logger.warning("Token file invalid, deleting: %s", exc)
+            return False
+
+        token_scopes = payload.get("scopes") or payload.get("scope") or []
+        if isinstance(token_scopes, str):
+            token_scopes = token_scopes.split()
+
+        missing_scopes = [scope for scope in SCOPES if scope not in token_scopes]
+        if missing_scopes:
+            logger.info(
+                "Stored OAuth token missing required scopes: %s",
+                ", ".join(missing_scopes),
+            )
+            return False
+
+        return True
 
     # ------------------------------------------------------------------
     # Authentication
@@ -84,17 +120,17 @@ class GmailService:
 
         # Try loading existing token
         if self.token_path.exists():
-            try:
-                self.creds = Credentials.from_authorized_user_file(
-                    str(self.token_path), SCOPES
-                )
-            except (ValueError, KeyError) as exc:
-                logger.warning("Token file invalid, deleting: %s", exc)
+            if not self._stored_token_has_required_scopes():
+                self._delete_token_file()
+            else:
                 try:
-                    os.remove(self.token_path)
-                except OSError as exc2:
-                    logger.warning("Could not delete token file: %s", exc2)
-                self.creds = None
+                    self.creds = Credentials.from_authorized_user_file(
+                        str(self.token_path), SCOPES
+                    )
+                except (ValueError, KeyError) as exc:
+                    logger.warning("Token file invalid, deleting: %s", exc)
+                    self._delete_token_file()
+                    self.creds = None
 
         # Refresh or re-authenticate
         if not self.creds or not self.creds.valid:
@@ -104,10 +140,7 @@ class GmailService:
                     self.creds.refresh(Request())
                 except RefreshError:
                     logger.warning("Token invalid, deleting and re-authenticating...")
-                    try:
-                        os.remove(self.token_path)
-                    except OSError as exc:
-                        logger.warning("Could not delete token file: %s", exc)
+                    self._delete_token_file()
                     self.creds = None
                 except Exception as exc:  # noqa: BLE001
                     logger.error("Auth error during refresh: %s", exc)
@@ -153,6 +186,197 @@ class GmailService:
         except Exception as exc:  # noqa: BLE001
             logger.error("API build error: %s", exc)
             return False
+
+    # ------------------------------------------------------------------
+    # Search helpers
+    # ------------------------------------------------------------------
+
+    def build_search_query(self, rule: CleanRule) -> Optional[str]:
+        """Translate a CleanRule into a Gmail API query string."""
+        try:
+            if rule.filter_type == "older_than_days":
+                days = int(rule.value)
+                if days <= 0:
+                    return None
+                return f"older_than:{days}d -label:TRASH"
+
+            if rule.filter_type == "sender":
+                safe_value = rule.value.replace('"', "").strip()
+                if not safe_value:
+                    return None
+                return f'from:"{safe_value}" -label:TRASH'
+
+            if rule.filter_type == "subject":
+                safe_value = rule.value.replace('"', "").strip()
+                if not safe_value:
+                    return None
+                return f'subject:"{safe_value}" -label:TRASH'
+
+            if rule.filter_type == "size_mb":
+                size_mb = float(rule.value)
+                if size_mb <= 0:
+                    return None
+                size_limit = max(1, math.ceil(size_mb))
+                return f"larger:{size_limit}M -label:TRASH"
+        except (TypeError, ValueError) as exc:
+            logger.warning("build_search_query error for rule '%s': %s", rule.name, exc)
+            return None
+
+        return None
+
+    def list_message_ids(self, query: str, max_results: Optional[int] = None) -> list[str]:
+        """Return Gmail message IDs matching a query."""
+        if not self.gmail:
+            logger.warning("list_message_ids called before successful auth()")
+            return []
+
+        ids: list[str] = []
+        page_token = None
+
+        while True:
+            try:
+                kwargs = {
+                    "userId": "me",
+                    "q": query,
+                    "maxResults": 100,
+                }
+                if page_token:
+                    kwargs["pageToken"] = page_token
+                if max_results is not None:
+                    remaining = max_results - len(ids)
+                    if remaining <= 0:
+                        break
+                    kwargs["maxResults"] = min(kwargs["maxResults"], remaining)
+
+                response = self.gmail.users().messages().list(**kwargs).execute()
+                ids.extend(msg["id"] for msg in response.get("messages", []))
+
+                page_token = response.get("nextPageToken")
+                if not page_token:
+                    break
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Gmail query failed for '%s': %s", query, exc)
+                break
+
+        return ids
+
+    @staticmethod
+    def _extract_header(headers: list, name: str, default: str = "") -> str:
+        """Read a single header value from a Gmail message payload."""
+        target = name.lower()
+        for header in headers or []:
+            if header.get("name", "").lower() == target:
+                return header.get("value", default)
+        return default
+
+    def scan_large_messages(self, threshold_mb: int, max_results: int = 50) -> list[dict]:
+        """Return metadata for large Gmail messages above a threshold."""
+        if not self.gmail:
+            logger.warning("scan_large_messages called before successful auth()")
+            return []
+
+        query = f"larger:{max(1, int(threshold_mb))}M -label:TRASH"
+        results = []
+
+        for msg_id in self.list_message_ids(query, max_results=max_results):
+            try:
+                full = self.gmail.users().messages().get(userId="me", id=msg_id).execute()
+                payload = full.get("payload", {})
+                headers = payload.get("headers", [])
+                subject = self._extract_header(headers, "Subject", "(Kein Betreff)")
+                date_str = self._extract_header(headers, "Date", "")[:16]
+                size = int(full.get("sizeEstimate", 0)) / (1024 * 1024)
+                results.append({
+                    "id": msg_id,
+                    "folder": "Gmail",
+                    "subject": subject,
+                    "size": size,
+                    "date": date_str,
+                    "item_type": "gmail_message",
+                })
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Large-message metadata skipped for %s: %s", msg_id, exc)
+
+        return results
+
+    def scan_large_drive_files(
+        self,
+        threshold_mb: int,
+        max_results: int = 50,
+    ) -> list[dict]:
+        """Return metadata for large Drive files above a threshold."""
+        if not self.drive:
+            logger.warning("scan_large_drive_files called before successful auth()")
+            return []
+
+        min_size_bytes = int(threshold_mb) * 1024 * 1024
+        query = (
+            "trashed = false "
+            "and mimeType != 'application/vnd.google-apps.folder'"
+        )
+        fields = "nextPageToken, files(id, name, size, modifiedTime, webViewLink)"
+        request_kwargs = {
+            "q": query,
+            "fields": fields,
+            "pageSize": min(100, max(1, int(max_results))),
+        }
+
+        results = []
+        page_token = None
+
+        while len(results) < max_results:
+            if page_token:
+                request_kwargs["pageToken"] = page_token
+            else:
+                request_kwargs.pop("pageToken", None)
+
+            try:
+                response = self.drive.files().list(
+                    includeItemsFromAllDrives=True,
+                    supportsAllDrives=True,
+                    corpora="allDrives",
+                    **request_kwargs,
+                ).execute()
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "All-drives Drive scan failed, falling back to personal drive: %s",
+                    exc,
+                )
+                try:
+                    response = self.drive.files().list(
+                        spaces="drive",
+                        **request_kwargs,
+                    ).execute()
+                except Exception as exc2:  # noqa: BLE001
+                    logger.error("Drive scan failed: %s", exc2)
+                    return results
+
+            for drive_file in response.get("files", []):
+                try:
+                    size_bytes = int(drive_file.get("size", 0))
+                    if size_bytes <= min_size_bytes:
+                        continue
+                    results.append(
+                        {
+                            "id": drive_file["id"],
+                            "folder": "Drive",
+                            "subject": drive_file.get("name", "(Ohne Name)"),
+                            "size": size_bytes / (1024 * 1024),
+                            "date": drive_file.get("modifiedTime", "")[:16],
+                            "item_type": "drive_file",
+                            "link": drive_file.get("webViewLink", ""),
+                        }
+                    )
+                    if len(results) >= max_results:
+                        break
+                except (KeyError, TypeError, ValueError) as exc:
+                    logger.warning("Large-drive-file metadata skipped: %s", exc)
+
+            page_token = response.get("nextPageToken")
+            if not page_token:
+                break
+
+        return results
 
     # ------------------------------------------------------------------
     # Storage statistics
@@ -216,9 +440,165 @@ class GmailService:
             logger.error("Label fetch error: %s", exc)
             return []
 
+    def create_label(self, name: str) -> dict:
+        """Create a new user label.
+
+        Args:
+            name: Display name for the new label.
+
+        Returns:
+            The created label payload returned by the Gmail API.
+        """
+        if not self.gmail:
+            logger.warning("create_label called before successful auth()")
+            return {}
+
+        label_name = name.strip()
+        if not label_name:
+            raise ValueError("Label name must not be empty.")
+
+        body = {
+            "name": label_name,
+            "labelListVisibility": "labelShow",
+            "messageListVisibility": "show",
+        }
+        result = self.gmail.users().labels().create(userId="me", body=body).execute()
+        logger.info("Created Gmail label '%s'.", label_name)
+        return result or {}
+
+    def rename_label(self, label_id: str, new_name: str) -> dict:
+        """Rename an existing user label.
+
+        Args:
+            label_id: Gmail label ID (for example ``"Label_123"``).
+            new_name: New display name for the label.
+
+        Returns:
+            The updated label payload returned by the Gmail API.
+        """
+        if not self.gmail:
+            logger.warning("rename_label called before successful auth()")
+            return {}
+
+        label_name = new_name.strip()
+        if not label_name:
+            raise ValueError("New label name must not be empty.")
+
+        result = self.gmail.users().labels().patch(
+            userId="me",
+            id=label_id,
+            body={"name": label_name},
+        ).execute()
+        logger.info("Renamed Gmail label '%s' to '%s'.", label_id, label_name)
+        return result or {}
+
+    def delete_label(self, label_id: str) -> bool:
+        """Delete an existing user label definition.
+
+        Args:
+            label_id: Gmail label ID (for example ``"Label_123"``).
+
+        Returns:
+            True on success, False if the service is not authenticated.
+        """
+        if not self.gmail:
+            logger.warning("delete_label called before successful auth()")
+            return False
+
+        self.gmail.users().labels().delete(userId="me", id=label_id).execute()
+        logger.info("Deleted Gmail label '%s'.", label_id)
+        return True
+
     # ------------------------------------------------------------------
     # Bulk operations
     # ------------------------------------------------------------------
+
+    def trash_message_ids(self, message_ids: list[str]) -> int:
+        """Move a list of Gmail messages to Trash."""
+        if not self.gmail:
+            logger.warning("trash_message_ids called before successful auth()")
+            return 0
+
+        processed = 0
+        for msg_id in message_ids:
+            try:
+                self.gmail.users().messages().trash(userId="me", id=msg_id).execute()
+                processed += 1
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Could not trash message %s: %s", msg_id, exc)
+        return processed
+
+    def delete_message_ids(self, message_ids: list[str]) -> int:
+        """Permanently delete a list of Gmail messages."""
+        if not self.gmail:
+            logger.warning("delete_message_ids called before successful auth()")
+            return 0
+
+        processed = 0
+        for msg_id in message_ids:
+            try:
+                self.gmail.users().messages().delete(userId="me", id=msg_id).execute()
+                processed += 1
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Could not delete message %s: %s", msg_id, exc)
+        return processed
+
+    def trash_drive_file_ids(self, file_ids: list[str]) -> int:
+        """Move a list of Drive files to Trash."""
+        if not self.drive:
+            logger.warning("trash_drive_file_ids called before successful auth()")
+            return 0
+
+        processed = 0
+        for file_id in file_ids:
+            try:
+                self.drive.files().update(
+                    fileId=file_id,
+                    body={"trashed": True},
+                    supportsAllDrives=True,
+                ).execute()
+                processed += 1
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Could not trash Drive file %s: %s", file_id, exc)
+        return processed
+
+    def delete_drive_file_ids(self, file_ids: list[str]) -> int:
+        """Permanently delete a list of Drive files."""
+        if not self.drive:
+            logger.warning("delete_drive_file_ids called before successful auth()")
+            return 0
+
+        processed = 0
+        for file_id in file_ids:
+            try:
+                self.drive.files().delete(
+                    fileId=file_id,
+                    supportsAllDrives=True,
+                ).execute()
+                processed += 1
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Could not delete Drive file %s: %s", file_id, exc)
+        return processed
+
+    def process_rule(self, rule: CleanRule, trash: bool = True) -> int:
+        """Execute one CleanRule via the Gmail API backend."""
+        query = self.build_search_query(rule)
+        if not query:
+            logger.warning("Unsupported Gmail rule skipped: %s", rule.name)
+            return 0
+
+        message_ids = self.list_message_ids(query)
+        if not message_ids:
+            self.log("   No matches.")
+            return 0
+
+        self.log(f"   Found {len(message_ids)} emails. Processing...")
+        processed = (
+            self.trash_message_ids(message_ids)
+            if trash
+            else self.delete_message_ids(message_ids)
+        )
+        return processed
 
     def delete_by_label(self, label_id: str, trash: bool = True) -> int:
         """Move or delete all messages with the given label.
@@ -305,4 +685,20 @@ class GmailService:
             return True
         except Exception as exc:  # noqa: BLE001
             logger.error("Restore mail failed for %s: %s", msg_id, exc)
+            return False
+
+    def restore_drive_file(self, file_id: str) -> bool:
+        """Restore a Drive file from Trash."""
+        if not self.drive:
+            logger.warning("restore_drive_file called before successful auth()")
+            return False
+        try:
+            self.drive.files().update(
+                fileId=file_id,
+                body={"trashed": False},
+                supportsAllDrives=True,
+            ).execute()
+            return True
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Restore Drive file failed for %s: %s", file_id, exc)
             return False
