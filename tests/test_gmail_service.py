@@ -1,5 +1,6 @@
 """Unit tests for GmailService."""
 
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -163,6 +164,29 @@ class _FakeDriveApi:
 class TestGmailService(unittest.TestCase):
     def setUp(self):
         self.service = GmailService()
+
+    def test_module_import_stays_lazy_without_google_clients(self):
+        project_root = Path(__file__).resolve().parent.parent
+        script = (
+            "import sys; "
+            "import gmail_service; "
+            "loaded = [name for name in ("
+            "'googleapiclient.discovery', "
+            "'google_auth_oauthlib.flow', "
+            "'google.auth.transport.requests', "
+            "'google.oauth2.credentials'"
+            ") if name in sys.modules]; "
+            "print('loaded=' + ','.join(loaded))"
+        )
+        result = subprocess.run(
+            [sys.executable, "-u", "-c", script],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=True,
+        )
+        self.assertEqual(result.stdout.strip(), "loaded=")
 
     def test_build_search_query_maps_supported_rule_types(self):
         older = CleanRule("Old", "Alle", "older_than_days", "30")

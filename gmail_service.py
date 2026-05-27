@@ -30,15 +30,48 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive",
 ]
 
-try:
-    from googleapiclient.discovery import build
-    from google_auth_oauthlib.flow import InstalledAppFlow
-    from google.auth.transport.requests import Request
-    from google.oauth2.credentials import Credentials
-    from google.auth.exceptions import RefreshError
+GOOGLE_AVAIL = None
+_GOOGLE_IMPORT_ERROR = None
+_BUILD = None
+_INSTALLED_APP_FLOW = None
+_REQUEST = None
+_CREDENTIALS = None
+_REFRESH_ERROR = None
+
+
+def _ensure_google_dependencies() -> bool:
+    """Load Google client libraries only when OAuth is actually needed."""
+    global GOOGLE_AVAIL
+    global _GOOGLE_IMPORT_ERROR
+    global _BUILD
+    global _INSTALLED_APP_FLOW
+    global _REQUEST
+    global _CREDENTIALS
+    global _REFRESH_ERROR
+
+    if GOOGLE_AVAIL is True:
+        return True
+    if GOOGLE_AVAIL is False:
+        return False
+
+    try:
+        from googleapiclient.discovery import build as build_fn
+        from google_auth_oauthlib.flow import InstalledAppFlow as installed_app_flow_cls
+        from google.auth.transport.requests import Request as request_cls
+        from google.oauth2.credentials import Credentials as credentials_cls
+        from google.auth.exceptions import RefreshError as refresh_error_cls
+    except ImportError as exc:
+        GOOGLE_AVAIL = False
+        _GOOGLE_IMPORT_ERROR = exc
+        return False
+
+    _BUILD = build_fn
+    _INSTALLED_APP_FLOW = installed_app_flow_cls
+    _REQUEST = request_cls
+    _CREDENTIALS = credentials_cls
+    _REFRESH_ERROR = refresh_error_cls
     GOOGLE_AVAIL = True
-except ImportError:
-    GOOGLE_AVAIL = False
+    return True
 
 
 class GmailService:
@@ -111,8 +144,10 @@ class GmailService:
         Returns:
             True if authentication succeeded, False otherwise.
         """
-        if not GOOGLE_AVAIL:
+        if not _ensure_google_dependencies():
             logger.error("Google libraries not available (pip install google-api-python-client google-auth-oauthlib)")
+            if _GOOGLE_IMPORT_ERROR is not None:
+                logger.debug("Google import error: %s", _GOOGLE_IMPORT_ERROR)
             return False
 
         # Ensure token directory exists
@@ -124,7 +159,7 @@ class GmailService:
                 self._delete_token_file()
             else:
                 try:
-                    self.creds = Credentials.from_authorized_user_file(
+                    self.creds = _CREDENTIALS.from_authorized_user_file(
                         str(self.token_path), SCOPES
                     )
                 except (ValueError, KeyError) as exc:
@@ -137,8 +172,8 @@ class GmailService:
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 try:
                     logger.info("Refreshing OAuth token...")
-                    self.creds.refresh(Request())
-                except RefreshError:
+                    self.creds.refresh(_REQUEST())
+                except _REFRESH_ERROR:
                     logger.warning("Token invalid, deleting and re-authenticating...")
                     self._delete_token_file()
                     self.creds = None
@@ -162,7 +197,7 @@ class GmailService:
 
                 logger.info("Opening browser for OAuth2 login...")
                 try:
-                    flow = InstalledAppFlow.from_client_secrets_file(
+                    flow = _INSTALLED_APP_FLOW.from_client_secrets_file(
                         str(cred_path), SCOPES
                     )
                     self.creds = flow.run_local_server(port=0)
@@ -175,10 +210,10 @@ class GmailService:
 
         # Build API clients
         try:
-            self.gmail = build(
+            self.gmail = _BUILD(
                 "gmail", "v1", credentials=self.creds, cache_discovery=False
             )
-            self.drive = build(
+            self.drive = _BUILD(
                 "drive", "v3", credentials=self.creds, cache_discovery=False
             )
             logger.info("Google APIs connected.")
