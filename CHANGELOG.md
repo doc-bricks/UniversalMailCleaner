@@ -16,6 +16,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Folder selection dialog is limited to IMAP accounts because Gmail rules do not use IMAP folders
 - IMAP large-mail deletion now respects the original folder of each selected mail
 - Gmail OAuth now requests full Drive access and discards cached tokens that only have the old read-only Drive scope
+- Google client libraries are now imported lazily so IMAP-only setups still
+  start even when the optional Gmail packages are not installed
 
 ## [1.2.0] - 2026-05-02
 

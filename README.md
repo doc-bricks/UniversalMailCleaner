@@ -9,6 +9,9 @@ Desktop tool for cleaning IMAP and Gmail mailboxes with rule-based filters, safe
 ## Features
 
 - Multi-account support for IMAP providers plus Gmail API via OAuth2
+- Google client libraries are only loaded when a Gmail API account is
+  authenticated, so IMAP-only setups can still start without the optional
+  Gmail packages
 - Secure password storage via `keyring` with session-only fallback
 - Rule-based filters for age, sender, subject, and size
 - Multi-folder support beyond INBOX-only processing
@@ -76,6 +79,8 @@ For IMAP, enable two-factor authentication and create an App Password:
 [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
 
 For Gmail API accounts, place `credentials.json` next to the application and complete the OAuth2 browser login.
+The optional Google client packages are only required for this Gmail API path;
+pure IMAP usage can still start without them.
 
 If you upgrade from an older Gmail-only token and Drive cleanup stays unavailable, delete
 `%LOCALAPPDATA%\\UniversalMailCleaner\\gmail_token.json` once and authenticate again so the new Drive scope can be granted.

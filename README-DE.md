@@ -13,6 +13,9 @@ UniversalMailCleaner ist für lokale Mail-Aufräumroutinen gedacht: mehrere Kont
 ## Funktionen
 
 - Multi-Account-Management für IMAP-Provider plus Gmail API via OAuth2
+- Die Google-Clientbibliotheken werden erst geladen, wenn wirklich ein
+  Gmail-API-Konto authentifiziert wird; reine IMAP-Setups starten daher auch
+  ohne die optionalen Gmail-Pakete
 - Sichere Passwortspeicherung via `keyring` mit Fallback ohne Persistenz
 - Regelbasierte Filter für Alter, Absender, Betreff und Größe
 - Mehrordner-Support statt reiner INBOX-Verarbeitung
@@ -80,6 +83,8 @@ Für IMAP: Zwei-Faktor-Authentifizierung aktivieren und ein App-Passwort erstell
 [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
 
 Für Gmail API: `credentials.json` neben die Anwendung legen und den OAuth2-Login im Browser abschließen.
+Die optionalen Google-Clientpakete werden nur für diesen Gmail-API-Pfad
+benötigt; reine IMAP-Nutzung startet auch ohne sie.
 
 Wenn nach einem Upgrade die Drive-Bereinigung nicht verfügbar bleibt, einmal
 `%LOCALAPPDATA%\\UniversalMailCleaner\\gmail_token.json` löschen und den OAuth2-Login erneut ausführen, damit der neue Drive-Zugriff freigegeben wird.
