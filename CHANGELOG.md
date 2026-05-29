@@ -18,6 +18,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Gmail OAuth now requests full Drive access and discards cached tokens that only have the old read-only Drive scope
 - Google client libraries are now imported lazily so IMAP-only setups still
   start even when the optional Gmail packages are not installed
+- README copy, screenshot alt text, app title, and discovery metadata now describe UniversalMailCleaner as a local-first Gmail and IMAP cleanup app
 
 ## [1.2.0] - 2026-05-02
 

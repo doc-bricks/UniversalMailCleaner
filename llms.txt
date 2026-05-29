@@ -1,0 +1,30 @@
+# UniversalMailCleaner
+
+UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and Gmail mailboxes. It uses PySide6 and supports rule-based cleanup, safe trash mode, undo for trash operations, large-mail scans, Gmail API OAuth2 accounts, Gmail labels, Drive file cleanup, and scheduled cleanup runs.
+
+## Repository
+
+- GitHub: https://github.com/doc-bricks/UniversalMailCleaner
+- Organization: doc-bricks
+- License: MIT
+- Main app entry point: `mail_imap_cleaner_v1.py`
+- Core modules: `imap_client.py`, `gmail_service.py`, `workers.py`, `models.py`, `scheduler_widget.py`
+- Tests: `tests/`
+
+## Audience
+
+This project is for users who want local mailbox cleanup without a hosted inbox-management service. Typical searches include Gmail cleaner, Gmail cleanup tool, IMAP cleaner, mailbox cleaner, large email finder, Gmail label cleanup, local-first email management, and Windows email cleaner.
+
+## Safety Model
+
+- Safe mode moves messages to trash by default.
+- Undo is available for safe-mode delete actions.
+- IMAP uses SSL connections.
+- Passwords are stored through the OS keyring when available.
+- Gmail API access uses OAuth2 with local credentials and token files.
+
+## Related doc-bricks Mail Tools
+
+- MailProcessor: https://github.com/doc-bricks/MailProcessor
+- UniversalDocsGrabber: https://github.com/doc-bricks/UniversalDocsGrabber
+- UniversalInvoiceMail: https://github.com/doc-bricks/UniversalInvoiceMail

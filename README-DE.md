@@ -1,14 +1,26 @@
 # UniversalMailCleaner
 
-Desktop-Tool zum regelbasierten Aufräumen von IMAP- und Gmail-Postfächern mit Safe-Mode, Mehrordner-Support und Undo für Papierkorb-Aktionen.
+Lokale Windows-Desktop-App zum Aufräumen von IMAP- und Gmail-Postfächern. UniversalMailCleaner bündelt regelbasierte Mail-Bereinigung, große-Mail- und Drive-Scans, geplante Läufe, Safe-Mode und rückgängig machbare Löschaktionen in einer PySide6-Oberfläche.
 
 > **English documentation:** [README.md](README.md)
 
-![UniversalMailCleaner Vorschau](README/screenshots/main.png)
+![UniversalMailCleaner Desktop-Oberfläche für Mailbox-Bereinigung mit Konten, Regeln, großen Elementen, Gmail-Labels, Scheduler und Safe-Mode](README/screenshots/main.png)
 
 ## Überblick
 
 UniversalMailCleaner ist für lokale Mail-Aufräumroutinen gedacht: mehrere Konten verwalten, Regeln definieren, große Mails finden und Löschaktionen standardmäßig sicher über den Papierkorb ausführen.
+
+## Warum UniversalMailCleaner
+
+Das Tool richtet sich an Nutzerinnen und Nutzer, die Postfachspeicher und Newsletter-Ballast reduzieren möchten, ohne die eigene Mailbox an einen zusätzlichen Cloud-Dienst zu übergeben. Die App läuft lokal, speichert Passwörter nicht in der Projektkonfiguration, unterstützt normale IMAP-Provider und nutzt die Gmail API nur dort, wo OAuth2-Funktionen gebraucht werden.
+
+Geeignet für:
+
+- Gmail-Bereinigung mit OAuth2 und Label-Aktionen
+- IMAP-Mail-Aufräumen für GMX, Outlook, Gmail IMAP und weitere SSL-IMAP-Provider
+- Suche nach großen E-Mails und optionalen Google-Drive-Dateien
+- Geplante Safe-Mode-Bereinigung
+- Lokales, datenschutzorientiertes Mail-Management unter Windows
 
 ## Funktionen
 
@@ -25,6 +37,10 @@ UniversalMailCleaner ist für lokale Mail-Aufräumroutinen gedacht: mehrere Kont
 - Gmail-spezifische Tabs für Speicherstatistiken und labelbasiertes Aufräumen
 - Konfigurierbares Logging über `UMAIL_CLEANER_LOG_LEVEL`
 - Modulare Struktur mit `imap_client.py`, `models.py` und `workers.py`
+
+## Suchbegriffe
+
+`Gmail Cleaner`, `Gmail aufräumen`, `IMAP Cleaner`, `Mailbox Cleaner`, `E-Mail-Bereinigung`, `große Mails finden`, `Gmail Labels aufräumen`, `lokales Mail-Management`, `PySide6 Desktop-App`, `Windows Mail Cleaner`
 
 ## Start
 

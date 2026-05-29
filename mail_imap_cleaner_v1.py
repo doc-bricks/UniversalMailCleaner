@@ -48,7 +48,7 @@ except ImportError:
 
 # ==================== CONFIGURATION ====================
 
-APP_NAME = "MailCleaner_V8_Universal"
+APP_NAME = "UniversalMailCleaner"
 BASE_DIR = Path.home() / ".mail_cleaner"
 BASE_DIR.mkdir(parents=True, exist_ok=True)
 CONFIG_FILE = BASE_DIR / "config.json"
