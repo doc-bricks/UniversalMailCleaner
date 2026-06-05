@@ -234,7 +234,7 @@ class Worker(QThread):
                             continue
                         msg = email.message_from_bytes(response_part[1])
                         subject = decode_header_str(msg["Subject"])
-                        date_str = msg["Date"][:16]
+                        date_str = (msg["Date"] or "")[:16]
 
                         meta = response_part[0].decode()
                         if "RFC822.SIZE" in meta:

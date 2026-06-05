@@ -227,5 +227,57 @@ class TestWorkerBackends(unittest.TestCase):
         self.assertEqual(fake.conn.expunge_calls, 2)
 
 
+class TestScanLargeMissingDateHeader(unittest.TestCase):
+    """scan_large must not crash when an email has no Date header."""
+
+    def test_missing_date_header_yields_empty_date_string(self):
+        raw_headers = b"Subject: Big Attachment\r\n\r\n"
+        size = 15_000_000
+        meta = (
+            f"1 (RFC822.SIZE {size} BODY[HEADER.FIELDS (SUBJECT DATE)] "
+            f"{{{len(raw_headers)}}})"
+        ).encode()
+
+        class _Conn:
+            def select(self, folder, readonly=False):
+                return "OK", [b"1"]
+
+            def search(self, charset, criteria):
+                return "OK", [b"1"]
+
+            def fetch(self, num, parts):
+                return "OK", [(meta, raw_headers), b")"]
+
+        class _Svc:
+            def __init__(self, log_func):
+                self.conn = _Conn()
+
+            def connect(self, account):
+                return True
+
+            def disconnect(self):
+                pass
+
+        imap_account = MailAccount(
+            name="IMAP Test",
+            host="imap.example.com",
+            user="test@example.com",
+            port=993,
+        )
+
+        received = []
+        with patch("workers.ImapService", _Svc):
+            worker = Worker(
+                "scan_large",
+                {"threshold": 10, "folders": ["INBOX"], "scan_mail": True},
+                [imap_account],
+            )
+            worker.data_ready.connect(lambda items: received.extend(items))
+            worker.run()
+
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]["date"], "")
+
+
 if __name__ == "__main__":
     unittest.main()
