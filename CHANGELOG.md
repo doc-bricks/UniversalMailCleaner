@@ -19,6 +19,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Google client libraries are now imported lazily so IMAP-only setups still
   start even when the optional Gmail packages are not installed
 - README copy, screenshot alt text, app title, and discovery metadata now describe UniversalMailCleaner as a local-first Gmail and IMAP cleanup app
+- README and `llms.txt` now include clearer start points and search/disambiguation wording for Gmail cleanup, IMAP mailbox cleanup, large-mail finding, and local-first Windows mail management
 
 ## [1.2.0] - 2026-05-02
 

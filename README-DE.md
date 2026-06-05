@@ -14,6 +14,15 @@ UniversalMailCleaner ist für lokale Mail-Aufräumroutinen gedacht: mehrere Kont
 
 Das Tool richtet sich an Nutzerinnen und Nutzer, die Postfachspeicher und Newsletter-Ballast reduzieren möchten, ohne die eigene Mailbox an einen zusätzlichen Cloud-Dienst zu übergeben. Die App läuft lokal, speichert Passwörter nicht in der Projektkonfiguration, unterstützt normale IMAP-Provider und nutzt die Gmail API nur dort, wo OAuth2-Funktionen gebraucht werden.
 
+## Einstieg
+
+| Wenn du ... | Starte hier |
+|---|---|
+| ein Gmail-Postfach ohne gehosteten Cleanup-Dienst aufräumen möchtest | Gmail-API-Konto, Safe-Mode und labelbasierte Bereinigung |
+| Speicher in einem klassischen Postfach reduzieren möchtest | IMAP-Konto, Scanner für große Elemente und Papierkorb-Prüfung |
+| alte Newsletter oder wiederkehrende Absender entfernen möchtest | Regel-Filter für Alter, Absender, Betreff und Ordner |
+| verwandte Mail-Tools prüfen möchtest | [MailProcessor](https://github.com/doc-bricks/MailProcessor), [UniversalDocsGrabber](https://github.com/doc-bricks/UniversalDocsGrabber) und [UniversalInvoiceMail](https://github.com/doc-bricks/UniversalInvoiceMail) |
+
 Geeignet für:
 
 - Gmail-Bereinigung mit OAuth2 und Label-Aktionen
@@ -41,6 +50,10 @@ Geeignet für:
 ## Suchbegriffe
 
 `Gmail Cleaner`, `Gmail aufräumen`, `IMAP Cleaner`, `Mailbox Cleaner`, `E-Mail-Bereinigung`, `große Mails finden`, `Gmail Labels aufräumen`, `lokales Mail-Management`, `PySide6 Desktop-App`, `Windows Mail Cleaner`
+
+## Suche und Abgrenzung
+
+UniversalMailCleaner ist eine lokale Desktop-App für Mailbox-Bereinigung, kein E-Mail-Marketing-Tool, kein CRM, kein gehosteter Abmeldedienst und keine reine Browser-Erweiterung für Gmail. Das Repository passt am besten zu Suchanfragen nach lokaler Gmail-Bereinigung, IMAP-Mailbox-Cleaner, große Mails finden unter Windows, PySide6-Mailverwaltung, Safe-Mode-Mail-Cleanup und Gmail-Label-Bereinigung mit Undo.
 
 ## Start
 

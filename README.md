@@ -10,6 +10,15 @@ Local-first Windows desktop app for cleaning IMAP and Gmail mailboxes. Universal
 
 UniversalMailCleaner is built for people who want to reduce mailbox storage and newsletter clutter without handing their inbox to another cloud service. It runs locally, keeps passwords out of the project config, supports standard IMAP providers, and can use the Gmail API when OAuth2 account features are needed.
 
+## Start Here
+
+| If you want to... | Start with |
+|---|---|
+| clean a Gmail inbox without a hosted cleanup service | Gmail API account, safe mode, and label-aware cleanup |
+| reduce storage in a classic mailbox | IMAP account, large-item scanner, and trash-folder check |
+| remove old newsletters or repetitive senders | rule filters for age, sender, subject, and folder |
+| review related mail tools | [MailProcessor](https://github.com/doc-bricks/MailProcessor), [UniversalDocsGrabber](https://github.com/doc-bricks/UniversalDocsGrabber), and [UniversalInvoiceMail](https://github.com/doc-bricks/UniversalInvoiceMail) |
+
 Use it for:
 
 - Gmail mailbox cleanup with OAuth2 and label-aware actions
@@ -37,6 +46,10 @@ Use it for:
 ## Discovery Keywords
 
 `gmail cleaner`, `gmail cleanup tool`, `imap cleaner`, `mailbox cleaner`, `email cleanup`, `large email finder`, `gmail label cleanup`, `local-first email management`, `PySide6 desktop app`, `Windows email cleaner`
+
+## Search and Disambiguation
+
+UniversalMailCleaner is a desktop mailbox cleanup app, not an email marketing tool, CRM, hosted unsubscribe service, or browser-only Gmail extension. The repository is best matched by searches for local-first Gmail cleanup, IMAP mailbox cleaner, large email finder for Windows, PySide6 email management app, safe trash mode mail cleanup, and Gmail label cleanup with undo support.
 
 ## Run
 
