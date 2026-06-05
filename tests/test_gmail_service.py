@@ -380,5 +380,54 @@ class TestGmailService(unittest.TestCase):
         self.assertEqual(files_api.delete_calls[0]["fileId"], "drive-3")
 
 
+class TestGmailServiceAuth(unittest.TestCase):
+    def test_auth_saves_refreshed_token_to_disk(self):
+        """auth() must persist refreshed credentials to disk so next startup skips re-refresh."""
+        import json
+        import tempfile
+        from unittest.mock import MagicMock, patch
+
+        import gmail_service as gs
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            token_path = Path(tmpdir) / "token.json"
+            token_path.write_text(
+                json.dumps({"token": "old", "refresh_token": "rt", "scopes": gs.SCOPES}),
+                encoding="utf-8",
+            )
+
+            mock_creds = MagicMock()
+            mock_creds.valid = False
+            mock_creds.expired = True
+            mock_creds.refresh_token = "rt"
+            mock_creds.to_json.return_value = '{"token": "new"}'
+
+            def _refresh(_req):
+                mock_creds.valid = True
+                mock_creds.expired = False
+
+            mock_creds.refresh.side_effect = _refresh
+
+            FakeRefreshError = type("FakeRefreshError", (Exception,), {})
+
+            with patch.object(gs, "GOOGLE_AVAIL", True), \
+                 patch.object(gs, "_CREDENTIALS", MagicMock(
+                     from_authorized_user_file=MagicMock(return_value=mock_creds)
+                 )), \
+                 patch.object(gs, "_REQUEST", MagicMock()), \
+                 patch.object(gs, "_BUILD", MagicMock()), \
+                 patch.object(gs, "_REFRESH_ERROR", FakeRefreshError):
+
+                svc = GmailService(
+                    token_path=token_path,
+                    creds_path=Path(tmpdir) / "creds.json",
+                )
+                result = svc.auth()
+
+            self.assertTrue(result)
+            mock_creds.refresh.assert_called_once()
+            self.assertIn("new", token_path.read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()

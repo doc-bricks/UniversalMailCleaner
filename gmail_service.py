@@ -173,6 +173,11 @@ class GmailService:
                 try:
                     logger.info("Refreshing OAuth token...")
                     self.creds.refresh(_REQUEST())
+                    try:
+                        with open(self.token_path, "w", encoding="utf-8") as fh:
+                            fh.write(self.creds.to_json())
+                    except OSError as exc:
+                        logger.warning("Could not save refreshed token: %s", exc)
                 except _REFRESH_ERROR:
                     logger.warning("Token invalid, deleting and re-authenticating...")
                     self._delete_token_file()
