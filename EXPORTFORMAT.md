@@ -1,6 +1,6 @@
 # UniversalMailCleaner Austauschformat
 
-Stand: 2026-06-01
+Stand: 2026-06-03
 Schema: `universalmailcleaner-profile-v1.json`
 
 ## Zweck
@@ -15,7 +15,7 @@ Es ist kein Backup der Mailbox und kein Synchronisationsprotokoll. Löschhistori
 {
   "schema": "universalmailcleaner-profile-v1",
   "app": "UniversalMailCleaner",
-  "exported_at": "2026-06-01T10:00:00+02:00",
+  "exported_at": "2026-06-03T16:00:00+02:00",
   "accounts": [
     {
       "name": "Privat Gmail",
@@ -37,23 +37,21 @@ Es ist kein Backup der Mailbox und kein Synchronisationsprotokoll. Löschhistori
   "rules": [
     {
       "name": "Newsletter älter als 90 Tage",
-      "account": "GMX",
-      "type": "sender",
+      "target_account": "GMX",
+      "filter_type": "sender",
       "value": "newsletter@example.org",
-      "older_than_days": 90,
-      "size_mb": 0,
-      "active": true,
-      "folders": ["INBOX"]
+      "active": true
     }
   ],
   "settings": {
     "safe_mode": true,
+    "selected_rule_folders": ["INBOX"],
     "large_item_threshold_mb": 10,
     "scan_mail": true,
     "scan_drive": false,
     "scheduler": {
       "enabled": false,
-      "interval_minutes": 60,
+      "interval_hours": 24,
       "run_on_startup": false
     }
   }
@@ -63,7 +61,8 @@ Es ist kein Backup der Mailbox und kein Synchronisationsprotokoll. Löschhistori
 ## Exportregeln
 
 - Konten dürfen nur Metadaten enthalten: Name, Protokoll, Host, Port, Nutzerkennung und Papierkorb-Ordner.
-- Regeln dürfen nur fachliche Filter enthalten: Name, Account-Bezug, Typ, Wert, Alter, Größe, Aktivstatus und Zielordner.
+- Regeln dürfen nur fachliche Filter enthalten: Name, Account-Bezug, Filtertyp, Wert und Aktivstatus.
+- Die aktuell gewählten IMAP-Zielordner für Regelläufe werden als `selected_rule_folders` in den `settings` gehalten.
 - Scheduler-Einstellungen dürfen exportiert werden, solange sie keine lokalen Pfade oder Tokens enthalten.
 - Der Export muss UTF-8 schreiben und deutsche Umlaute unverändert erhalten.
 
@@ -79,10 +78,11 @@ Diese Daten dürfen nicht exportiert werden:
 
 ## Importverhalten
 
-Der spätere Import soll defensiv sein:
+Der Import soll defensiv sein:
 
 - Unbekannte Schema-Versionen ablehnen.
 - Fehlende optionale Felder mit sicheren Defaults füllen.
 - Passwörter und OAuth-Zugänge nach dem Import neu abfragen.
 - Nie automatisch Löschaktionen auslösen.
 - Konflikte bei bestehenden Konten oder Regeln sichtbar machen statt still zu überschreiben.
+- Ältere Alias-Felder wie `account` oder `type` dürfen tolerant gelesen werden, wenn sie eindeutig auf die aktuelle Struktur abbildbar sind.

@@ -40,6 +40,7 @@ Use it for:
 - Undo for safe-mode deletions
 - Large-item scanner with tabular selection for Gmail, IMAP, and optional Drive cleanup
 - Gmail-specific tabs for storage statistics and label-based cleanup
+- Secrets-free profile export/import for rules, account metadata, and scheduler presets
 - Configurable logging via `UMAIL_CLEANER_LOG_LEVEL`
 - Modular architecture: `imap_client.py`, `models.py`, `workers.py`
 

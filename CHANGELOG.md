@@ -10,6 +10,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Large-mail scan, delete, and undo now work for Gmail API accounts
 - Large-item scan now optionally includes Google Drive files for Gmail API accounts
 - Regression tests for Gmail backend routing, Gmail service helpers, and scheduler behavior
+- Secrets-free profile export/import for `universalmailcleaner-profile-v1.json`
 
 ### Changed
 - Large-mail account selection now includes Gmail API accounts
@@ -20,6 +21,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
   start even when the optional Gmail packages are not installed
 - README copy, screenshot alt text, app title, and discovery metadata now describe UniversalMailCleaner as a local-first Gmail and IMAP cleanup app
 - README and `llms.txt` now include clearer start points and search/disambiguation wording for Gmail cleanup, IMAP mailbox cleanup, large-mail finding, and local-first Windows mail management
+- Scan settings, selected IMAP target folders, and scheduler exchange settings now persist in the desktop config and portable profile
 
 ## [1.2.0] - 2026-05-02
 

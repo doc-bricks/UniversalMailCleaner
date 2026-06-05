@@ -46,6 +46,7 @@ Geeignet für:
 - Gmail-spezifische Tabs für Speicherstatistiken und labelbasiertes Aufräumen
 - Konfigurierbares Logging über `UMAIL_CLEANER_LOG_LEVEL`
 - Modulare Struktur mit `imap_client.py`, `models.py` und `workers.py`
+- Secrets-freier Profil-Export/-Import für Regeln, Kontometadaten und Scheduler-Vorgaben
 
 ## Suchbegriffe
 

@@ -38,4 +38,6 @@ class CleanRule:
     def to_dict(self): return asdict(self)
 
     @classmethod
-    def from_dict(cls, d): return cls(**d)
+    def from_dict(cls, d):
+        known = {k: v for k, v in d.items() if k in cls.__dataclass_fields__}
+        return cls(**known)

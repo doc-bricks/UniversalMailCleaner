@@ -26,6 +26,12 @@ from typing import List, Optional, Callable
 # Import from modules
 from models import MailAccount, CleanRule
 from imap_client import ImapService, decode_header_str
+from profile_exchange import (
+    default_profile_settings,
+    merge_profile_settings,
+    read_profile,
+    write_profile,
+)
 from workers import Worker
 
 # GUI Imports
@@ -35,8 +41,9 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QFormLayout, QPlainTextEdit, QComboBox, QGroupBox,
                              QCheckBox, QTabWidget, QDialogButtonBox,
                              QSpinBox, QMenu, QTreeWidget, QTreeWidgetItem, QLineEdit,
+                             QFileDialog,
                              QInputDialog)
-from PySide6.QtCore import Qt, QThread, Signal, QUrl
+from PySide6.QtCore import Qt, QThread, Signal, QUrl, QSignalBlocker
 from PySide6.QtGui import QDesktopServices, QColor, QPalette
 
 # Security
@@ -281,7 +288,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         """Initializes the main window, loads config, and sets up the UI."""
         super().__init__()
-        self.settings = {"safe_mode": True}
+        self.settings = default_profile_settings()
         self.accounts: List[MailAccount] = []
         self.rules: List[CleanRule] = []
         self.selected_rule_folders: List[str] = ["INBOX"]
@@ -298,21 +305,76 @@ class MainWindow(QMainWindow):
         """Loads accounts, rules, and settings from the JSON config file."""
         if CONFIG_FILE.exists():
             try:
-                data = json.loads(CONFIG_FILE.read_text())
-                self.settings = data.get("settings", {"safe_mode": True})
+                data = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+                self.settings = merge_profile_settings(data.get("settings"))
                 self.accounts = [MailAccount.from_dict(x) for x in data.get("accounts", [])]
                 self.rules = [CleanRule.from_dict(x) for x in data.get("rules", [])]
+                self.selected_rule_folders = list(
+                    self.settings.get("selected_rule_folders", ["INBOX"])
+                )
             except Exception as e:
                 logger.warning(f"load_config error: {e}")
 
     def save_config(self):
         """Saves accounts, rules, and settings to the JSON config file."""
+        self._sync_settings_from_ui()
         data = {
             "settings": self.settings,
             "accounts": [a.to_dict() for a in self.accounts],
             "rules": [r.to_dict() for r in self.rules]
         }
-        CONFIG_FILE.write_text(json.dumps(data, indent=4))
+        CONFIG_FILE.write_text(
+            json.dumps(data, indent=4, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+    def _sync_settings_from_ui(self):
+        """Copy relevant UI state back into the persisted settings dict."""
+        if hasattr(self, "chk_safe"):
+            self.settings["safe_mode"] = self.chk_safe.isChecked()
+        self.settings["selected_rule_folders"] = list(self.selected_rule_folders or ["INBOX"])
+        if hasattr(self, "spin_mb"):
+            self.settings["large_item_threshold_mb"] = self.spin_mb.value()
+        if hasattr(self, "chk_scan_mail"):
+            self.settings["scan_mail"] = self.chk_scan_mail.isChecked()
+        if hasattr(self, "chk_scan_drive"):
+            self.settings["scan_drive"] = self.chk_scan_drive.isChecked()
+        if hasattr(self, "_scheduler"):
+            scheduler_cfg = self._scheduler.get_config()
+            self.settings["scheduler"] = {
+                "enabled": scheduler_cfg.enabled,
+                "interval_hours": scheduler_cfg.interval_hours,
+                "run_on_startup": scheduler_cfg.run_on_startup,
+                "last_run": scheduler_cfg.last_run,
+                "next_run": scheduler_cfg.next_run,
+            }
+        self.settings = merge_profile_settings(self.settings)
+
+    def _apply_settings_to_ui(self):
+        """Apply persisted settings to the current widgets without recursive saves."""
+        self.selected_rule_folders = list(
+            self.settings.get("selected_rule_folders", ["INBOX"])
+        )
+        blockers = []
+        if hasattr(self, "chk_safe"):
+            blockers.append(QSignalBlocker(self.chk_safe))
+            self.chk_safe.setChecked(self.settings.get("safe_mode", True))
+        if hasattr(self, "spin_mb"):
+            blockers.append(QSignalBlocker(self.spin_mb))
+            self.spin_mb.setValue(self.settings.get("large_item_threshold_mb", 10))
+        if hasattr(self, "chk_scan_mail"):
+            blockers.append(QSignalBlocker(self.chk_scan_mail))
+            self.chk_scan_mail.setChecked(self.settings.get("scan_mail", True))
+        if hasattr(self, "chk_scan_drive"):
+            blockers.append(QSignalBlocker(self.chk_scan_drive))
+            self.chk_scan_drive.setChecked(self.settings.get("scan_drive", False))
+        if hasattr(self, "_scheduler"):
+            from scheduler_widget import ScheduleConfig
+
+            self._scheduler.set_config(
+                ScheduleConfig.from_dict(self.settings.get("scheduler", {}))
+            )
+        self.update_mode_label()
 
     def setup_ui(self):
         """Builds the main window UI with tabs for accounts, rules, large emails, settings, and log."""
@@ -370,12 +432,16 @@ class MainWindow(QMainWindow):
         t2 = QWidget(); l2 = QVBoxLayout(t2)
         conf_grp = QGroupBox("Scan Settings")
         cl = QHBoxLayout(conf_grp)
-        self.spin_mb = QSpinBox(); self.spin_mb.setRange(1, 1000); self.spin_mb.setValue(10); self.spin_mb.setSuffix(" MB")
+        self.spin_mb = QSpinBox(); self.spin_mb.setRange(1, 1000); self.spin_mb.setValue(self.settings.get("large_item_threshold_mb", 10)); self.spin_mb.setSuffix(" MB")
+        self.spin_mb.valueChanged.connect(self.save_settings_ui)
         self.cb_scan_acc = QComboBox()
         self.chk_scan_mail = QCheckBox("Emails")
-        self.chk_scan_mail.setChecked(True)
+        self.chk_scan_mail.setChecked(self.settings.get("scan_mail", True))
+        self.chk_scan_mail.toggled.connect(self.save_settings_ui)
         self.chk_scan_drive = QCheckBox("Drive files (Gmail API)")
         self.chk_scan_drive.setToolTip("Only Gmail API accounts can scan Google Drive files.")
+        self.chk_scan_drive.setChecked(self.settings.get("scan_drive", False))
+        self.chk_scan_drive.toggled.connect(self.save_settings_ui)
         btn_scan = QPushButton("🔍 Start Scan"); btn_scan.clicked.connect(self.start_large_scan)
         cl.addWidget(QLabel("Account:")); cl.addWidget(self.cb_scan_acc)
         cl.addWidget(QLabel("Larger than:")); cl.addWidget(self.spin_mb)
@@ -408,6 +474,16 @@ class MainWindow(QMainWindow):
         self.chk_safe.toggled.connect(self.save_settings_ui)
         fl.addRow(self.chk_safe)
         l3.addWidget(g_safe)
+        g_profile = QGroupBox("Profil austauschen")
+        h_profile = QHBoxLayout(g_profile)
+        b_export_profile = QPushButton("Profil exportieren...")
+        b_export_profile.clicked.connect(self.export_profile)
+        b_import_profile = QPushButton("Profil importieren...")
+        b_import_profile.clicked.connect(self.import_profile)
+        h_profile.addWidget(b_export_profile)
+        h_profile.addWidget(b_import_profile)
+        h_profile.addStretch()
+        l3.addWidget(g_profile)
         if not KEYRING_AVAIL:
             l3.addWidget(QLabel("⚠️ Keyring missing! Passwords will not be saved."))
         l3.addStretch()
@@ -486,6 +562,7 @@ class MainWindow(QMainWindow):
         self.status = QLabel("Ready"); lay.addWidget(self.status)
 
         self.refresh_ui()
+        self._apply_settings_to_ui()
 
     def refresh_ui(self):
         """Refreshes all UI elements from the current data model."""
@@ -589,6 +666,7 @@ class MainWindow(QMainWindow):
         d = FolderSelectDialog(imap_accounts, parent=self)
         if d.exec():
             self.selected_rule_folders = d.get_selected_folders() or ["INBOX"]
+            self.save_config()
             self.status.setText(f"Folders: {', '.join(self.selected_rule_folders)}")
 
     def run_all_rules(self):
@@ -703,6 +781,90 @@ class MainWindow(QMainWindow):
             self.accounts.append(acc)
             self.save_config()
             self.refresh_ui()
+
+    def export_profile(self):
+        """Export the current profile as a secrets-free JSON bundle."""
+        default_name = (
+            f"universalmailcleaner-profile-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+        )
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Profil exportieren",
+            str(Path.home() / "Downloads" / default_name),
+            "JSON-Dateien (*.json)",
+        )
+        if not path:
+            return
+        if not path.lower().endswith(".json"):
+            path += ".json"
+        try:
+            self._sync_settings_from_ui()
+            payload = write_profile(path, self.accounts, self.rules, self.settings)
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                "Export fehlgeschlagen",
+                f"Das Profil konnte nicht exportiert werden:\n{exc}",
+            )
+            return
+        self.log.appendPlainText(
+            f"[Profil] Exportiert: {path} ({len(payload['accounts'])} Konten, {len(payload['rules'])} Regeln)"
+        )
+        self.status.setText("Profil exportiert.")
+
+    def import_profile(self):
+        """Import a previously exported secrets-free profile JSON."""
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Profil importieren",
+            str(Path.home() / "Downloads"),
+            "JSON-Dateien (*.json)",
+        )
+        if not path:
+            return
+        try:
+            accounts, rules, settings = read_profile(path)
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                "Import fehlgeschlagen",
+                f"Das Profil konnte nicht importiert werden:\n{exc}",
+            )
+            return
+
+        existing_accounts = len(self.accounts)
+        existing_rules = len(self.rules)
+        if existing_accounts or existing_rules:
+            answer = QMessageBox.question(
+                self,
+                "Profil importieren",
+                (
+                    "Der Import ersetzt die aktuelle Profilkonfiguration.\n\n"
+                    f"Aktuell: {existing_accounts} Konten, {existing_rules} Regeln\n"
+                    f"Import: {len(accounts)} Konten, {len(rules)} Regeln\n\n"
+                    "Passwörter und OAuth-Zugänge werden nicht importiert und "
+                    "müssen bei Bedarf lokal neu gesetzt werden.\n\n"
+                    "Fortfahren?"
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+
+        self.accounts = accounts
+        self.rules = rules
+        self.settings = merge_profile_settings(settings)
+        self.selected_rule_folders = list(
+            self.settings.get("selected_rule_folders", ["INBOX"])
+        )
+        self.refresh_ui()
+        self._apply_settings_to_ui()
+        self.save_config()
+        self.log.appendPlainText(
+            f"[Profil] Importiert: {path} ({len(self.accounts)} Konten, {len(self.rules)} Regeln)"
+        )
+        self.status.setText("Profil importiert.")
 
     # ------------------------------------------------------------------
     # Scheduler
@@ -1085,14 +1247,13 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Persist scheduler config on application close."""
-        if hasattr(self, "_scheduler"):
-            self.settings["scheduler"] = self._scheduler.get_config().to_dict()
         self.save_config()
         super().closeEvent(event)
 
-    def save_settings_ui(self):
+    def save_settings_ui(self, *_args):
         """Saves settings when the safe mode checkbox is toggled."""
-        self.settings["safe_mode"] = self.chk_safe.isChecked(); self.save_config(); self.update_mode_label()
+        self.save_config()
+        self.update_mode_label()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
