@@ -92,6 +92,28 @@ class TestImapServiceSearchCriteria(unittest.TestCase):
         expected_bytes = int(5.5 * 1024 * 1024)
         self.assertEqual(result, f'(LARGER {expected_bytes})')
 
+    def test_sender_filter_escapes_backslash(self):
+        """Test: sender Filter mit Backslash wird RFC-3501-konform escaped"""
+        rule = CleanRule(
+            name="Test",
+            target_account="Alle",
+            filter_type="sender",
+            value="user\\domain"
+        )
+        result = self.service.get_search_criteria(rule)
+        self.assertEqual(result, '(FROM "user\\\\domain")')
+
+    def test_subject_filter_escapes_backslash(self):
+        """Test: subject Filter mit Backslash wird RFC-3501-konform escaped"""
+        rule = CleanRule(
+            name="Test",
+            target_account="Alle",
+            filter_type="subject",
+            value="test\\value"
+        )
+        result = self.service.get_search_criteria(rule)
+        self.assertEqual(result, '(SUBJECT "test\\\\value")')
+
     def test_invalid_filter_type(self):
         """Test: Ungültiger filter_type sollte None zurückgeben"""
         rule = CleanRule(

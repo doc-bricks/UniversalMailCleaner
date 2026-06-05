@@ -180,10 +180,10 @@ class ImapService:
                 cutoff = (datetime.now() - timedelta(days=days)).strftime("%d-%b-%Y")
                 return f'(BEFORE "{cutoff}")'
             elif rule.filter_type == "sender":
-                safe_value = rule.value.replace('"', '')
+                safe_value = rule.value.replace('\\', '\\\\').replace('"', '')
                 return f'(FROM "{safe_value}")'
             elif rule.filter_type == "subject":
-                safe_value = rule.value.replace('"', '')
+                safe_value = rule.value.replace('\\', '\\\\').replace('"', '')
                 return f'(SUBJECT "{safe_value}")'
             elif rule.filter_type == "size_mb":
                 bytes_val = int(float(rule.value) * 1024 * 1024)
