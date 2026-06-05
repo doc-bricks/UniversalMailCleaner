@@ -23,6 +23,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - README and `llms.txt` now include clearer start points and search/disambiguation wording for Gmail cleanup, IMAP mailbox cleanup, large-mail finding, and local-first Windows mail management
 - Scan settings, selected IMAP target folders, and scheduler exchange settings now persist in the desktop config and portable profile
 
+### Fixed
+- `workers.py`: guard against missing `Date` header in `scan_large` (`None` slice raised `TypeError`)
+- `profile_exchange.py`: guard against `null` settings in `load_profile_payload` (`None or {}` pattern)
+- `imap_client.py`: escape backslashes in IMAP quoted strings per RFC 3501 to prevent broken search queries
+- `gmail_service.py`: persist refreshed OAuth token to disk so subsequent startups skip re-authentication
+
 ## [1.2.0] - 2026-05-02
 
 ### Added
