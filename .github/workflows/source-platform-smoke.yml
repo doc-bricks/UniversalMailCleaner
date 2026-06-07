@@ -3,13 +3,8 @@ name: UniversalMailCleaner source-platform smoke
 on:
   push:
     branches: [main, master]
-    paths:
-      - "mail_imap_cleaner_v1.py"
-      - "tests/source_platform_smoke.py"
   pull_request:
-    paths:
-      - "mail_imap_cleaner_v1.py"
-      - "tests/source_platform_smoke.py"
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
