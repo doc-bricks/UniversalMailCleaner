@@ -6,6 +6,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Source-platform smoke (`tests/source_platform_smoke.py`) for macOS and Linux with
+  GitHub Actions CI on ubuntu-latest and macos-latest (PySide6 offscreen, 6 checks)
 - Gmail cleanup rules now run against Gmail API accounts in addition to IMAP accounts
 - Large-mail scan, delete, and undo now work for Gmail API accounts
 - Large-item scan now optionally includes Google Drive files for Gmail API accounts

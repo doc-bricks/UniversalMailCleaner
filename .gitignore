@@ -16,6 +16,7 @@ env/
 .env/
 
 # ---- Interne Steuerungsdateien ----
+docs/superpowers/
 AUFGABEN.txt
 TEST.txt
 TESTS.txt
