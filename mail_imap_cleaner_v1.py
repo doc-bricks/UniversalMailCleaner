@@ -323,10 +323,13 @@ class MainWindow(QMainWindow):
             "accounts": [a.to_dict() for a in self.accounts],
             "rules": [r.to_dict() for r in self.rules]
         }
-        CONFIG_FILE.write_text(
-            json.dumps(data, indent=4, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        try:
+            CONFIG_FILE.write_text(
+                json.dumps(data, indent=4, ensure_ascii=False),
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            logger.error("save_config failed: %s", exc)
 
     def _sync_settings_from_ui(self):
         """Copy relevant UI state back into the persisted settings dict."""
@@ -597,8 +600,13 @@ class MainWindow(QMainWindow):
         if d.exec():
             acc, pwd = d.get_account()
             self.accounts.append(acc)
-            if KEYRING_AVAIL and pwd: keyring.set_password(APP_NAME, acc.name, pwd)
-            self.save_config(); self.refresh_ui()
+            if KEYRING_AVAIL and pwd:
+                try:
+                    keyring.set_password(APP_NAME, acc.name, pwd)
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("Keyring save failed for %s: %s", acc.name, exc)
+            self.save_config()
+            self.refresh_ui()
 
     def del_acc(self):
         """Removes the currently selected account."""
@@ -644,6 +652,13 @@ class MainWindow(QMainWindow):
             mode: Worker mode ("rules", "scan_large", or "delete").
             params: Parameter dict for the worker.
         """
+        if hasattr(self, "worker") and self.worker and self.worker.isRunning():
+            try:
+                self.worker.data_ready.disconnect(self.fill_large)
+            except (RuntimeError, TypeError):
+                pass
+            self.worker.requestInterruption()
+            self.worker.wait(2000)
         self.worker = Worker(mode, params, self.accounts)
         self.worker.log.connect(self.log.appendPlainText)
         if mode == "scan_large": self.worker.data_ready.connect(self.fill_large)
@@ -1094,15 +1109,24 @@ class MainWindow(QMainWindow):
                 except Exception as exc:
                     self.error.emit(str(exc))
 
-        self._label_action_worker = LabelActionWorker(action)
+        if not hasattr(self, "_label_action_workers"):
+            self._label_action_workers: list = []
+
+        worker = LabelActionWorker(action)
+        self._label_action_workers.append(worker)
 
         def _on_error(msg):
             self.log.appendPlainText(f"[Labels] {error_prefix}: {msg}")
             self.status.setText("Labels: Fehler")
 
-        self._label_action_worker.done.connect(on_done)
-        self._label_action_worker.error.connect(_on_error)
-        self._label_action_worker.start()
+        def _cleanup(_w=worker):
+            if _w in self._label_action_workers:
+                self._label_action_workers.remove(_w)
+
+        worker.done.connect(on_done)
+        worker.error.connect(_on_error)
+        worker.finished.connect(_cleanup)
+        worker.start()
 
     def _prompt_label_name(self, title: str, prompt: str, initial: str = "") -> Optional[str]:
         """Prompt the user for a label name and return a trimmed value."""
@@ -1246,7 +1270,10 @@ class MainWindow(QMainWindow):
         self._del_label_worker.start()
 
     def closeEvent(self, event):
-        """Persist scheduler config on application close."""
+        """Persist scheduler config and stop running workers on application close."""
+        if hasattr(self, "worker") and self.worker and self.worker.isRunning():
+            self.worker.requestInterruption()
+            self.worker.wait(3000)
         self.save_config()
         super().closeEvent(event)
 

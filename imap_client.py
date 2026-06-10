@@ -124,8 +124,17 @@ class ImapService:
 
             folder_names = []
             for f in folders:
-                name = f.decode().split(' "')[-1].replace('"', '').strip()
-                folder_names.append(name)
+                if not f:
+                    continue
+                decoded = f.decode("utf-8", errors="replace") if isinstance(f, bytes) else f
+                stripped = decoded.strip()
+                if stripped.endswith('"'):
+                    open_q = stripped.rfind('"', 0, len(stripped) - 1)
+                    name = stripped[open_q + 1:-1]
+                else:
+                    name = stripped.rsplit(' ', 1)[-1]
+                if name:
+                    folder_names.append(name)
 
             for c in candidates:
                 for f in folder_names:
@@ -156,8 +165,13 @@ class ImapService:
                     continue
                 decoded = entry.decode("utf-8", errors="replace") if isinstance(entry, bytes) else entry
                 # Format: (\HasNoChildren) "/" "INBOX"  or  (\HasNoChildren) "/" INBOX
-                parts = decoded.rsplit(" ", 1)
-                name = parts[-1].strip().strip('"')
+                # Quoted names (e.g. "Sent Items") must not be split on the inner space.
+                stripped = decoded.strip()
+                if stripped.endswith('"'):
+                    open_q = stripped.rfind('"', 0, len(stripped) - 1)
+                    name = stripped[open_q + 1:-1]
+                else:
+                    name = stripped.rsplit(' ', 1)[-1]
                 if name:
                     folders.append(name)
             return folders if folders else ["INBOX"]

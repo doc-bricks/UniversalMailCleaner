@@ -148,5 +148,102 @@ class TestImapServiceSearchCriteria(unittest.TestCase):
         self.assertIsNone(result)
 
 
+class TestListFoldersParsing(unittest.TestCase):
+    """list_folders must return complete folder names even when they contain spaces."""
+
+    def _make_service_with_folders(self, raw_entries):
+        """Return an ImapService whose conn.list() yields the given raw_entries."""
+        class _FakeConn:
+            def list(inner_self):  # noqa: N805
+                return "OK", [
+                    e if isinstance(e, bytes) else e.encode()
+                    for e in raw_entries
+                ]
+
+        service = ImapService(lambda _: None)
+        service.conn = _FakeConn()
+        return service
+
+    def test_single_word_quoted_folder(self):
+        service = self._make_service_with_folders([
+            '(\\HasNoChildren) "/" "INBOX"',
+            '(\\HasNoChildren) "/" "Sent"',
+        ])
+        self.assertEqual(service.list_folders(), ["INBOX", "Sent"])
+
+    def test_multi_word_quoted_folder_name(self):
+        """Folder names with spaces (e.g. Exchange 'Sent Items') must not be truncated."""
+        service = self._make_service_with_folders([
+            '(\\HasNoChildren) "/" "Sent Items"',
+            '(\\HasNoChildren) "/" "Deleted Items"',
+        ])
+        self.assertEqual(service.list_folders(), ["Sent Items", "Deleted Items"])
+
+    def test_unquoted_folder_name(self):
+        service = self._make_service_with_folders(['(\\HasNoChildren) "/" INBOX'])
+        self.assertEqual(service.list_folders(), ["INBOX"])
+
+    def test_empty_entry_is_skipped(self):
+        service = self._make_service_with_folders([b"", '(\\HasNoChildren) "/" "INBOX"'])
+        self.assertEqual(service.list_folders(), ["INBOX"])
+
+
+class TestFindTrashFolderParsing(unittest.TestCase):
+    """find_trash_folder must correctly detect unquoted and quoted trash folder names."""
+
+    def _make_service_with_account_and_folders(self, raw_entries):
+        from models import MailAccount
+
+        class _FakeConn:
+            def list(inner_self):  # noqa: N805
+                return "OK", [
+                    e if isinstance(e, bytes) else e.encode()
+                    for e in raw_entries
+                ]
+
+        acc = MailAccount(name="Test", host="imap.example.com", user="u@example.com", port=993)
+        service = ImapService(lambda _: None)
+        service.conn = _FakeConn()
+        service.current_account = acc
+        return service
+
+    def test_detects_unquoted_papierkorb(self):
+        """Unquoted 'Papierkorb' must be detected as trash folder."""
+        service = self._make_service_with_account_and_folders([
+            '(\\HasNoChildren) "/" INBOX',
+            '(\\HasNoChildren) "/" Papierkorb',
+            '(\\HasNoChildren) "/" Sent',
+        ])
+        result = service.find_trash_folder()
+        self.assertEqual(result, "Papierkorb")
+
+    def test_detects_quoted_trash(self):
+        """Quoted 'Trash' must be detected as trash folder."""
+        service = self._make_service_with_account_and_folders([
+            '(\\HasNoChildren) "/" "INBOX"',
+            '(\\HasNoChildren) "/" "Trash"',
+        ])
+        result = service.find_trash_folder()
+        self.assertEqual(result, "Trash")
+
+    def test_detects_quoted_deleted_items(self):
+        """Quoted 'Deleted Items' (Exchange) must be detected as trash folder."""
+        service = self._make_service_with_account_and_folders([
+            '(\\HasNoChildren) "/" "INBOX"',
+            '(\\HasNoChildren) "/" "Deleted Items"',
+        ])
+        result = service.find_trash_folder()
+        self.assertEqual(result, "Deleted Items")
+
+    def test_falls_back_to_trash_when_no_candidate_matches(self):
+        """If no known trash folder is found, 'Trash' is returned as fallback."""
+        service = self._make_service_with_account_and_folders([
+            '(\\HasNoChildren) "/" INBOX',
+            '(\\HasNoChildren) "/" Sent',
+        ])
+        result = service.find_trash_folder()
+        self.assertEqual(result, "Trash")
+
+
 if __name__ == "__main__":
     unittest.main()

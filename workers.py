@@ -45,7 +45,7 @@ class Worker(QThread):
         super().__init__()
         self.mode = mode
         self.params = params
-        self.accounts = accounts
+        self.accounts = list(accounts)  # snapshot — protects against GUI-thread mutations
         self.service = None
         self.safe_mode = params.get("safe_mode", True)
 
@@ -137,12 +137,16 @@ class Worker(QThread):
                     continue
 
                 self.log.emit(f"Rule '{rule.name}' on {acc.name}/{folder}...")
-                typ, data = self.service.conn.search(None, criteria)
+                try:
+                    typ, data = self.service.conn.search(None, criteria)
+                except imaplib.IMAP4.error as exc:
+                    self.log.emit(f"   IMAP search error: {exc}")
+                    continue
 
                 if typ != "OK":
                     continue
 
-                ids = data[0].split()
+                ids = data[0].split() if data else []
                 if not ids:
                     self.log.emit("   No matches.")
                     continue
@@ -210,11 +214,15 @@ class Worker(QThread):
                 self.log.emit(f"Cannot select folder '{folder}': {exc}")
                 continue
 
-            typ, data = self.service.conn.search(None, f"(LARGER {limit_bytes})")
+            try:
+                typ, data = self.service.conn.search(None, f"(LARGER {limit_bytes})")
+            except imaplib.IMAP4.error as exc:
+                self.log.emit(f"Cannot search folder '{folder}': {exc}")
+                continue
             if typ != "OK":
                 continue
 
-            ids = data[0].split()
+            ids = data[0].split() if data else []
             ids = ids[-50:]
 
             for num in ids:
@@ -371,17 +379,26 @@ class Worker(QThread):
         self.log.emit(f"Deleting {total_ids} emails in {acc.name}...")
 
         for folder, folder_items in grouped_items.items():
-            self.service.conn.select(folder)
-            ids = [item["id"].encode() for item in folder_items]
-            id_str = b",".join(ids).decode()
+            if self.isInterruptionRequested():
+                break
+            try:
+                self.service.conn.select(folder)
+                ids = [item["id"].encode() for item in folder_items]
+                id_str = b",".join(ids).decode()
 
-            if self.safe_mode:
-                if self.service.conn.copy(id_str, trash)[0] == "OK":
+                if self.safe_mode:
+                    if self.service.conn.copy(id_str, trash)[0] == "OK":
+                        self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
+                        self.service.conn.expunge()
+                    else:
+                        self.log.emit(f"   Could not move to trash from {folder}.")
+                else:
                     self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
                     self.service.conn.expunge()
-            else:
-                self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                self.service.conn.expunge()
+            except imaplib.IMAP4.error as exc:
+                self.log.emit(f"   IMAP error in folder '{folder}': {exc}")
+            except Exception as exc:  # noqa: BLE001
+                self.log.emit(f"   Unexpected error in folder '{folder}': {exc}")
 
     def _delete_gmail_items(self, acc: MailAccount) -> None:
         """Delete or trash selected Gmail messages and Drive files."""
