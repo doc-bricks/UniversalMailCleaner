@@ -70,3 +70,7 @@ DECISIONS.md
 PORTIERUNGSPLAN.md
 TODO.md
 DONE.md
+
+# ---- Temporäre Backup-Dateien aus Entwicklungsphasen ----
+*_FINAL_*.py
+*_PREFIXBAK_*.py

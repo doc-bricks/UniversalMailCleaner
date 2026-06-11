@@ -13,13 +13,26 @@ UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and 
 
 ## Audience
 
-This project is for users who want local mailbox cleanup without a hosted inbox-management service. Typical searches include Gmail cleaner, Gmail cleanup tool, IMAP cleaner, mailbox cleaner, large email finder, Gmail label cleanup, local-first email management, and Windows email cleaner.
+- **Privacy-conscious Windows users** who want to clean Gmail or IMAP mailboxes without handing their inbox to a cloud service.
+- **Gmail power users** who need label-aware cleanup, Drive file scanning, large-mail detection, and OAuth2-based management — all running locally.
+- **IMAP users** on GMX, Outlook, T-Online, and other standard providers who want rule-based age/sender/subject filters with safe trash mode.
+- **Freelancers and small businesses** looking for scheduled mailbox maintenance without a subscription or hosted service.
+- **Developers** building or extending PySide6 Windows desktop workflows for email management, IMAP automation, or Gmail API integration.
 
-## Search Positioning
+## Search Phrases
 
-Use UniversalMailCleaner for local-first Gmail cleanup, IMAP mailbox cleaning, safe trash-mode email deletion, undoable mailbox cleanup, Gmail label cleanup, large email finder workflows, and PySide6 Windows email management.
+- `local Gmail cleanup tool`
+- `IMAP mailbox cleaner Windows`
+- `Gmail label cleanup local app`
+- `large email finder Gmail IMAP`
+- `safe trash mode email deletion`
+- `undoable mailbox cleanup`
+- `Gmail Drive storage cleaner desktop`
+- `PySide6 email management app`
+- `local-first Gmail and IMAP cleaner`
+- `Windows email cleaner no subscription`
 
-Do not describe it as an email marketing platform, CRM, hosted unsubscribe service, server-side mailbox proxy, or browser-only Gmail extension.
+## Last-checked: 2026-06-11
 
 ## Safety Model
 
