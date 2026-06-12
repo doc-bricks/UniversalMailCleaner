@@ -23,6 +23,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
   start even when the optional Gmail packages are not installed
 - README copy, screenshot alt text, app title, and discovery metadata now describe UniversalMailCleaner as a local-first Gmail and IMAP cleanup app
 - README and `llms.txt` now include clearer start points and search/disambiguation wording for Gmail cleanup, IMAP mailbox cleanup, large-mail finding, and local-first Windows mail management
+- README, README-DE, and `llms.txt` now include exact `doc-bricks/UniversalMailCleaner` search anchors and clearer disambiguation from anti-spam gateways, mailing-list cleaners, unsubscribe services, and browser-only Gmail extensions
 - Scan settings, selected IMAP target folders, and scheduler exchange settings now persist in the desktop config and portable profile
 - CI: source-platform smoke workflow `paths:` filter removed so the smoke now triggers on changes to any module (`imap_client`, `models`, `gmail_service`, `profile_exchange`), not just the main file
 

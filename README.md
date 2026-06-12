@@ -46,11 +46,11 @@ Use it for:
 
 ## Discovery Keywords
 
-`gmail cleaner`, `gmail cleanup tool`, `imap cleaner`, `mailbox cleaner`, `email cleanup`, `large email finder`, `gmail label cleanup`, `local-first email management`, `PySide6 desktop app`, `Windows email cleaner`
+`doc-bricks/UniversalMailCleaner`, `UniversalMailCleaner`, `gmail cleaner`, `gmail cleanup tool`, `imap cleaner`, `imap-cleaner`, `mailbox cleaner`, `mailbox cleanup`, `inbox cleanup`, `email cleanup`, `large email finder`, `gmail label cleanup`, `local-first email management`, `PySide6 desktop app`, `Windows email cleaner`, `safe delete email cleanup`
 
 ## Search and Disambiguation
 
-UniversalMailCleaner is a desktop mailbox cleanup app, not an email marketing tool, CRM, hosted unsubscribe service, or browser-only Gmail extension. The repository is best matched by searches for local-first Gmail cleanup, IMAP mailbox cleaner, large email finder for Windows, PySide6 email management app, safe trash mode mail cleanup, and Gmail label cleanup with undo support.
+UniversalMailCleaner is a desktop mailbox cleanup app, not an email marketing tool, CRM, hosted unsubscribe service, mailing-list validator, MailCleaner anti-spam gateway, or browser-only Gmail extension. The repository is best matched by searches for `doc-bricks/UniversalMailCleaner`, local-first Gmail cleanup, IMAP mailbox cleaner, large email finder for Windows, PySide6 email management app, safe trash mode mail cleanup, inbox cleanup without subscription, and Gmail label cleanup with undo support.
 
 ## Run
 

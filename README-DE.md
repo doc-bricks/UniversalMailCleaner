@@ -50,11 +50,11 @@ Geeignet für:
 
 ## Suchbegriffe
 
-`Gmail Cleaner`, `Gmail aufräumen`, `IMAP Cleaner`, `Mailbox Cleaner`, `E-Mail-Bereinigung`, `große Mails finden`, `Gmail Labels aufräumen`, `lokales Mail-Management`, `PySide6 Desktop-App`, `Windows Mail Cleaner`
+`doc-bricks/UniversalMailCleaner`, `UniversalMailCleaner`, `Gmail Cleaner`, `Gmail aufräumen`, `IMAP Cleaner`, `imap-cleaner`, `Mailbox Cleaner`, `Mailbox Cleanup`, `Postfach aufräumen`, `E-Mail-Bereinigung`, `große Mails finden`, `Gmail Labels aufräumen`, `lokales Mail-Management`, `PySide6 Desktop-App`, `Windows Mail Cleaner`, `sicheres E-Mail-Löschen`
 
 ## Suche und Abgrenzung
 
-UniversalMailCleaner ist eine lokale Desktop-App für Mailbox-Bereinigung, kein E-Mail-Marketing-Tool, kein CRM, kein gehosteter Abmeldedienst und keine reine Browser-Erweiterung für Gmail. Das Repository passt am besten zu Suchanfragen nach lokaler Gmail-Bereinigung, IMAP-Mailbox-Cleaner, große Mails finden unter Windows, PySide6-Mailverwaltung, Safe-Mode-Mail-Cleanup und Gmail-Label-Bereinigung mit Undo.
+UniversalMailCleaner ist eine lokale Desktop-App für Mailbox-Bereinigung, kein E-Mail-Marketing-Tool, kein CRM, kein gehosteter Abmeldedienst, kein Mailinglisten-Validator, kein MailCleaner-Anti-Spam-Gateway und keine reine Browser-Erweiterung für Gmail. Das Repository passt am besten zu Suchanfragen nach `doc-bricks/UniversalMailCleaner`, lokaler Gmail-Bereinigung, IMAP-Mailbox-Cleaner, große Mails finden unter Windows, PySide6-Mailverwaltung, Postfach aufräumen ohne Abo, Safe-Mode-Mail-Cleanup und Gmail-Label-Bereinigung mit Undo.
 
 ## Start
 
