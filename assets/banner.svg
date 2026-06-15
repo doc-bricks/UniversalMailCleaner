@@ -1,0 +1,311 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="100%" height="100%">
+  <defs>
+    <!-- Background Light Gradient -->
+    <linearGradient id="bg-grad-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0F9FF" />
+      <stop offset="100%" stop-color="#E0F2FE" />
+    </linearGradient>
+    
+    <!-- Background Dark Gradient -->
+    <linearGradient id="bg-grad-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    
+    <!-- Glowing Accent Gradient (Adaptive) -->
+    <radialGradient id="glow-grad" cx="260" cy="180" r="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="var(--glow-color)" stop-opacity="var(--glow-opacity)" />
+      <stop offset="100%" stop-color="var(--glow-color)" stop-opacity="0" />
+    </radialGradient>
+    
+    <!-- Brand Title Gradient -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0EA5E9" />
+      <stop offset="50%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    
+    <!-- Bucket Gradient -->
+    <linearGradient id="bucket-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    
+    <!-- Sponge Gradient -->
+    <linearGradient id="sponge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+    
+    <!-- Foam Bubble Gradient -->
+    <linearGradient id="foam-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E0F2FE" />
+    </linearGradient>
+    
+    <!-- Shiny 3D Bubble Gradient -->
+    <radialGradient id="bubble-grad" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9" />
+      <stop offset="15%" stop-color="#E0F2FE" stop-opacity="0.6" />
+      <stop offset="70%" stop-color="#38BDF8" stop-opacity="0.2" />
+      <stop offset="90%" stop-color="#0EA5E9" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.7" />
+    </radialGradient>
+    
+    <!-- Divider Line Gradient -->
+    <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0EA5E9" />
+      <stop offset="60%" stop-color="#3B82F6" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0" />
+    </linearGradient>
+    
+    <!-- Dot Grid Pattern -->
+    <pattern id="grid-pattern" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="1.2" fill="var(--grid-color)" />
+    </pattern>
+  </defs>
+  
+  <style>
+    :root {
+      --bg-fill: url(#bg-grad-light);
+      --bg-stroke: #E2E8F0;
+      --grid-color: rgba(15, 23, 42, 0.07);
+      --glow-color: #0EA5E9;
+      --glow-opacity: 0.12;
+      --text-title: #0F172A;
+      --text-tagline: #475569;
+      --env-body: #FFFFFF;
+      --env-stroke: #1E293B;
+      --env-stamp-bg: #FEF2F2;
+      --env-stamp-border: #EF4444;
+      --env-flap: #F8FAFC;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-fill: url(#bg-grad-dark);
+        --bg-stroke: #1E293B;
+        --grid-color: rgba(248, 250, 252, 0.05);
+        --glow-color: #38BDF8;
+        --glow-opacity: 0.22;
+        --text-title: #F8FAFC;
+        --text-tagline: #94A3B8;
+        --env-body: #FFFFFF;
+        --env-stroke: #0F172A;
+        --env-stamp-bg: #FEE2E2;
+        --env-stamp-border: #EF4444;
+        --env-flap: #F8FAFC;
+      }
+    }
+    
+    .bg {
+      fill: var(--bg-fill);
+      stroke: var(--bg-stroke);
+      transition: fill 0.3s ease, stroke 0.3s ease;
+    }
+    
+    .title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 800;
+      font-size: 54px;
+      letter-spacing: -1.5px;
+    }
+    
+    .text-title {
+      fill: var(--text-title);
+      transition: fill 0.3s ease;
+    }
+    
+    .tagline {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 500;
+      font-size: 22px;
+      letter-spacing: 0.2px;
+      fill: var(--text-tagline);
+      transition: fill 0.3s ease;
+    }
+    
+    .envelope-body {
+      fill: var(--env-body);
+      stroke: var(--env-stroke);
+      stroke-linejoin: round;
+    }
+    
+    .envelope-flap {
+      fill: var(--env-flap);
+      stroke: var(--env-stroke);
+      stroke-linejoin: round;
+    }
+    
+    .envelope-stamp {
+      fill: var(--env-stamp-bg);
+      stroke: var(--env-stamp-border);
+    }
+    
+    .bubble {
+      fill: url(#bubble-grad);
+    }
+    
+    .water-drop {
+      fill: #38BDF8;
+      opacity: 0.8;
+    }
+  </style>
+  
+  <!-- Outer Container Background -->
+  <rect x="1" y="1" width="1198" height="338" rx="16" class="bg" stroke-width="1.5" />
+  
+  <!-- Grid overlay -->
+  <rect x="1" y="1" width="1198" height="338" rx="16" fill="url(#grid-pattern)" />
+  
+  <!-- Ambient glows -->
+  <circle cx="260" cy="180" r="180" fill="url(#glow-grad)" />
+  <circle cx="900" cy="170" r="150" fill="url(#glow-grad)" opacity="0.5" />
+  
+  <!-- MAIN GRAPHICS GROUP -->
+  <!-- Left Scene: Bucket & Envelope (Center: 260, y: 70..280) -->
+  <g id="envelope-bath-scene">
+    <!-- Back wire handle of bucket (just behind foam) -->
+    <path d="M 158,193 Q 260,100 362,193" fill="none" stroke="#E2E8F0" stroke-width="2.5" opacity="0.4" />
+    
+    <!-- Cute Envelope Character Group -->
+    <g transform="rotate(-8 260 145)">
+      <!-- Envelope Shadow inside bucket -->
+      <rect x="184" y="96.5" width="160" height="105" rx="10" fill="#0284C7" opacity="0.15" />
+      
+      <!-- Envelope Body -->
+      <rect x="180" y="92.5" width="160" height="105" rx="10" class="envelope-body" stroke-width="3.5" />
+      
+      <!-- Shallow Envelope Flap (Back) -->
+      <path d="M 180,92.5 L 260,132 L 340,92.5 Z" class="envelope-flap" stroke-width="3.5" />
+      
+      <!-- Stamp (Top Right) -->
+      <rect x="305" y="102" width="22" height="26" rx="2" class="envelope-stamp" stroke-width="1.5" stroke-dasharray="3,2" />
+      <!-- Heart in the stamp -->
+      <path d="M 316,120 Q 310,114 313,111 Q 316,108 316,112 Q 316,108 319,111 Q 322,114 316,120 Z" fill="#EF4444" />
+      
+      <!-- Postmark Wavy Lines -->
+      <path d="M 280,110 Q 290,107 300,110 M 280,118 Q 290,115 300,118" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" />
+      
+      <!-- Address lines (Bottom Left) -->
+      <line x1="195" y1="172" x2="225" y2="172" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+      <line x1="195" y1="180" x2="225" y2="180" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+      <line x1="195" y1="188" x2="215" y2="188" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+      
+      <!-- Dust/Dirt Smudges on the Right Side (to be cleaned) -->
+      <path d="M 290,128 C 298,124 308,128 304,136 C 300,140 290,136 290,128 Z" fill="#64748B" opacity="0.18" />
+      <path d="M 312,142 C 322,138 327,146 323,153 C 319,160 308,153 312,142 Z" fill="#64748B" opacity="0.18" />
+      <path d="M 300,172 C 306,168 312,172 310,178 C 308,182 302,180 300,172 Z" fill="#64748B" opacity="0.15" />
+      
+      <!-- Happy Cartoon Face -->
+      <!-- Left Eye -->
+      <circle cx="235" cy="146" r="8.5" fill="var(--env-stroke)" />
+      <circle cx="232.5" cy="143.5" r="2.5" fill="#FFFFFF" />
+      <circle cx="237.5" cy="148.5" r="1" fill="#FFFFFF" />
+      
+      <!-- Right Eye -->
+      <circle cx="285" cy="146" r="8.5" fill="var(--env-stroke)" />
+      <circle cx="282.5" cy="143.5" r="2.5" fill="#FFFFFF" />
+      <circle cx="287.5" cy="148.5" r="1" fill="#FFFFFF" />
+      
+      <!-- Rosy Cheeks -->
+      <ellipse cx="218" cy="154" rx="7" ry="3.5" fill="#FDA4AF" opacity="0.6" />
+      <ellipse cx="302" cy="154" rx="7" ry="3.5" fill="#FDA4AF" opacity="0.6" />
+      
+      <!-- Open Happy Mouth -->
+      <path d="M 256,151 Q 260,160 264,151 Z" fill="#F43F5E" stroke="var(--env-stroke)" stroke-width="2" stroke-linejoin="round" />
+      
+      <!-- Shine Sparkles (Squeaky Clean Left Side) -->
+      <!-- Sparkle 1 -->
+      <path d="M 195,115 Q 195,123 187,123 Q 195,123 195,131 Q 195,123 203,123 Q 195,123 195,115 Z" fill="#F59E0B" />
+      <!-- Sparkle 2 -->
+      <path d="M 215,130 Q 215,135 210,135 Q 215,135 215,140 Q 215,135 220,135 Q 215,135 215,130 Z" fill="#FBBF24" />
+    </g>
+    
+    <!-- Bubble Hat on Envelope -->
+    <circle cx="235" cy="88" r="11" class="bubble" />
+    <circle cx="243" cy="93" r="7" class="bubble" />
+    
+    <!-- Thick Soap Foam pile overflowing the bucket rim -->
+    <g id="foam-suds">
+      <!-- Back layer of foam -->
+      <circle cx="165" cy="190" r="16" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="185" cy="185" r="20" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="210" cy="188" r="15" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="235" cy="190" r="18" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="265" cy="186" r="22" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="295" cy="188" r="20" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="325" cy="185" r="18" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="350" cy="192" r="16" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="370" cy="200" r="14" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <!-- Front layer of foam -->
+      <circle cx="175" cy="198" r="12" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="200" cy="196" r="15" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="225" cy="200" r="11" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="250" cy="197" r="16" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="280" cy="196" r="14" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="310" cy="195" r="16" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+      <circle cx="340" cy="197" r="12" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+    </g>
+    
+    <!-- Metal Handle hanging down -->
+    <path d="M 158,193 Q 260,282 362,193" fill="none" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" />
+    <!-- Handle Grip -->
+    <rect x="238" y="233" width="44" height="9" rx="3.5" fill="#1E293B" stroke="#0F172A" stroke-width="1" />
+    
+    <!-- Bucket Body Front -->
+    <path d="M 160,190 L 190,260 Q 260,272 330,260 L 360,190 Q 260,202 160,190 Z" fill="url(#bucket-grad)" stroke="#0E7490" stroke-width="2" />
+    
+    <!-- Bucket Shiny Highlights (3D Glossy effect) -->
+    <path d="M 175,195 L 200,253" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.18" />
+    <path d="M 183,195 L 189,210" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.12" />
+    
+    <!-- Cute Yellow Sponge scrubbing the right side -->
+    <g transform="rotate(12 340 125)">
+      <!-- Sponge Body -->
+      <rect x="310" y="105" width="60" height="40" rx="8" fill="url(#sponge-grad)" stroke="#D97706" stroke-width="2.5" />
+      <!-- Sponge Pores -->
+      <circle cx="323" cy="116" r="2.5" fill="#B45309" opacity="0.25" />
+      <circle cx="352" cy="120" r="3.2" fill="#B45309" opacity="0.25" />
+      <circle cx="330" cy="134" r="2.2" fill="#B45309" opacity="0.25" />
+      <circle cx="358" cy="133" r="2" fill="#B45309" opacity="0.2" />
+    </g>
+    
+    <!-- Soap Suds right at the Sponge/Envelope interface -->
+    <circle cx="308" cy="138" r="8" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+    <circle cx="316" cy="144" r="6" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+    <circle cx="301" cy="148" r="5" fill="url(#foam-grad)" stroke="#BAE6FD" stroke-width="0.75" />
+    
+    <!-- Water Splashes / Droplets flying out -->
+    <!-- Droplet Left -->
+    <path d="M 115,215 Q 105,228 115,232 Q 125,228 115,215 Z" class="water-drop" />
+    <!-- Droplet Right -->
+    <path d="M 395,215 Q 405,228 395,232 Q 385,228 395,215 Z" class="water-drop" />
+    <!-- Droplet Top Left -->
+    <path d="M 175,105 Q 170,95 180,95 Q 185,100 175,105 Z" class="water-drop" />
+    
+    <!-- Floating Bubbles in the Air -->
+    <circle cx="140" cy="130" r="14" class="bubble" />
+    <circle cx="115" cy="170" r="9" class="bubble" />
+    <circle cx="390" cy="140" r="16" class="bubble" />
+    <circle cx="380" cy="90" r="11" class="bubble" />
+    <circle cx="200" cy="74" r="13" class="bubble" />
+    <circle cx="290" cy="75" r="9" class="bubble" />
+    <circle cx="170" cy="250" r="8" class="bubble" />
+    <circle cx="352" cy="255" r="10" class="bubble" />
+  </g>
+  
+  <!-- Right Scene: Wordmark & Tagline (Center-Left aligned, x: 500..1100, y: 80..280) -->
+  <g id="text-group">
+    <!-- Main Wordmark -->
+    <text x="500" y="170" class="title">
+      <tspan class="text-title">Universal</tspan><tspan fill="url(#brand-grad)">MailCleaner</tspan>
+    </text>
+    
+    <!-- Sleek Glowing Divider Line -->
+    <rect x="500" y="186" width="450" height="3" rx="1.5" fill="url(#line-grad)" />
+    
+    <!-- Subtitle / Tagline -->
+    <text x="502" y="218" class="tagline">Clean IMAP and Gmail mailboxes</text>
+  </g>
+</svg>

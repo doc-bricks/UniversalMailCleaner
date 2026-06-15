@@ -1,8 +1,17 @@
+<img src="assets/banner.svg" width="100%" alt="UniversalMailCleaner Banner">
+
 # UniversalMailCleaner
 
-Lokale Windows-Desktop-App zum Aufräumen von IMAP- und Gmail-Postfächern. UniversalMailCleaner bündelt regelbasierte Mail-Bereinigung, große-Mail- und Drive-Scans, geplante Läufe, Safe-Mode und rückgängig machbare Löschaktionen in einer PySide6-Oberfläche.
+**[🇬🇧 English documentation](README.md)** · **🇩🇪 Deutsch**
 
-> **English documentation:** [README.md](README.md)
+> Lokale Windows-Desktop-App zum Aufräumen von IMAP- und Gmail-Postfächern — regelbasierte Bereinigung, Große-Mail-Scans, Scheduler, Safe-Mode.
+
+[![Lizenz: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-v1.2.0-blue)](CHANGELOG.md)
+[![Plattform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#überblick)
+[![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
+
+UniversalMailCleaner bündelt regelbasierte Mail-Bereinigung, große-Mail- und Drive-Scans, geplante Läufe, Safe-Mode und rückgängig machbare Löschaktionen in einer PySide6-Oberfläche.
 
 ![UniversalMailCleaner Desktop-Oberfläche für Mailbox-Bereinigung mit Konten, Regeln, großen Elementen, Gmail-Labels, Scheduler und Safe-Mode](README/screenshots/main.png)
 
@@ -63,6 +72,13 @@ UniversalMailCleaner ist eine lokale Desktop-App für Mailbox-Bereinigung, kein 
 `START.bat` per Doppelklick ausführen
 
 ### Manuell
+
+```bash
+pip install -e .
+universalmailcleaner
+```
+
+Legacy-Alternative:
 
 ```bash
 pip install -r requirements.txt
