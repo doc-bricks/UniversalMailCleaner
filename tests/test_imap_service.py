@@ -245,5 +245,43 @@ class TestFindTrashFolderParsing(unittest.TestCase):
         self.assertEqual(result, "Trash")
 
 
+class TestImapConnectTimeout(unittest.TestCase):
+    """ImapService.connect() muss IMAP4_SSL mit timeout=30 aufrufen."""
+
+    def test_connect_passes_timeout_to_imap4_ssl(self):
+        import imap_client as ic
+        from models import MailAccount
+
+        calls = []
+
+        class FakeIMAP:
+            def __init__(self, host, port, timeout=None):
+                calls.append({"host": host, "port": port, "timeout": timeout})
+
+            def login(self, user, pwd):
+                pass
+
+        original_imap = ic.imaplib.IMAP4_SSL
+        ic.imaplib.IMAP4_SSL = FakeIMAP
+        original_keyring_avail = ic.KEYRING_AVAIL
+        ic.KEYRING_AVAIL = True
+
+        import keyring as _keyring
+        original_get_password = _keyring.get_password
+        _keyring.get_password = lambda app, name: "geheimwort"
+
+        try:
+            acc = MailAccount(name="Test", host="imap.example.com", user="u@test.com", port=993)
+            service = ic.ImapService(lambda _: None)
+            service.connect(acc)
+        finally:
+            ic.imaplib.IMAP4_SSL = original_imap
+            ic.KEYRING_AVAIL = original_keyring_avail
+            _keyring.get_password = original_get_password
+
+        self.assertTrue(calls, "IMAP4_SSL wurde nicht aufgerufen")
+        self.assertEqual(calls[0]["timeout"], 30, f"timeout war {calls[0]['timeout']}, erwartet 30")
+
+
 if __name__ == "__main__":
     unittest.main()

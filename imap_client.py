@@ -89,7 +89,7 @@ class ImapService:
 
         try:
             self.log(f"🔌 Connecting to {account.host}...")
-            self.conn = imaplib.IMAP4_SSL(account.host, account.port)
+            self.conn = imaplib.IMAP4_SSL(account.host, account.port, timeout=30)
             self.conn.login(account.user, pwd)
             self.log(f"✅ Logged in as {account.user}")
             return True

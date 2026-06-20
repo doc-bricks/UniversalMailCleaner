@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QTabWidget
 from PySide6.QtGui import QCloseEvent
 
 _APP = QApplication.instance() or QApplication([])
@@ -167,6 +167,100 @@ class TestLabelActionWorkerLifetime(unittest.TestCase):
             _APP.processEvents()
 
         self.assertEqual(len(win._label_action_workers), 0, "Finished workers must be cleaned up")
+        win.deleteLater()
+
+
+class TestCloseEventStopsInlineWorkers(unittest.TestCase):
+    """closeEvent muss auch Inline-Worker stoppen, nicht nur self.worker."""
+
+    def test_close_event_stops_stats_worker(self):
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        stats_w = MagicMock()
+        stats_w.isRunning.return_value = True
+        win._stats_worker = stats_w
+
+        win.closeEvent(QCloseEvent())
+
+        stats_w.requestInterruption.assert_called_once()
+        stats_w.wait.assert_called_once()
+        win.deleteLater()
+
+    def test_close_event_stops_labels_worker(self):
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        labels_w = MagicMock()
+        labels_w.isRunning.return_value = True
+        win._labels_worker = labels_w
+
+        win.closeEvent(QCloseEvent())
+
+        labels_w.requestInterruption.assert_called_once()
+        labels_w.wait.assert_called_once()
+        win.deleteLater()
+
+    def test_close_event_stops_del_label_worker(self):
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        del_w = MagicMock()
+        del_w.isRunning.return_value = True
+        win._del_label_worker = del_w
+
+        win.closeEvent(QCloseEvent())
+
+        del_w.requestInterruption.assert_called_once()
+        del_w.wait.assert_called_once()
+        win.deleteLater()
+
+    def test_close_event_stops_label_action_workers(self):
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        action_w = MagicMock()
+        action_w.isRunning.return_value = True
+        win._label_action_workers = [action_w]
+
+        win.closeEvent(QCloseEvent())
+
+        action_w.requestInterruption.assert_called_once()
+        action_w.wait.assert_called_once()
+        win.deleteLater()
+
+    def test_close_event_skips_stopped_inline_worker(self):
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        stopped_w = MagicMock()
+        stopped_w.isRunning.return_value = False
+        win._stats_worker = stopped_w
+
+        win.closeEvent(QCloseEvent())
+
+        stopped_w.requestInterruption.assert_not_called()
+        stopped_w.wait.assert_not_called()
+        win.deleteLater()
+
+
+class TestPrimaryNavigationAccessibility(unittest.TestCase):
+    def test_settings_tab_uses_readable_label_and_tooltip(self):
+        """The settings tab must not rely on a lone gear symbol."""
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        tabs = win.centralWidget().findChild(QTabWidget)
+
+        self.assertIsNotNone(tabs)
+        labels = [tabs.tabText(index) for index in range(tabs.count())]
+        self.assertIn("⚙ Einstellungen", labels)
+
+        settings_index = labels.index("⚙ Einstellungen")
+        self.assertEqual(
+            tabs.tabToolTip(settings_index),
+            "Einstellungen für Sicherheitsmodus und Profilaustausch öffnen.",
+        )
         win.deleteLater()
 
 

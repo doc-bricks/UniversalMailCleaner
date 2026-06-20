@@ -490,7 +490,11 @@ class MainWindow(QMainWindow):
         if not KEYRING_AVAIL:
             l3.addWidget(QLabel("⚠️ Keyring missing! Passwords will not be saved."))
         l3.addStretch()
-        tabs.addTab(t3, "⚙️")
+        settings_tab_index = tabs.addTab(t3, "⚙ Einstellungen")
+        tabs.setTabToolTip(
+            settings_tab_index,
+            "Einstellungen für Sicherheitsmodus und Profilaustausch öffnen.",
+        )
 
         # TAB 5: SCHEDULER
         from scheduler_widget import SchedulerWidget, ScheduleConfig
@@ -1274,6 +1278,15 @@ class MainWindow(QMainWindow):
         if hasattr(self, "worker") and self.worker and self.worker.isRunning():
             self.worker.requestInterruption()
             self.worker.wait(3000)
+        for attr in ("_stats_worker", "_labels_worker", "_del_label_worker"):
+            w = getattr(self, attr, None)
+            if w is not None and w.isRunning():
+                w.requestInterruption()
+                w.wait(2000)
+        for w in getattr(self, "_label_action_workers", []):
+            if w.isRunning():
+                w.requestInterruption()
+                w.wait(2000)
         self.save_config()
         super().closeEvent(event)
 
@@ -1282,8 +1295,13 @@ class MainWindow(QMainWindow):
         self.save_config()
         self.update_mode_label()
 
-if __name__ == "__main__":
+def main() -> int:
+    """Start the desktop application."""
     app = QApplication(sys.argv)
     win = MainWindow()
     win.show()
-    sys.exit(app.exec())
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
