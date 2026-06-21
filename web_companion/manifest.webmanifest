@@ -1,0 +1,24 @@
+{
+  "name": "UniversalMailCleaner Companion",
+  "short_name": "UMC Companion",
+  "description": "Read-only mobile companion for secrets-free UniversalMailCleaner profile exports.",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#eef3f2",
+  "theme_color": "#11353d",
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "../UniversalMailCleaner_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

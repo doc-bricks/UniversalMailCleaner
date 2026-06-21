@@ -101,6 +101,22 @@ python mail_imap_cleaner_v1.py
 - Passwörter werden nicht in der JSON-Datei gespeichert
 - Safe-Mode ist standardmäßig aktiv
 
+## Companion
+
+Das Repository enthält jetzt zusätzlich einen read-only Mobile-/Browser-Companion
+unter `web_companion/`.
+
+- Eingabe: lokale `universalmailcleaner-profile-v1.json`
+- Inhalt: Kontometadaten, Regeln, Safe-Mode-, Scan- und Scheduler-Vorgaben
+- Schutzgrenzen: keine IMAP-, Gmail-, OAuth-, Drive- oder Löschaktionen im Browser
+- Offline: der letzte secrets-freie Profil-Export wird lokal im Browser zwischengespeichert
+
+Schneller lokaler Vorschau-Start:
+
+```bash
+python -m http.server 4178 -d web_companion
+```
+
 ## Tests
 
 ```bash

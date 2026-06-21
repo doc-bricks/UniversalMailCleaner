@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    >
+    <meta name="theme-color" content="#11353d">
+    <meta
+      name="description"
+      content="Read-only mobile companion for UniversalMailCleaner profile exports."
+    >
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="../UniversalMailCleaner_icon.png" sizes="512x512" type="image/png">
+    <link rel="apple-touch-icon" href="../UniversalMailCleaner_icon.png">
+    <link rel="stylesheet" href="./app.css">
+    <title>UniversalMailCleaner Companion</title>
+  </head>
+  <body>
+    <div class="background-glow background-glow-a"></div>
+    <div class="background-glow background-glow-b"></div>
+
+    <main class="shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">UniversalMailCleaner Companion</p>
+          <h1>Profiles, rules, and scheduler presets on the go.</h1>
+          <p class="lede">
+            This mobile companion reads a local
+            <code>universalmailcleaner-profile-v1.json</code> export in the
+            browser. It stays read-only, keeps credentials out, and restores
+            the last loaded profile for offline reference.
+          </p>
+        </div>
+
+        <section class="panel panel-controls" aria-labelledby="import-title">
+          <div class="panel-header">
+            <h2 id="import-title">Import</h2>
+            <p>Load a local JSON file, paste JSON, or use a safe demo payload.</p>
+          </div>
+
+          <div class="button-row">
+            <button id="pick-file" class="button button-primary" type="button">
+              Open JSON file
+            </button>
+            <button id="toggle-paste" class="button button-secondary" type="button">
+              Paste JSON
+            </button>
+            <button id="load-demo" class="button button-secondary" type="button">
+              Load demo
+            </button>
+            <button id="clear-data" class="button button-ghost" type="button">
+              Clear cache
+            </button>
+          </div>
+
+          <input id="file-input" type="file" accept=".json,application/json" hidden>
+
+          <div id="paste-panel" class="paste-panel hidden">
+            <label class="label" for="paste-json">Paste profile export</label>
+            <textarea
+              id="paste-json"
+              rows="8"
+              spellcheck="false"
+              placeholder='{"schema":"universalmailcleaner-profile-v1", ...}'
+            ></textarea>
+            <div class="button-row">
+              <button id="load-paste" class="button button-primary" type="button">
+                Import pasted JSON
+              </button>
+            </div>
+          </div>
+
+          <p id="status-banner" class="status-banner" data-tone="info">
+            Waiting for a local profile export.
+          </p>
+        </section>
+      </header>
+
+      <section class="summary-grid" aria-label="Profile summary">
+        <article class="stat-card">
+          <span class="stat-label">Accounts</span>
+          <strong id="stat-accounts">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Rules</span>
+          <strong id="stat-rules">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Safe mode</span>
+          <strong id="stat-safe-mode">Unknown</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Scheduler</span>
+          <strong id="stat-scheduler">Unknown</strong>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Accounts</h2>
+            <p>Protocol, mailbox identity, and trash-folder metadata only.</p>
+          </div>
+          <div id="accounts-list" class="card-list empty-state">
+            No profile loaded yet.
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Rules</h2>
+            <p>Read-only search across account targets, filters, and values.</p>
+          </div>
+
+          <div class="toolbar">
+            <label class="toolbar-field">
+              <span>Search</span>
+              <input
+                id="rule-search"
+                type="search"
+                placeholder="newsletter, 90, GMX, sender..."
+              >
+            </label>
+
+            <label class="toolbar-field toolbar-field-compact">
+              <span>Status</span>
+              <select id="rule-status">
+                <option value="all">All rules</option>
+                <option value="active">Active only</option>
+                <option value="inactive">Inactive only</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="rules-list" class="card-list empty-state">
+            No profile loaded yet.
+          </div>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Companion settings</h2>
+            <p>Only non-sensitive scan and scheduler preferences are shown.</p>
+          </div>
+          <dl id="settings-list" class="definition-list empty-state">
+            <div>
+              <dt>Status</dt>
+              <dd>Load a profile export first.</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Guardrails</h2>
+            <p>What this companion does and does not do.</p>
+          </div>
+          <ul class="guardrail-list">
+            <li>Reads local JSON only. No IMAP, Gmail API, OAuth, or Drive access.</li>
+            <li>Never stores passwords, tokens, deletion logs, or message IDs.</li>
+            <li>Offline cache keeps only the last loaded secrets-free profile export.</li>
+            <li>Mail cleanup remains a desktop-only action in UniversalMailCleaner.</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
