@@ -63,7 +63,7 @@ code {
   z-index: 1;
   width: min(1200px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 1.25rem 0 3rem;
+  padding: calc(1.25rem + env(safe-area-inset-top, 0px)) env(safe-area-inset-right, 0px) calc(3rem + env(safe-area-inset-bottom, 0px)) env(safe-area-inset-left, 0px);
 }
 
 .hero {
@@ -161,6 +161,7 @@ code {
   border: 0;
   border-radius: 999px;
   padding: 0.8rem 1.1rem;
+  min-height: 44px;
   font: inherit;
   cursor: pointer;
   transition:

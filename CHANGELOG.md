@@ -13,6 +13,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Large-item scan now optionally includes Google Drive files for Gmail API accounts
 - Regression tests for Gmail backend routing, Gmail service helpers, and scheduler behavior
 - Secrets-free profile export/import for `universalmailcleaner-profile-v1.json`
+- `pyproject.toml` with setuptools metadata, GUI entry point, and shared pytest/Ruff configuration
 
 ### Changed
 - Large-mail account selection now includes Gmail API accounts
@@ -26,8 +27,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - README, README-DE, and `llms.txt` now include exact `doc-bricks/UniversalMailCleaner` search anchors and clearer disambiguation from anti-spam gateways, mailing-list cleaners, unsubscribe services, and browser-only Gmail extensions
 - Scan settings, selected IMAP target folders, and scheduler exchange settings now persist in the desktop config and portable profile
 - CI: source-platform smoke workflow `paths:` filter removed so the smoke now triggers on changes to any module (`imap_client`, `models`, `gmail_service`, `profile_exchange`), not just the main file
+- `mail_imap_cleaner_v1.py` exposes `main()` so editable installs and GUI entry points can launch the existing desktop app without wrapper scripts
 
 ### Fixed
+- `mail_imap_cleaner_v1.py`: Die Einstellungen sind in der Hauptnavigation nicht mehr nur über ein einzelnes Zahnrad erreichbar; der Tab zeigt jetzt `⚙ Einstellungen` und erklärt den Bereich zusätzlich per Tooltip.
 - `mail_imap_cleaner_v1.py` / `closeEvent`: Worker is now stopped before `save_config` to avoid a race condition on window close.
 - `mail_imap_cleaner_v1.py` / `save_config`: `OSError` is now caught so a failed config write doesn't crash the app.
 - `mail_imap_cleaner_v1.py` / `add_acc`: `keyring.set_password` is now wrapped in try/except to handle missing or locked keyring backends gracefully.

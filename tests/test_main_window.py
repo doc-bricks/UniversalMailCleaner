@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from PySide6.QtWidgets import QApplication, QTabWidget
+from PySide6.QtWidgets import QApplication, QPushButton, QTabWidget
 from PySide6.QtGui import QCloseEvent
 
 _APP = QApplication.instance() or QApplication([])
@@ -260,6 +260,45 @@ class TestPrimaryNavigationAccessibility(unittest.TestCase):
         self.assertEqual(
             tabs.tabToolTip(settings_index),
             "Einstellungen für Sicherheitsmodus und Profilaustausch öffnen.",
+        )
+        win.deleteLater()
+
+    def test_label_action_buttons_expose_contextual_accessible_names(self):
+        """Row actions in the Gmail labels table must name the affected label."""
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        win._populate_labels_table(
+            [{"id": "Label_123", "name": "Rechnungen 2026", "type": "user"}]
+        )
+
+        actions = win.table_labels.cellWidget(0, 2)
+        self.assertIsNotNone(actions)
+        buttons = {button.text(): button for button in actions.findChildren(QPushButton)}
+
+        self.assertEqual(
+            buttons["Leeren"].accessibleName(),
+            "Label Rechnungen 2026 leeren",
+        )
+        self.assertEqual(
+            buttons["Leeren"].accessibleDescription(),
+            "Verschiebt alle Mails mit dem Gmail-Label Rechnungen 2026 in den Papierkorb.",
+        )
+        self.assertEqual(
+            buttons["Umbenennen"].accessibleName(),
+            "Label Rechnungen 2026 umbenennen",
+        )
+        self.assertEqual(
+            buttons["Umbenennen"].toolTip(),
+            "Das Gmail-Label Rechnungen 2026 umbenennen.",
+        )
+        self.assertEqual(
+            buttons["Löschen"].accessibleName(),
+            "Label Rechnungen 2026 löschen",
+        )
+        self.assertEqual(
+            buttons["Löschen"].accessibleDescription(),
+            "Löscht nur das Gmail-Label Rechnungen 2026, nicht die enthaltenen Mails.",
         )
         win.deleteLater()
 

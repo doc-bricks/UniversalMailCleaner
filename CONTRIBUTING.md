@@ -49,10 +49,10 @@ Damit bestaetigen Sie, dass Sie das Recht haben, den Code unter der Projektlizen
 ### Erste Schritte
 
 ```bash
-git clone https://github.com/lukisch/UniversalMailCleaner.git
+git clone https://github.com/doc-bricks/UniversalMailCleaner.git
 cd UniversalMailCleaner
-pip install -r requirements.txt
-python main.py
+pip install -e .[dev]
+universalmailcleaner
 ```
 
 ---
@@ -106,8 +106,8 @@ This certifies that you have the right to submit the code under the project lice
 ### Getting Started
 
 ```bash
-git clone https://github.com/lukisch/PROJECTNAME.git
-cd PROJECTNAME
-pip install -r requirements.txt
-python main.py
+git clone https://github.com/doc-bricks/UniversalMailCleaner.git
+cd UniversalMailCleaner
+pip install -e .[dev]
+universalmailcleaner
 ```

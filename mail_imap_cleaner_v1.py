@@ -1064,15 +1064,28 @@ class MainWindow(QMainWindow):
 
         b_clear = QPushButton("Leeren")
         b_clear.setToolTip("Alle Mails mit diesem Label in den Papierkorb verschieben.")
+        b_clear.setAccessibleName(f"Label {label_name} leeren")
+        b_clear.setAccessibleDescription(
+            f"Verschiebt alle Mails mit dem Gmail-Label {label_name} in den Papierkorb."
+        )
         b_clear.clicked.connect(lambda: self._delete_by_label(label_id, label_name))
         layout.addWidget(b_clear)
 
         b_rename = QPushButton("Umbenennen")
+        b_rename.setToolTip(f"Das Gmail-Label {label_name} umbenennen.")
+        b_rename.setAccessibleName(f"Label {label_name} umbenennen")
+        b_rename.setAccessibleDescription(
+            f"Öffnet den Dialog zum Umbenennen des Gmail-Labels {label_name}."
+        )
         b_rename.clicked.connect(lambda: self._rename_label(label_id, label_name))
         layout.addWidget(b_rename)
 
         b_delete = QPushButton("Löschen")
         b_delete.setToolTip("Nur das Label löschen, nicht die enthaltenen Mails.")
+        b_delete.setAccessibleName(f"Label {label_name} löschen")
+        b_delete.setAccessibleDescription(
+            f"Löscht nur das Gmail-Label {label_name}, nicht die enthaltenen Mails."
+        )
         b_delete.clicked.connect(lambda: self._delete_label_definition(label_id, label_name))
         layout.addWidget(b_delete)
 

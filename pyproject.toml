@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "universalmailcleaner"
+version = "1.2.0"
+description = "Local-first Windows desktop app for cleaning IMAP and Gmail mailboxes."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Lukas Geiger" }
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Email",
+]
+dependencies = [
+    "PySide6>=6.5.0,<7.0.0",
+    "keyring>=23.0.0,<26.0.0",
+    "google-auth-oauthlib>=1.0.0,<2.0.0",
+    "google-api-python-client>=2.0.0,<3.0.0",
+]
+
+[project.gui-scripts]
+universalmailcleaner = "mail_imap_cleaner_v1:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/doc-bricks/UniversalMailCleaner"
+Repository = "https://github.com/doc-bricks/UniversalMailCleaner"
+
+[tool.setuptools]
+py-modules = [
+    "gmail_service",
+    "imap_client",
+    "mail_imap_cleaner_v1",
+    "models",
+    "profile_exchange",
+    "scheduler_widget",
+    "workers",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
