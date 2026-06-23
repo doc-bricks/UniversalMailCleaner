@@ -141,10 +141,13 @@ def write_profile(
     """Write a profile payload as UTF-8 JSON and return the payload."""
 
     payload = build_profile_payload(accounts, rules, settings, exported_at=exported_at)
-    Path(path).write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    # FIX: atomar schreiben (tmp + replace), sonst zerstoert ein Crash/Lock waehrend
+    # write_text eine bestehende Profil-JSON (abgeschnitten/leer).
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_name(p.name + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(p)
     return payload
 
 
@@ -190,6 +193,12 @@ def load_profile_payload(payload: dict) -> tuple[list[MailAccount], list[CleanRu
     if not isinstance(raw_accounts, list) or not isinstance(raw_rules, list):
         raise ValueError("Konten und Regeln müssen Listen sein.")
 
+    # FIX: isinstance-Guard (analog _load_rule fuer rules) -> ein Nicht-dict-Konten-
+    # Eintrag (z.B. "accounts": ["foo"]) wirft sonst AttributeError in from_dict und
+    # bricht den GANZEN Profil-Import ab (asymmetrisch zu rules, die geschuetzt waren).
+    for _acc in raw_accounts:
+        if not isinstance(_acc, dict):
+            raise ValueError("Konten-Eintrag ist kein Objekt.")
     accounts = [MailAccount.from_dict(item) for item in raw_accounts]
     rules = [_load_rule(item) for item in raw_rules]
     settings = merge_profile_settings(payload.get("settings"))

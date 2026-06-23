@@ -574,6 +574,15 @@ class GmailService:
             logger.warning("delete_message_ids called before successful auth()")
             return 0
 
+        # FIX: messages().delete() braucht den Scope 'https://mail.google.com/', der in
+        # SCOPES fehlt (nur gmail.modify) -> jeder Aufruf 403, per-Message geschluckt,
+        # Rueckgabe processed=0 (STILLER Fehlschlag, GUI meldet faelschlich Erfolg/0).
+        # Konsistent zu delete_by_label hart abweisen statt Loeschen vorzutaeuschen.
+        raise PermissionError(
+            "Permanent deletion requires the 'https://mail.google.com/' scope "
+            "which is not included. Use trashing (move to Trash) instead."
+        )
+
         processed = 0
         for msg_id in message_ids:
             try:
