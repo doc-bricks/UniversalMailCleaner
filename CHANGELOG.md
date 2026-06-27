@@ -30,6 +30,14 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `mail_imap_cleaner_v1.py` exposes `main()` so editable installs and GUI entry points can launch the existing desktop app without wrapper scripts
 
 ### Fixed
+- `workers.py` / `imap_client.py`: Kritischer Datensicherheits-Bug — alle IMAP-Operationen
+  (SEARCH, FETCH, COPY, STORE, EXPUNGE) nutzen jetzt durchgängig UIDs statt
+  verbindungslokal gültiger Sequenznummern (MSN). Damit können keine falschen Mails mehr
+  gelöscht werden, wenn sich die Mailbox zwischen Scan und Löschen geändert hat.
+  `ImapService` erhält `supports_uidplus()` und `uid_expunge()` (RFC 4315 UIDPLUS, mit
+  Fallback auf reguläres EXPUNGE). Neue Regressionstests verifizieren, dass MSN-Pfade
+  nicht mehr erreichbar sind. IMAP-Undo bleibt sicherheitshalber blockiert bis
+  COPYUID-basiertes Trash-Mapping implementiert ist (Teilproblem b).
 - `mail_imap_cleaner_v1.py`: Die Einstellungen sind in der Hauptnavigation nicht mehr nur über ein einzelnes Zahnrad erreichbar; der Tab zeigt jetzt `⚙ Einstellungen` und erklärt den Bereich zusätzlich per Tooltip.
 - `mail_imap_cleaner_v1.py` / `closeEvent`: Worker is now stopped before `save_config` to avoid a race condition on window close.
 - `mail_imap_cleaner_v1.py` / `save_config`: `OSError` is now caught so a failed config write doesn't crash the app.
@@ -83,3 +91,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Logging-Level konfigurierbar via UMAIL_CLEANER_LOG_LEVEL
 - Unit-Tests für ImapService.get_search_criteria() (9 Tests)
 - Docstrings und Type Hints für ImapService und Worker
+# Changelog
+
+## 2026-06-26
+- Sicherheitsfix fuer IMAP-Large-Delete: Scan-Ergebnisse tragen jetzt einen Mailbox-Snapshot
+  (UIDVALIDITY/UIDNEXT/EXISTS) pro Ordner, und der Delete-Worker bricht hart ab, wenn sich der
+  Ordner seit dem Scan geaendert hat.
+- IMAP-Undo wird fuer diese sichere Delete-Historie explizit blockiert, bis eine vollstaendige
+  UID/COPYUID-basierte Zuordnung implementiert ist; dadurch werden keine falschen Trash-Mails
+  restauriert oder expunged.

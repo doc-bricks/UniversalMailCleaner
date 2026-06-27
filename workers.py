@@ -103,6 +103,46 @@ class Worker(QThread):
             return None
         return service
 
+    def _mark_imap_undo_unsafe(self, items: list, reason: str) -> None:
+        """Propagate a safety block back into the GUI undo history objects."""
+        for item in items:
+            item["undo_supported"] = False
+            item["undo_block_reason"] = reason
+
+    def _mailbox_matches_scan_snapshot(self, folder: str, folder_items: list) -> bool:
+        """Abort IMAP deletes when the mailbox changed since the scan result was built."""
+        snapshots = [item.get("mailbox_snapshot") for item in folder_items]
+        if not snapshots or any(snapshot is None for snapshot in snapshots):
+            self.log.emit(
+                f"   Skipping '{folder}': mailbox state from scan is missing, delete aborted for safety."
+            )
+            return False
+
+        baseline = snapshots[0]
+        if any(snapshot != baseline for snapshot in snapshots[1:]):
+            self.log.emit(
+                f"   Skipping '{folder}': inconsistent scan snapshots, delete aborted for safety."
+            )
+            return False
+
+        if not hasattr(self.service, "get_mailbox_snapshot"):
+            return True
+
+        current = self.service.get_mailbox_snapshot(folder)
+        if current is None:
+            self.log.emit(
+                f"   Skipping '{folder}': current mailbox state could not be verified, delete aborted for safety."
+            )
+            return False
+
+        keys = ("uidvalidity", "uidnext", "exists")
+        if any(current.get(key) != baseline.get(key) for key in keys):
+            self.log.emit(
+                f"   Skipping '{folder}': mailbox changed since scan (UIDVALIDITY/UIDNEXT/EXISTS drift)."
+            )
+            return False
+        return True
+
     def run_rules(self, acc: MailAccount) -> None:
         """Executes automatic cleanup rules on an account."""
         rules = self.params.get("rules", [])
@@ -138,7 +178,7 @@ class Worker(QThread):
 
                 self.log.emit(f"Rule '{rule.name}' on {acc.name}/{folder}...")
                 try:
-                    typ, data = self.service.conn.search(None, criteria)
+                    typ, data = self.service.conn.uid("SEARCH", criteria)
                 except imaplib.IMAP4.error as exc:
                     self.log.emit(f"   IMAP search error: {exc}")
                     continue
@@ -146,26 +186,26 @@ class Worker(QThread):
                 if typ != "OK":
                     continue
 
-                ids = data[0].split() if data else []
-                if not ids:
+                uids = data[0].split() if data else []
+                if not uids:
                     self.log.emit("   No matches.")
                     continue
 
-                self.log.emit(f"   Found {len(ids)} emails. Processing...")
-                id_str = b",".join(ids).decode()
+                self.log.emit(f"   Found {len(uids)} emails. Processing...")
+                uid_str = b",".join(uids).decode()
 
                 try:
                     if self.safe_mode:
-                        copy_result = self.service.conn.copy(id_str, trash_folder)
+                        copy_result = self.service.conn.uid("COPY", uid_str, trash_folder)
                         if copy_result[0] == "OK":
-                            self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                            self.service.conn.expunge()
+                            self.service.conn.uid("STORE", uid_str, "+FLAGS", "\\Deleted")
+                            self.service.uid_expunge(uid_str)
                             self.log.emit("   Moved to trash.")
                         else:
                             self.log.emit(f"   Could not move to trash: {copy_result}")
                     else:
-                        self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                        self.service.conn.expunge()
+                        self.service.conn.uid("STORE", uid_str, "+FLAGS", "\\Deleted")
+                        self.service.uid_expunge(uid_str)
                         self.log.emit("   Permanently deleted.")
                 except imaplib.IMAP4.error as exc:
                     self.log.emit(f"   IMAP error during deletion: {exc}")
@@ -208,6 +248,11 @@ class Worker(QThread):
         for folder in folders:
             if self.isInterruptionRequested():
                 break
+            folder_snapshot = (
+                self.service.get_mailbox_snapshot(folder)
+                if hasattr(self.service, "get_mailbox_snapshot")
+                else None
+            )
             try:
                 self.service.conn.select(folder, readonly=True)
             except Exception as exc:  # noqa: BLE001
@@ -215,22 +260,22 @@ class Worker(QThread):
                 continue
 
             try:
-                typ, data = self.service.conn.search(None, f"(LARGER {limit_bytes})")
+                typ, data = self.service.conn.uid("SEARCH", f"(LARGER {limit_bytes})")
             except imaplib.IMAP4.error as exc:
                 self.log.emit(f"Cannot search folder '{folder}': {exc}")
                 continue
             if typ != "OK":
                 continue
 
-            ids = data[0].split() if data else []
-            ids = ids[-50:]
+            uids = data[0].split() if data else []
+            uids = uids[-50:]
 
-            for num in ids:
+            for uid in uids:
                 if self.isInterruptionRequested():
                     break
                 try:
-                    _res, fetch_data = self.service.conn.fetch(
-                        num, "(RFC822.SIZE BODY.PEEK[HEADER.FIELDS (SUBJECT DATE)])"
+                    _res, fetch_data = self.service.conn.uid(
+                        "FETCH", uid, "(RFC822.SIZE BODY.PEEK[HEADER.FIELDS (SUBJECT DATE)])"
                     )
 
                     size_bytes = 0
@@ -256,7 +301,8 @@ class Worker(QThread):
                         results.append({
                             "account": acc.name,
                             "folder": folder,
-                            "id": num.decode(),
+                            "id": uid.decode(),
+                            "mailbox_snapshot": folder_snapshot,
                             "subject": subject,
                             "size": size_bytes / (1024 * 1024),
                             "date": date_str,
@@ -264,7 +310,7 @@ class Worker(QThread):
                 except Exception as exc:  # noqa: BLE001
                     logger.warning(
                         "scan_large: error fetching email %s in %s: %s",
-                        num,
+                        uid,
                         folder,
                         exc,
                     )
@@ -306,6 +352,13 @@ class Worker(QThread):
 
         trash = self.service.find_trash_folder()
         self.log.emit(f"Restoring {len(my_items)} emails from trash in {acc.name}...")
+        blocked_reason = next(
+            (item.get("undo_block_reason") for item in my_items if item.get("undo_supported") is False),
+            None,
+        )
+        if blocked_reason:
+            self.log.emit(f"   Undo blocked for safety: {blocked_reason}")
+            return
         try:
             self.service.conn.select(trash)
             grouped_items = {}
@@ -314,12 +367,12 @@ class Worker(QThread):
 
             restored_total = 0
             for folder, folder_items in grouped_items.items():
-                ids = [item["id"].encode() for item in folder_items]
-                id_str = b",".join(ids).decode()
-                copy_res = self.service.conn.copy(id_str, folder)
+                uids = [item["id"].encode() for item in folder_items]
+                uid_str = b",".join(uids).decode()
+                copy_res = self.service.conn.uid("COPY", uid_str, folder)
                 if copy_res[0] == "OK":
-                    self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                    self.service.conn.expunge()
+                    self.service.conn.uid("STORE", uid_str, "+FLAGS", "\\Deleted")
+                    self.service.uid_expunge(uid_str)
                     restored_total += len(folder_items)
                     self.log.emit(f"   {len(folder_items)} email(s) restored to {folder}.")
                 else:
@@ -382,19 +435,31 @@ class Worker(QThread):
             if self.isInterruptionRequested():
                 break
             try:
+                if not self._mailbox_matches_scan_snapshot(folder, folder_items):
+                    if self.safe_mode:
+                        self._mark_imap_undo_unsafe(
+                            folder_items,
+                            "IMAP-Löschung wurde wegen Mailbox-Drift vor dem Delete blockiert.",
+                        )
+                    continue
                 self.service.conn.select(folder)
-                ids = [item["id"].encode() for item in folder_items]
-                id_str = b",".join(ids).decode()
+                uids = [item["id"].encode() for item in folder_items]
+                uid_str = b",".join(uids).decode()
 
                 if self.safe_mode:
-                    if self.service.conn.copy(id_str, trash)[0] == "OK":
-                        self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                        self.service.conn.expunge()
+                    self._mark_imap_undo_unsafe(
+                        folder_items,
+                        "IMAP-Undo bleibt bis zur UID/COPYUID-sicheren Zuordnung gesperrt; "
+                        "Elemente liegen weiterhin im Papierkorb.",
+                    )
+                    if self.service.conn.uid("COPY", uid_str, trash)[0] == "OK":
+                        self.service.conn.uid("STORE", uid_str, "+FLAGS", "\\Deleted")
+                        self.service.uid_expunge(uid_str)
                     else:
                         self.log.emit(f"   Could not move to trash from {folder}.")
                 else:
-                    self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                    self.service.conn.expunge()
+                    self.service.conn.uid("STORE", uid_str, "+FLAGS", "\\Deleted")
+                    self.service.uid_expunge(uid_str)
             except imaplib.IMAP4.error as exc:
                 self.log.emit(f"   IMAP error in folder '{folder}': {exc}")
             except Exception as exc:  # noqa: BLE001

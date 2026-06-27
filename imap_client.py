@@ -6,6 +6,7 @@ import imaplib
 import email
 import email.header
 import logging
+import re
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 
@@ -65,6 +66,7 @@ class ImapService:
         self.log = log_func
         self.conn = None
         self.current_account = None
+        self._uidplus_cache: Optional[bool] = None
 
     def connect(self, account: MailAccount) -> bool:
         """Establishes an IMAP4_SSL connection to an account.
@@ -91,6 +93,7 @@ class ImapService:
             self.log(f"🔌 Connecting to {account.host}...")
             self.conn = imaplib.IMAP4_SSL(account.host, account.port, timeout=30)
             self.conn.login(account.user, pwd)
+            self._uidplus_cache = None  # zurücksetzen bei neuer Verbindung
             self.log(f"✅ Logged in as {account.user}")
             return True
         except Exception as e:
@@ -105,6 +108,7 @@ class ImapService:
             except Exception as e:
                 logger.warning(f"IMAP logout error: {e}")
             self.conn = None
+            self._uidplus_cache = None  # zurücksetzen bei Trennung
 
     def find_trash_folder(self) -> str:
         """Tries to detect the trash folder.
@@ -178,6 +182,77 @@ class ImapService:
         except Exception as e:
             logger.warning(f"list_folders error: {e}")
             return ["INBOX"]
+
+    def get_mailbox_snapshot(self, mailbox: str) -> Optional[dict]:
+        """Return a minimal mailbox state snapshot for drift checks.
+
+        The snapshot is intentionally small and portable so scan results can carry
+        it into a later delete/undo action and the worker can abort if the mailbox
+        changed in between.
+        """
+        if not self.conn:
+            return None
+        try:
+            status, data = self.conn.status(mailbox, "(UIDVALIDITY UIDNEXT MESSAGES)")
+            if status != "OK" or not data:
+                return None
+            raw = data[0].decode("utf-8", errors="replace") if isinstance(data[0], bytes) else str(data[0])
+            snapshot = {"mailbox": mailbox}
+            for key in ("UIDVALIDITY", "UIDNEXT", "MESSAGES"):
+                match = re.search(rf"{key}\s+(\d+)", raw, re.IGNORECASE)
+                if not match:
+                    return None
+                snapshot[key.lower()] = int(match.group(1))
+            snapshot["exists"] = snapshot["messages"]
+            return snapshot
+        except Exception as e:
+            logger.warning(f"get_mailbox_snapshot error for {mailbox}: {e}")
+            return None
+
+    def supports_uidplus(self) -> bool:
+        """Prüft ob der IMAP-Server UIDPLUS (RFC 4315) unterstützt.
+
+        Das Ergebnis wird bis zur nächsten Verbindung gecacht.
+
+        Returns:
+            True wenn der Server UIDPLUS meldet, sonst False.
+        """
+        if self._uidplus_cache is not None:
+            return self._uidplus_cache
+        if not self.conn:
+            return False
+        try:
+            status, caps = self.conn.capability()
+            if status != "OK" or not caps:
+                self._uidplus_cache = False
+                return False
+            cap_str = b" ".join(c for c in caps if c).decode("utf-8", errors="replace").upper()
+            self._uidplus_cache = "UIDPLUS" in cap_str
+            return self._uidplus_cache
+        except Exception as e:
+            logger.debug(f"supports_uidplus-Abfrage fehlgeschlagen: {e}")
+            self._uidplus_cache = False
+            return False
+
+    def uid_expunge(self, uid_str: str) -> tuple:
+        """Entfernt Nachrichten per UID EXPUNGE (RFC 4315), falls UIDPLUS verfügbar.
+
+        Falls der Server UIDPLUS nicht unterstützt, fällt die Methode auf
+        reguläres EXPUNGE zurück — das löscht dann alle \\Deleted-Mails im
+        aktuellen Ordner, nicht nur die angegebenen UIDs.
+
+        Args:
+            uid_str: Kommagetrennte UID-Liste, z.B. '101,102,103'.
+
+        Returns:
+            IMAP-Antwort-Tuple (typ, data).
+        """
+        if self.supports_uidplus():
+            return self.conn.uid("EXPUNGE", uid_str)
+        logger.warning(
+            "UIDPLUS nicht verfügbar — EXPUNGE entfernt alle \\Deleted-Mails im Ordner"
+        )
+        return self.conn.expunge()
 
     def get_search_criteria(self, rule: CleanRule) -> Optional[str]:
         """Translates a CleanRule into an IMAP search command string.

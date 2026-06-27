@@ -245,6 +245,42 @@ class TestFindTrashFolderParsing(unittest.TestCase):
         self.assertEqual(result, "Trash")
 
 
+class TestMailboxSnapshot(unittest.TestCase):
+    """get_mailbox_snapshot must parse STATUS metadata for drift checks."""
+
+    def test_parses_uidvalidity_uidnext_and_messages(self):
+        class _FakeConn:
+            def status(self, mailbox, attrs):  # noqa: ARG002
+                self.last_mailbox = mailbox
+                return "OK", [b'INBOX (UIDVALIDITY 42 UIDNEXT 105 MESSAGES 7)']
+
+        service = ImapService(lambda _: None)
+        service.conn = _FakeConn()
+
+        snapshot = service.get_mailbox_snapshot("INBOX")
+
+        self.assertEqual(
+            snapshot,
+            {
+                "mailbox": "INBOX",
+                "uidvalidity": 42,
+                "uidnext": 105,
+                "messages": 7,
+                "exists": 7,
+            },
+        )
+
+    def test_returns_none_when_status_payload_is_incomplete(self):
+        class _FakeConn:
+            def status(self, mailbox, attrs):  # noqa: ARG002
+                return "OK", [b'INBOX (UIDVALIDITY 42 MESSAGES 7)']
+
+        service = ImapService(lambda _: None)
+        service.conn = _FakeConn()
+
+        self.assertIsNone(service.get_mailbox_snapshot("INBOX"))
+
+
 class TestImapConnectTimeout(unittest.TestCase):
     """ImapService.connect() muss IMAP4_SSL mit timeout=30 aufrufen."""
 
@@ -281,6 +317,78 @@ class TestImapConnectTimeout(unittest.TestCase):
 
         self.assertTrue(calls, "IMAP4_SSL wurde nicht aufgerufen")
         self.assertEqual(calls[0]["timeout"], 30, f"timeout war {calls[0]['timeout']}, erwartet 30")
+
+
+class TestImapServiceUidExpunge(unittest.TestCase):
+    """Tests für ImapService.supports_uidplus() und .uid_expunge()."""
+
+    def _make_service(self):
+        """Erstellt einen ImapService mit Dummy-Log."""
+        return ImapService(lambda _: None)
+
+    def test_supports_uidplus_returns_true_when_capability_includes_uidplus(self):
+        """supports_uidplus() muss True zurückgeben wenn der Server UIDPLUS meldet."""
+
+        class _CapConn:
+            def capability(self):
+                return "OK", [b"IMAP4rev1 AUTH=LOGIN UIDPLUS UNSELECT LITERAL+"]
+
+        service = self._make_service()
+        service.conn = _CapConn()
+        self.assertTrue(service.supports_uidplus())
+
+    def test_supports_uidplus_returns_false_when_uidplus_absent(self):
+        """supports_uidplus() muss False zurückgeben wenn UIDPLUS nicht in CAPABILITY."""
+
+        class _CapConnNoUidplus:
+            def capability(self):
+                return "OK", [b"IMAP4rev1 AUTH=LOGIN UNSELECT"]
+
+        service = self._make_service()
+        service.conn = _CapConnNoUidplus()
+        self.assertFalse(service.supports_uidplus())
+
+    def test_uid_expunge_uses_uid_command_when_uidplus_available(self):
+        """uid_expunge() muss conn.uid('EXPUNGE', uid_str) aufrufen wenn UIDPLUS vorhanden."""
+        uid_expunge_calls = []
+
+        class _UidplusConn:
+            def capability(self):
+                return "OK", [b"IMAP4rev1 UIDPLUS"]
+
+            def uid(self, command, *args):
+                if command == "EXPUNGE":
+                    uid_expunge_calls.append(args)
+                return "OK", [b""]
+
+            def expunge(self):
+                raise AssertionError("conn.expunge() darf bei UIDPLUS nicht aufgerufen werden")
+
+        service = self._make_service()
+        service.conn = _UidplusConn()
+        service.uid_expunge("101,102,103")
+
+        self.assertEqual(len(uid_expunge_calls), 1)
+        self.assertEqual(uid_expunge_calls[0][0], "101,102,103")
+
+    def test_uid_expunge_falls_back_to_plain_expunge_without_uidplus(self):
+        """uid_expunge() muss auf conn.expunge() zurückfallen wenn UIDPLUS fehlt."""
+        expunge_calls = []
+
+        class _NoUidplusConn:
+            def capability(self):
+                return "OK", [b"IMAP4rev1 AUTH=LOGIN"]
+
+            def expunge(self):
+                expunge_calls.append(True)
+                return "OK", [b""]
+
+        service = self._make_service()
+        service.conn = _NoUidplusConn()
+        service.uid_expunge("101,102,103")
+
+        self.assertEqual(len(expunge_calls), 1,
+                         "conn.expunge() muss als Fallback aufgerufen werden")
 
 
 if __name__ == "__main__":

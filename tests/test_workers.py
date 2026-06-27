@@ -95,22 +95,69 @@ class _FakeImapConn:
         self.copy_calls = []
         self.store_calls = []
         self.expunge_calls = 0
+        self.snapshot_map = {
+            "INBOX": {
+                "mailbox": "INBOX",
+                "uidvalidity": 1,
+                "uidnext": 11,
+                "messages": 2,
+                "exists": 2,
+            },
+            "Projects": {
+                "mailbox": "Projects",
+                "uidvalidity": 2,
+                "uidnext": 21,
+                "messages": 2,
+                "exists": 2,
+            },
+            "Trash": {
+                "mailbox": "Trash",
+                "uidvalidity": 3,
+                "uidnext": 31,
+                "messages": 5,
+                "exists": 5,
+            },
+        }
 
     def select(self, mailbox, readonly=False):
         self.select_calls.append((mailbox, readonly))
         return "OK", [b""]
 
-    def copy(self, message_set, mailbox):
-        self.copy_calls.append((message_set, mailbox))
+    def uid(self, command, *args):
+        """Simuliert UID-Befehle; routed COPY/STORE/EXPUNGE in Tracking-Listen.
+
+        MSN-basierte Methoden (copy/store/expunge) dürfen nach der UID-Migration
+        nie mehr direkt aufgerufen werden — sie werfen AssertionError als Schutz.
+        """
+        if command == "SEARCH":
+            return "OK", [b""]  # Standard: keine Treffer
+        if command == "FETCH":
+            return "OK", [b""]
+        if command == "COPY":
+            self.copy_calls.append((args[0], args[1]))
+            return "OK", [b""]
+        if command == "STORE":
+            self.store_calls.append(args)
+            return "OK", [b""]
+        if command == "EXPUNGE":
+            self.expunge_calls += 1
+            return "OK", [b""]
         return "OK", [b""]
+
+    def copy(self, message_set, mailbox):
+        raise AssertionError(
+            "MSN-basiertes conn.copy() aufgerufen — muss conn.uid('COPY', ...) nutzen"
+        )
 
     def store(self, *args):
-        self.store_calls.append(args)
-        return "OK", [b""]
+        raise AssertionError(
+            "MSN-basiertes conn.store() aufgerufen — muss conn.uid('STORE', ...) nutzen"
+        )
 
     def expunge(self):
-        self.expunge_calls += 1
-        return "OK", [b""]
+        raise AssertionError(
+            "MSN-basiertes conn.expunge() aufgerufen — muss service.uid_expunge() nutzen"
+        )
 
 
 class _FakeImapService:
@@ -129,6 +176,12 @@ class _FakeImapService:
 
     def find_trash_folder(self):
         return "Trash"
+
+    def get_mailbox_snapshot(self, mailbox):
+        return dict(self.conn.snapshot_map.get(mailbox, {})) or None
+
+    def uid_expunge(self, uid_str):
+        return self.conn.uid("EXPUNGE", uid_str)
 
     def disconnect(self):
         self.disconnect_called = True
@@ -243,8 +296,30 @@ class TestDeleteItemsImap(unittest.TestCase):
     def test_delete_items_imap_error_does_not_abort_remaining_folders(self):
         """An IMAP error selecting folder 1 must not skip processing folder 2."""
         items = [
-            {"account": "IMAP Main", "id": "1", "folder": "INBOX"},
-            {"account": "IMAP Main", "id": "2", "folder": "Projects"},
+            {
+                "account": "IMAP Main",
+                "id": "1",
+                "folder": "INBOX",
+                "mailbox_snapshot": {
+                    "mailbox": "INBOX",
+                    "uidvalidity": 1,
+                    "uidnext": 11,
+                    "messages": 2,
+                    "exists": 2,
+                },
+            },
+            {
+                "account": "IMAP Main",
+                "id": "2",
+                "folder": "Projects",
+                "mailbox_snapshot": {
+                    "mailbox": "Projects",
+                    "uidvalidity": 2,
+                    "uidnext": 21,
+                    "messages": 2,
+                    "exists": 2,
+                },
+            },
         ]
 
         class _FailFirstSelectConn(_FakeImapConn):
@@ -274,8 +349,30 @@ class TestDeleteItemsImap(unittest.TestCase):
     def test_delete_items_stops_when_interruption_requested(self):
         """delete_items must break out of the folder loop on interruption."""
         items = [
-            {"account": "IMAP Main", "id": "1", "folder": "INBOX"},
-            {"account": "IMAP Main", "id": "2", "folder": "Projects"},
+            {
+                "account": "IMAP Main",
+                "id": "1",
+                "folder": "INBOX",
+                "mailbox_snapshot": {
+                    "mailbox": "INBOX",
+                    "uidvalidity": 1,
+                    "uidnext": 11,
+                    "messages": 2,
+                    "exists": 2,
+                },
+            },
+            {
+                "account": "IMAP Main",
+                "id": "2",
+                "folder": "Projects",
+                "mailbox_snapshot": {
+                    "mailbox": "Projects",
+                    "uidvalidity": 2,
+                    "uidnext": 21,
+                    "messages": 2,
+                    "exists": 2,
+                },
+            },
         ]
         call_count = [0]
 
@@ -293,6 +390,59 @@ class TestDeleteItemsImap(unittest.TestCase):
         fake = _FakeImapService.instances[-1]
         self.assertEqual(fake.conn.select_calls, [], "No folder may be selected after interruption")
 
+    def test_delete_items_blocks_when_mailbox_drifted_since_scan(self):
+        """A later delete must abort if the mailbox state differs from the scan snapshot."""
+        items = [
+            {
+                "account": "IMAP Main",
+                "id": "1",
+                "folder": "INBOX",
+                "mailbox_snapshot": {
+                    "mailbox": "INBOX",
+                    "uidvalidity": 1,
+                    "uidnext": 10,
+                    "messages": 1,
+                    "exists": 1,
+                },
+            }
+        ]
+        log_messages = []
+
+        with patch("workers.ImapService", _FakeImapService):
+            worker = Worker(
+                "delete", {"items": items, "safe_mode": True}, [self.imap_account]
+            )
+            worker.log.connect(log_messages.append)
+            worker.run()
+
+        fake = _FakeImapService.instances[-1]
+        self.assertEqual(fake.conn.select_calls, [], "Delete must stop before selecting the drifted mailbox")
+        self.assertTrue(any("mailbox changed since scan" in msg.lower() for msg in log_messages))
+        self.assertFalse(items[0]["undo_supported"])
+        self.assertIn("drift", items[0]["undo_block_reason"].lower())
+
+    def test_undo_delete_blocks_when_items_are_marked_unsafe(self):
+        """Unsafe IMAP undo metadata must stop the restore worker before Trash access."""
+        items = [
+            {
+                "account": "IMAP Main",
+                "id": "1",
+                "folder": "INBOX",
+                "undo_supported": False,
+                "undo_block_reason": "IMAP undo remains blocked until UID-safe mapping exists.",
+            }
+        ]
+        log_messages = []
+
+        with patch("workers.ImapService", _FakeImapService):
+            worker = Worker("undo", {"items": items, "safe_mode": True}, [self.imap_account])
+            worker.log.connect(log_messages.append)
+            worker.run()
+
+        fake = _FakeImapService.instances[-1]
+        self.assertEqual(fake.conn.select_calls, [], "Unsafe undo must not open Trash at all")
+        self.assertTrue(any("undo blocked for safety" in msg.lower() for msg in log_messages))
+
 
 class TestScanLargeMissingDateHeader(unittest.TestCase):
     """scan_large must not crash when an email has no Date header."""
@@ -301,7 +451,7 @@ class TestScanLargeMissingDateHeader(unittest.TestCase):
         raw_headers = b"Subject: Big Attachment\r\n\r\n"
         size = 15_000_000
         meta = (
-            f"1 (RFC822.SIZE {size} BODY[HEADER.FIELDS (SUBJECT DATE)] "
+            f"1 (UID 1 RFC822.SIZE {size} BODY[HEADER.FIELDS (SUBJECT DATE)] "
             f"{{{len(raw_headers)}}})"
         ).encode()
 
@@ -309,11 +459,12 @@ class TestScanLargeMissingDateHeader(unittest.TestCase):
             def select(self, folder, readonly=False):
                 return "OK", [b"1"]
 
-            def search(self, charset, criteria):
-                return "OK", [b"1"]
-
-            def fetch(self, num, parts):
-                return "OK", [(meta, raw_headers), b")"]
+            def uid(self, command, *args):
+                if command == "SEARCH":
+                    return "OK", [b"1"]
+                if command == "FETCH":
+                    return "OK", [(meta, raw_headers), b")"]
+                return "OK", [b""]
 
         class _Svc:
             def __init__(self, log_func):
@@ -358,21 +509,22 @@ class TestScanLargeSearchError(unittest.TestCase):
             def select(self, folder, readonly=False):
                 return "OK", [b""]
 
-            def search(self, charset, criteria):
-                _ConnSearchFails._folder_count += 1
-                if _ConnSearchFails._folder_count == 1:
-                    raise imaplib.IMAP4.error("Simulated search error")
-                # Second folder returns one result
-                return "OK", [b"1"]
-
-            def fetch(self, num, parts):
-                raw = b"Subject: Large Mail\r\n\r\n"
-                size = 20_000_000
-                meta = (
-                    f"1 (RFC822.SIZE {size} BODY[HEADER.FIELDS (SUBJECT DATE)] "
-                    f"{{{len(raw)}}})"
-                ).encode()
-                return "OK", [(meta, raw), b")"]
+            def uid(self, command, *args):
+                if command == "SEARCH":
+                    _ConnSearchFails._folder_count += 1
+                    if _ConnSearchFails._folder_count == 1:
+                        raise imaplib.IMAP4.error("Simulated search error")
+                    # Zweiter Ordner liefert ein Ergebnis
+                    return "OK", [b"1"]
+                if command == "FETCH":
+                    raw = b"Subject: Large Mail\r\n\r\n"
+                    size = 20_000_000
+                    meta = (
+                        f"1 (UID 1 RFC822.SIZE {size} BODY[HEADER.FIELDS (SUBJECT DATE)] "
+                        f"{{{len(raw)}}})"
+                    ).encode()
+                    return "OK", [(meta, raw), b")"]
+                return "OK", [b""]
 
         class _Svc:
             def __init__(self, log_func):
@@ -422,11 +574,14 @@ class TestRunRulesSearchError(unittest.TestCase):
         search_calls = []
 
         class _SearchErrorConn(_FakeImapConn):
-            def search(self, charset, criteria):
-                search_calls.append(criteria)
-                if len(search_calls) == 1:
-                    raise imaplib.IMAP4.error("Simulated search error")
-                return "OK", [b""]  # no matches for rule_b
+            def uid(self, command, *args):
+                if command == "SEARCH":
+                    # Das Kriterium ist das letzte Argument
+                    search_calls.append(args[-1])
+                    if len(search_calls) == 1:
+                        raise imaplib.IMAP4.error("Simulated search error")
+                    return "OK", [b""]  # Keine Treffer für rule_b
+                return super().uid(command, *args)
 
         class _SearchErrorService(_FakeImapService):
             def __init__(self, log_func):
@@ -457,6 +612,151 @@ class TestRunRulesSearchError(unittest.TestCase):
         self.assertTrue(
             any("imap search error" in msg.lower() for msg in log_messages),
             "Error from rule 1 must be logged",
+        )
+
+
+class TestUidMigration(unittest.TestCase):
+    """Regression: alle IMAP-Operationen in workers.py müssen UIDs nutzen, keine MSNs.
+
+    Die _FakeImapConn.copy/store/expunge-Methoden werfen AssertionError —
+    ein bestandener Test beweist, dass MSN-Pfade nie aufgerufen werden.
+    """
+
+    def setUp(self):
+        _FakeImapService.instances.clear()
+        self.imap_account = MailAccount(
+            name="IMAP Main",
+            host="imap.example.com",
+            user="user@example.com",
+            port=993,
+        )
+
+    def test_run_rules_uses_uid_search_not_msn_search(self):
+        """run_rules() muss uid('SEARCH') aufrufen, nie conn.search() (MSN)."""
+        rule = CleanRule("OlderThan", "IMAP Main", "older_than_days", "30")
+        uid_search_called = []
+
+        class _TrackConn(_FakeImapConn):
+            def uid(self, command, *args):
+                if command == "SEARCH":
+                    uid_search_called.append(args)
+                    return "OK", [b""]  # Keine Treffer → kein COPY/STORE
+                return super().uid(command, *args)
+
+        class _TrackSvc(_FakeImapService):
+            def __init__(self, log_func):
+                super().__init__(log_func)
+                self.conn = _TrackConn()
+
+            def get_search_criteria(self, rule_obj):
+                return '(BEFORE "01-Jan-2026")'
+
+        with patch("workers.ImapService", _TrackSvc):
+            worker = Worker(
+                "rules",
+                {"rules": [rule], "folders": ["INBOX"], "safe_mode": True},
+                [self.imap_account],
+            )
+            worker.run()
+
+        self.assertGreater(
+            len(uid_search_called), 0,
+            "conn.uid('SEARCH', ...) muss für die Regel aufgerufen werden"
+        )
+
+    def test_delete_items_passes_uid_to_copy_not_msn(self):
+        """delete_items() muss die UID per uid('COPY') senden, nicht conn.copy() (MSN).
+
+        Shift-Szenario: item['id'] enthält eine UID (hier '10042').
+        Nach MSN-basierten Löschungen hätte sich die Sequenznummer verschoben,
+        aber die UID bleibt stabil — uid('COPY') adressiert immer die richtige Mail.
+        """
+        items = [
+            {
+                "account": "IMAP Main",
+                "id": "10042",  # UID, keine MSN
+                "folder": "INBOX",
+                "mailbox_snapshot": {
+                    "mailbox": "INBOX",
+                    "uidvalidity": 1,
+                    "uidnext": 11,
+                    "messages": 2,
+                    "exists": 2,
+                },
+            }
+        ]
+
+        with patch("workers.ImapService", _FakeImapService):
+            worker = Worker(
+                "delete",
+                {"items": items, "safe_mode": True},
+                [self.imap_account],
+            )
+            worker.run()
+
+        fake = _FakeImapService.instances[-1]
+        self.assertEqual(
+            fake.conn.copy_calls, [("10042", "Trash")],
+            "uid('COPY') muss mit UID '10042' aufgerufen werden, nicht mit einer MSN"
+        )
+        self.assertEqual(
+            fake.conn.expunge_calls, 1,
+            "uid_expunge() muss nach COPY aufgerufen werden"
+        )
+
+    def test_scan_large_stores_uid_from_search_as_item_id(self):
+        """scan_large() muss die UID aus uid('SEARCH') als item['id'] speichern.
+
+        Shift-Szenario: uid('SEARCH') liefert die UID 99999. Auch wenn nach dem
+        Scan andere Mails gelöscht wurden und sich MSNs verschieben würden,
+        bleibt item['id'] == '99999' die stabile Zieladresse für spätere Aktionen.
+        """
+        expected_uid = b"99999"
+        raw_headers = b"Subject: Huge Mail\r\nDate: Sat, 01 Jan 2026 10:00:00 +0000\r\n\r\n"
+        size = 25_000_000
+        meta = (
+            f"1 (UID {expected_uid.decode()} RFC822.SIZE {size}"
+            f" BODY[HEADER.FIELDS (SUBJECT DATE)] {{{len(raw_headers)}}})"
+        ).encode()
+
+        class _UidScanConn:
+            def select(self, folder, readonly=False):
+                return "OK", [b""]
+
+            def uid(self, command, *args):
+                if command == "SEARCH":
+                    return "OK", [expected_uid]
+                if command == "FETCH":
+                    return "OK", [(meta, raw_headers), b")"]
+                return "OK", [b""]
+
+        class _UidScanSvc:
+            def __init__(self, log_func):
+                self.conn = _UidScanConn()
+
+            def connect(self, account):
+                return True
+
+            def get_mailbox_snapshot(self, folder):
+                return None
+
+            def disconnect(self):
+                pass
+
+        received = []
+        with patch("workers.ImapService", _UidScanSvc):
+            worker = Worker(
+                "scan_large",
+                {"threshold": 10, "folders": ["INBOX"], "scan_mail": True},
+                [self.imap_account],
+            )
+            worker.data_ready.connect(lambda items: received.extend(items))
+            worker.run()
+
+        self.assertEqual(len(received), 1)
+        self.assertEqual(
+            received[0]["id"], expected_uid.decode(),
+            "item['id'] muss die UID aus uid('SEARCH') enthalten, keine MSN"
         )
 
 
