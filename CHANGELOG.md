@@ -30,6 +30,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `mail_imap_cleaner_v1.py` exposes `main()` so editable installs and GUI entry points can launch the existing desktop app without wrapper scripts
 
 ### Fixed
+- `workers.py`: `finished = Signal(str)` überschattete das parameterlose `QThread.finished`-Lifecycle-Signal.
+  Das Custom-Signal heißt jetzt `task_done = Signal(str)`; `mail_imap_cleaner_v1.py` verbindet entsprechend
+  `task_done`. Damit reagiert Qt's C++-seitiger Lifecycle-Mechanismus wieder korrekt, wenn der Thread
+  unerwartet endet. Regressionstest in `tests/test_bug_regressions_20260623.py` ergänzt.
 - `workers.py` / `imap_client.py`: Kritischer Datensicherheits-Bug — alle IMAP-Operationen
   (SEARCH, FETCH, COPY, STORE, EXPUNGE) nutzen jetzt durchgängig UIDs statt
   verbindungslokal gültiger Sequenznummern (MSN). Damit können keine falschen Mails mehr

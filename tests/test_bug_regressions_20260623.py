@@ -36,3 +36,12 @@ def test_profile_write_atomic_source():
     s = _read("profile_exchange.py")
     assert "tmp.replace(p)" in s
     assert "Path(path).write_text(" not in s  # alter nicht-atomarer Pfad ersetzt
+
+
+def test_worker_task_done_does_not_shadow_qthread_finished():
+    """Worker.task_done = Signal(str); QThread.finished bleibt der ererbte parameterlose Lifecycle-Signal."""
+    s = _read("workers.py")
+    # Altes Shadowing muss weg sein
+    assert "finished = Signal" not in s
+    # Neuer, eindeutiger Signal-Name muss vorhanden sein
+    assert "task_done = Signal(str)" in s

@@ -666,7 +666,7 @@ class MainWindow(QMainWindow):
         self.worker = Worker(mode, params, self.accounts)
         self.worker.log.connect(self.log.appendPlainText)
         if mode == "scan_large": self.worker.data_ready.connect(self.fill_large)
-        self.worker.finished.connect(lambda x: self.status.setText(x))
+        self.worker.task_done.connect(lambda x: self.status.setText(x))
         self.worker.start()
 
     def select_rule_folders(self):

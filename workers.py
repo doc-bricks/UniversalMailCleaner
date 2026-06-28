@@ -27,12 +27,13 @@ class Worker(QThread):
     Signals:
         log (str): Log message for the GUI.
         data_ready (list): Data for the GUI (e.g. large emails).
-        finished (str): Completion message.
+        task_done (str): Completion message. Renamed from ``finished`` to avoid
+            shadowing the parameterless ``QThread.finished`` lifecycle signal.
     """
 
     log = Signal(str)
     data_ready = Signal(list)
-    finished = Signal(str)
+    task_done = Signal(str)
 
     def __init__(self, mode: str, params: dict, accounts: List[MailAccount]) -> None:
         """Initializes the worker.
@@ -60,7 +61,7 @@ class Worker(QThread):
 
         if not to_process:
             self.log.emit("No account selected.")
-            self.finished.emit("Aborted.")
+            self.task_done.emit("Aborted.")
             return
 
         for acc in to_process:
@@ -86,7 +87,7 @@ class Worker(QThread):
                 if isinstance(self.service, ImapService):
                     self.service.disconnect()
 
-        self.finished.emit("Operation completed.")
+        self.task_done.emit("Operation completed.")
 
     def _connect_service(self, acc: MailAccount):
         """Create and authenticate the backend service for one account."""
