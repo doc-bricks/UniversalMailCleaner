@@ -56,9 +56,28 @@ except ImportError:
 # ==================== CONFIGURATION ====================
 
 APP_NAME = "UniversalMailCleaner"
-BASE_DIR = Path.home() / ".mail_cleaner"
+LEGACY_BASE_DIR = Path.home() / ".mail_cleaner"
+
+
+def _default_base_dir() -> Path:
+    """Return the Store-friendly per-user data directory."""
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        return Path(local_app_data) / APP_NAME
+    return Path.home() / ".local" / "share" / APP_NAME
+
+
+BASE_DIR = _default_base_dir()
 BASE_DIR.mkdir(parents=True, exist_ok=True)
 CONFIG_FILE = BASE_DIR / "config.json"
+LEGACY_CONFIG_FILE = LEGACY_BASE_DIR / "config.json"
+
+
+def _config_read_file() -> Path:
+    """Prefer the Store-friendly config path, but read legacy installs once."""
+    if CONFIG_FILE.exists() or not LEGACY_CONFIG_FILE.exists():
+        return CONFIG_FILE
+    return LEGACY_CONFIG_FILE
 
 _log_level_name = os.environ.get("UMAIL_CLEANER_LOG_LEVEL", "INFO").upper()
 _log_level = getattr(logging, _log_level_name, None)
@@ -303,9 +322,10 @@ class MainWindow(QMainWindow):
 
     def load_config(self):
         """Loads accounts, rules, and settings from the JSON config file."""
-        if CONFIG_FILE.exists():
+        config_file = _config_read_file()
+        if config_file.exists():
             try:
-                data = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+                data = json.loads(config_file.read_text(encoding="utf-8"))
                 self.settings = merge_profile_settings(data.get("settings"))
                 self.accounts = [MailAccount.from_dict(x) for x in data.get("accounts", [])]
                 self.rules = [CleanRule.from_dict(x) for x in data.get("rules", [])]
@@ -324,6 +344,7 @@ class MainWindow(QMainWindow):
             "rules": [r.to_dict() for r in self.rules]
         }
         try:
+            CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
             CONFIG_FILE.write_text(
                 json.dumps(data, indent=4, ensure_ascii=False),
                 encoding="utf-8",

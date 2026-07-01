@@ -6,6 +6,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Windows Store readiness preflight (`scripts/check_store_readiness.py`),
+  `store_package.json`, and `docs/WINDOWS_STORE_READINESS.md` for the
+  Partner Center / MSIX / WACK gate.
 - Source-platform smoke (`tests/source_platform_smoke.py`) for macOS and Linux with
   GitHub Actions CI on ubuntu-latest and macos-latest (PySide6 offscreen, 6 checks)
 - Gmail cleanup rules now run against Gmail API accounts in addition to IMAP accounts
@@ -28,6 +31,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Scan settings, selected IMAP target folders, and scheduler exchange settings now persist in the desktop config and portable profile
 - CI: source-platform smoke workflow `paths:` filter removed so the smoke now triggers on changes to any module (`imap_client`, `models`, `gmail_service`, `profile_exchange`), not just the main file
 - `mail_imap_cleaner_v1.py` exposes `main()` so editable installs and GUI entry points can launch the existing desktop app without wrapper scripts
+- Desktop config writes now use `%LOCALAPPDATA%\UniversalMailCleaner\config.json`
+  while still reading legacy `%USERPROFILE%\.mail_cleaner\config.json` installs
+  when no new config exists.
 
 ### Fixed
 - `workers.py`: `finished = Signal(str)` überschattete das parameterlose `QThread.finished`-Lifecycle-Signal.

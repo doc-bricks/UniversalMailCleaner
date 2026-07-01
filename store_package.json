@@ -1,0 +1,27 @@
+{
+  "app_id": "UniversalMailCleaner",
+  "display_name": "UniversalMailCleaner",
+  "version": "1.2.0",
+  "publisher": "TODO_PARTNER_CENTER_PUBLISHER_DN",
+  "privacy_url": "TODO_PUBLIC_PRIVACY_URL",
+  "support_url": "TODO_PUBLIC_SUPPORT_URL",
+  "package_family_name": "TODO_PARTNER_CENTER_PACKAGE_FAMILY_NAME",
+  "description": "Local-first Windows desktop app for cleaning IMAP and Gmail mailboxes.",
+  "local_data": {
+    "config": "%LOCALAPPDATA%\\UniversalMailCleaner\\config.json",
+    "gmail_token": "%LOCALAPPDATA%\\UniversalMailCleaner\\gmail_token.json",
+    "legacy_config_read_fallback": "%USERPROFILE%\\.mail_cleaner\\config.json"
+  },
+  "forbidden_release_files": [
+    "credentials.json",
+    "client_secret*.json",
+    "token.json",
+    "gmail_token.json",
+    "*.pem",
+    "*.key",
+    "*.db",
+    "*.sqlite",
+    "*.sqlite3"
+  ],
+  "store_status": "preflight-blocked-until-public-urls-msix-wack"
+}

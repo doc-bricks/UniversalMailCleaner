@@ -93,7 +93,9 @@ python mail_imap_cleaner_v1.py
 
 ## Configuration
 
-- Config file: `%USERPROFILE%\.mail_cleaner\config.json`
+- Config file: `%LOCALAPPDATA%\UniversalMailCleaner\config.json`
+- Existing legacy installs can still be read from `%USERPROFILE%\.mail_cleaner\config.json`;
+  new saves use the Store-friendly local app data path.
 - Passwords are not stored in the JSON file
 - Safe mode is active by default
 
@@ -152,6 +154,19 @@ Install via `pip install keyring`.
 
 **Trash folder not detected?**
 Set it manually in the account dialog.
+
+## Windows Store Readiness
+
+The Store path is tracked as a conservative desktop-bridge preflight. Run:
+
+```bash
+python scripts/check_store_readiness.py --allow-blockers
+```
+
+The current preflight verifies local config/token paths, secret exclusions,
+runtime materials, and Store metadata. It intentionally remains blocked until
+the Partner Center publisher identity, public privacy/support URLs, a signed
+MSIX, and a WACK XML report are available.
 
 ## Related Tools
 

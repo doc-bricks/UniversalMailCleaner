@@ -97,7 +97,9 @@ python mail_imap_cleaner_v1.py
 
 ## Konfiguration
 
-- Lokale Konfigurationsdatei: `%USERPROFILE%\.mail_cleaner\config.json`
+- Lokale Konfigurationsdatei: `%LOCALAPPDATA%\UniversalMailCleaner\config.json`
+- Bestehende Legacy-Installationen können `%USERPROFILE%\.mail_cleaner\config.json`
+  noch lesen; neue Speicherungen nutzen den Store-freundlichen LocalAppData-Pfad.
 - Passwörter werden nicht in der JSON-Datei gespeichert
 - Safe-Mode ist standardmäßig aktiv
 
@@ -156,6 +158,19 @@ Installation via `pip install keyring`.
 
 **Papierkorb-Ordner nicht erkannt?**
 Im Konto-Dialog manuell setzen.
+
+## Windows-Store-Readiness
+
+Der Store-Pfad ist als konservativer Desktop-Bridge-Preflight dokumentiert:
+
+```bash
+python scripts/check_store_readiness.py --allow-blockers
+```
+
+Der aktuelle Preflight prüft lokale Konfigurations-/Tokenpfade, Secret-Ausschlüsse,
+Runtime-Material und Store-Metadaten. Er bleibt bewusst blockiert, bis
+Partner-Center-Publisher, öffentliche Privacy-/Support-URLs, ein signiertes MSIX
+und ein WACK-XML-Report vorliegen.
 
 ## Verwandte Tools
 
