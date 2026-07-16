@@ -67,6 +67,14 @@ test("index.html has viewport-fit=cover for iOS notch", async () => {
   assert.match(html, /viewport-fit=cover/);
 });
 
+test("status banner is a polite live region for import feedback", async () => {
+  const html = await readFile(new URL("index.html", ROOT), "utf8");
+  assert.match(html, /id="status-banner"/);
+  assert.match(html, /role="status"/);
+  assert.match(html, /aria-live="polite"/);
+  assert.match(html, /aria-atomic="true"/);
+});
+
 test("CSS uses safe-area-inset for notch/home-bar", async () => {
   const css = await readFile(new URL("app.css", ROOT), "utf8");
   assert.match(css, /env\(safe-area-inset-top/);
