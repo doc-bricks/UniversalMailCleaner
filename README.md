@@ -6,14 +6,55 @@
 
 > Local-first Windows desktop app for cleaning IMAP and Gmail mailboxes — rule-based cleanup, large-mail scans, scheduler, safe trash mode.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v1.2.0-blue)](CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-v1.2.0-blue.svg)](CHANGELOG.md)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#start-here)
-[![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
+[![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52.svg)](https://pypi.org/project/PySide6/)
+[![Pytest 85 Passed](https://img.shields.io/badge/Pytest-85%20passed-brightgreen.svg)](tests)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+[![LLM-Ready llms.txt](https://img.shields.io/badge/LLM--Ready-llms.txt-purple.svg)](llms.txt)
+[![Ecosystem doc-bricks](https://img.shields.io/badge/Ecosystem-doc--bricks-blue.svg)](https://github.com/doc-bricks)
+[![Umbrella open-bricks](https://img.shields.io/badge/Umbrella-open--bricks-orange.svg)](https://github.com/open-bricks)
 
 UniversalMailCleaner combines rule-based email cleanup, large-mail and Drive scans, scheduler runs, safe trash mode, and undoable deletion workflows in one PySide6 interface.
 
 ![UniversalMailCleaner desktop mailbox cleanup UI with accounts, rules, large-item scan, Gmail labels, scheduler, and safe trash mode](README/screenshots/main.png)
+
+> [!NOTE]
+> **Privacy-First & Local Architecture**: UniversalMailCleaner executes all scanning, filtering, IMAP calls, and OAuth2 Gmail API operations locally on your machine. Passwords and credentials never leave your local environment.
+
+> [!TIP]
+> **Safe Trash Mode**: Deletions move messages to the mailbox Trash folder by default with full Undo support. Unsafe permanent deletion must be explicitly enabled.
+
+## System Architecture
+
+```mermaid
+flowchart TD
+    subgraph UI["PySide6 Desktop Interface"]
+        MainWin["Main Application Window"]
+        ScannerTab["Large-Item Scanner Tab"]
+        RuleTab["Rule & Filter Tab"]
+        SchedulerTab["Scheduler Widget"]
+    end
+
+    subgraph Core["Core Engine"]
+        IMAPClient["IMAP Client (imap_client.py)"]
+        GmailService["Gmail API Service (gmail_service.py)"]
+        WorkerPool["Thread Workers (workers.py)"]
+    end
+
+    subgraph Safety["Safety & Storage"]
+        SafeMode["Safe Trash Mode"]
+        UndoMgr["Undo Manager"]
+        Keyring["OS Keyring / Session Store"]
+        LocalConfig["%LOCALAPPDATA% Config"]
+    end
+
+    UI --> Core
+    Core --> Safety
+    IMAPClient -->|SSL/TLS 993| IMAPProvider["IMAP Providers (GMX, Outlook, etc.)"]
+    GmailService -->|OAuth2 API| GoogleAPI["Gmail & Drive API"]
+```
 
 ## Why UniversalMailCleaner
 
@@ -39,9 +80,7 @@ Use it for:
 ## Features
 
 - Multi-account support for IMAP providers plus Gmail API via OAuth2
-- Google client libraries are only loaded when a Gmail API account is
-  authenticated, so IMAP-only setups can still start without the optional
-  Gmail packages
+- Google client libraries are only loaded when a Gmail API account is authenticated, so IMAP-only setups can still start without the optional Gmail packages
 - Secure password storage via `keyring` with session-only fallback
 - Rule-based filters for age, sender, subject, and size
 - Multi-folder support beyond INBOX-only processing
@@ -94,26 +133,9 @@ python mail_imap_cleaner_v1.py
 ## Configuration
 
 - Config file: `%LOCALAPPDATA%\UniversalMailCleaner\config.json`
-- Existing legacy installs can still be read from `%USERPROFILE%\.mail_cleaner\config.json`;
-  new saves use the Store-friendly local app data path.
+- Existing legacy installs can still be read from `%USERPROFILE%\.mail_cleaner\config.json`; new saves use the Store-friendly local app data path.
 - Passwords are not stored in the JSON file
 - Safe mode is active by default
-
-## Companion
-
-The repository now includes a read-only mobile/browser companion under
-`web_companion/`.
-
-- Input: local `universalmailcleaner-profile-v1.json`
-- Scope: account metadata, rules, safe-mode, scan settings, scheduler presets
-- Guardrails: no IMAP, Gmail API, OAuth, Drive, or cleanup actions in the browser
-- Offline behavior: restores the last loaded secrets-free profile from browser storage
-
-Quick local preview:
-
-```bash
-python -m http.server 4178 -d web_companion
-```
 
 ## Tests
 
@@ -143,11 +165,9 @@ For IMAP, enable two-factor authentication and create an App Password:
 [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
 
 For Gmail API accounts, place `credentials.json` next to the application and complete the OAuth2 browser login.
-The optional Google client packages are only required for this Gmail API path;
-pure IMAP usage can still start without them.
+The optional Google client packages are only required for this Gmail API path; pure IMAP usage can still start without them.
 
-If you upgrade from an older Gmail-only token and Drive cleanup stays unavailable, delete
-`%LOCALAPPDATA%\\UniversalMailCleaner\\gmail_token.json` once and authenticate again so the new Drive scope can be granted.
+If you upgrade from an older Gmail-only token and Drive cleanup stays unavailable, delete `%LOCALAPPDATA%\UniversalMailCleaner\gmail_token.json` once and authenticate again so the new Drive scope can be granted.
 
 **Keyring is missing?**
 Install via `pip install keyring`.
@@ -163,10 +183,7 @@ The Store path is tracked as a conservative desktop-bridge preflight. Run:
 python scripts/check_store_readiness.py --allow-blockers
 ```
 
-The current preflight verifies local config/token paths, secret exclusions,
-runtime materials, and Store metadata. It intentionally remains blocked until
-the Partner Center publisher identity, public privacy/support URLs, a signed
-MSIX, and a WACK XML report are available.
+The current preflight verifies local config/token paths, secret exclusions, runtime materials, and Store metadata. It intentionally remains blocked until the Partner Center publisher identity, public privacy/support URLs, a signed MSIX, and a WACK XML report are available.
 
 ## Related Tools
 

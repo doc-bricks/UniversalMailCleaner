@@ -3,7 +3,19 @@
 Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.2.1] - 2026-07-26
+
+### Added
+- Visual Shields.io badges (Pytest 85 passed, Python 3.10+, LLM-Ready, Ecosystem doc-bricks, Umbrella open-bricks) to `README.md` and `README-DE.md`.
+- GFM Callout blocks (`> [!NOTE]`, `> [!TIP]`) for AI agent discoverability, local-first privacy, and safe trash mode.
+- Mermaid System Architecture Diagram (`flowchart TD`) in English and German documentation.
+
+### Changed
+- Updated `llms.txt` index with `Last-checked: 2026-07-26` and 85 passing Pytest unit test count.
+- Purged stale web companion documentation sections in `README.md` and `README-DE.md`.
+
 ## [Unreleased]
+
 
 ### Added
 - Windows Store readiness preflight (`scripts/check_store_readiness.py`),

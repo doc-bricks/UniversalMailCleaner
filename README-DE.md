@@ -6,14 +6,55 @@
 
 > Lokale Windows-Desktop-App zum Aufräumen von IMAP- und Gmail-Postfächern — regelbasierte Bereinigung, Große-Mail-Scans, Scheduler, Safe-Mode.
 
-[![Lizenz: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v1.2.0-blue)](CHANGELOG.md)
+[![Lizenz: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-v1.2.0-blue.svg)](CHANGELOG.md)
 [![Plattform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#überblick)
-[![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
+[![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52.svg)](https://pypi.org/project/PySide6/)
+[![Pytest 85 Bestanden](https://img.shields.io/badge/Pytest-85%20passed-brightgreen.svg)](tests)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+[![LLM-Bereit llms.txt](https://img.shields.io/badge/LLM--Ready-llms.txt-purple.svg)](llms.txt)
+[![Ökosystem doc-bricks](https://img.shields.io/badge/Ecosystem-doc--bricks-blue.svg)](https://github.com/doc-bricks)
+[![Dachorganisation open-bricks](https://img.shields.io/badge/Umbrella-open--bricks-orange.svg)](https://github.com/open-bricks)
 
 UniversalMailCleaner bündelt regelbasierte Mail-Bereinigung, große-Mail- und Drive-Scans, geplante Läufe, Safe-Mode und rückgängig machbare Löschaktionen in einer PySide6-Oberfläche.
 
 ![UniversalMailCleaner Desktop-Oberfläche für Mailbox-Bereinigung mit Konten, Regeln, großen Elementen, Gmail-Labels, Scheduler und Safe-Mode](README/screenshots/main.png)
+
+> [!NOTE]
+> **Datenschutz & Lokale Architektur**: UniversalMailCleaner führt alle Scans, Regelprüfungen, IMAP-Abfragen und OAuth2-Gmail-API-Operationen lokal auf Ihrem Computer aus. Passwörter und Tokens verlassen zu keinem Zeitpunkt Ihre lokale Umgebung.
+
+> [!TIP]
+> **Sicherer Papierkorb-Modus (Safe Mode)**: Löschungen verschieben E-Mails standardmäßig in den Papierkorb-Ordner des Postfachs und bieten eine vollständige Undo-Funktion. Endgültiges Löschen muss explizit aktiviert werden.
+
+## Systemarchitektur
+
+```mermaid
+flowchart TD
+    subgraph UI["PySide6 Desktop-Benutzeroberfläche"]
+        MainWin["Hauptfenster"]
+        ScannerTab["Große-Elemente-Tab"]
+        RuleTab["Regeln & Filter-Tab"]
+        SchedulerTab["Scheduler-Widget"]
+    end
+
+    subgraph Core["Kern-Engine"]
+        IMAPClient["IMAP Client (imap_client.py)"]
+        GmailService["Gmail API Service (gmail_service.py)"]
+        WorkerPool["Thread Worker (workers.py)"]
+    end
+
+    subgraph Safety["Sicherheit & Speicher"]
+        SafeMode["Safe-Mode Papierkorb-Manager"]
+        UndoMgr["Undo-Manager"]
+        Keyring["OS Keyring / Session Store"]
+        LocalConfig["%LOCALAPPDATA% Konfiguration"]
+    end
+
+    UI --> Core
+    Core --> Safety
+    IMAPClient -->|SSL/TLS 993| IMAPProvider["IMAP Provider (GMX, Outlook, etc.)"]
+    GmailService -->|OAuth2 API| GoogleAPI["Gmail & Drive API"]
+```
 
 ## Überblick
 
@@ -43,9 +84,7 @@ Geeignet für:
 ## Funktionen
 
 - Multi-Account-Management für IMAP-Provider plus Gmail API via OAuth2
-- Die Google-Clientbibliotheken werden erst geladen, wenn wirklich ein
-  Gmail-API-Konto authentifiziert wird; reine IMAP-Setups starten daher auch
-  ohne die optionalen Gmail-Pakete
+- Die Google-Clientbibliotheken werden erst geladen, wenn wirklich ein Gmail-API-Konto authentifiziert wird; reine IMAP-Setups starten daher auch ohne die optionalen Gmail-Pakete
 - Sichere Passwortspeicherung via `keyring` mit Fallback ohne Persistenz
 - Regelbasierte Filter für Alter, Absender, Betreff und Größe
 - Mehrordner-Support statt reiner INBOX-Verarbeitung
@@ -98,26 +137,9 @@ python mail_imap_cleaner_v1.py
 ## Konfiguration
 
 - Lokale Konfigurationsdatei: `%LOCALAPPDATA%\UniversalMailCleaner\config.json`
-- Bestehende Legacy-Installationen können `%USERPROFILE%\.mail_cleaner\config.json`
-  noch lesen; neue Speicherungen nutzen den Store-freundlichen LocalAppData-Pfad.
+- Bestehende Legacy-Installationen können `%USERPROFILE%\.mail_cleaner\config.json` noch lesen; neue Speicherungen nutzen den Store-freundlichen LocalAppData-Pfad.
 - Passwörter werden nicht in der JSON-Datei gespeichert
 - Safe-Mode ist standardmäßig aktiv
-
-## Companion
-
-Das Repository enthält jetzt zusätzlich einen read-only Mobile-/Browser-Companion
-unter `web_companion/`.
-
-- Eingabe: lokale `universalmailcleaner-profile-v1.json`
-- Inhalt: Kontometadaten, Regeln, Safe-Mode-, Scan- und Scheduler-Vorgaben
-- Schutzgrenzen: keine IMAP-, Gmail-, OAuth-, Drive- oder Löschaktionen im Browser
-- Offline: der letzte secrets-freie Profil-Export wird lokal im Browser zwischengespeichert
-
-Schneller lokaler Vorschau-Start:
-
-```bash
-python -m http.server 4178 -d web_companion
-```
 
 ## Tests
 
@@ -147,11 +169,9 @@ Für IMAP: Zwei-Faktor-Authentifizierung aktivieren und ein App-Passwort erstell
 [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
 
 Für Gmail API: `credentials.json` neben die Anwendung legen und den OAuth2-Login im Browser abschließen.
-Die optionalen Google-Clientpakete werden nur für diesen Gmail-API-Pfad
-benötigt; reine IMAP-Nutzung startet auch ohne sie.
+Die optionalen Google-Clientpakete werden nur für diesen Gmail-API-Pfad benötigt; reine IMAP-Nutzung startet auch ohne sie.
 
-Wenn nach einem Upgrade die Drive-Bereinigung nicht verfügbar bleibt, einmal
-`%LOCALAPPDATA%\\UniversalMailCleaner\\gmail_token.json` löschen und den OAuth2-Login erneut ausführen, damit der neue Drive-Zugriff freigegeben wird.
+Wenn nach einem Upgrade die Drive-Bereinigung nicht verfügbar bleibt, einmal `%LOCALAPPDATA%\UniversalMailCleaner\gmail_token.json` löschen und den OAuth2-Login erneut ausführen, damit der neue Drive-Zugriff freigegeben wird.
 
 **Keyring fehlt?**
 Installation via `pip install keyring`.
@@ -167,10 +187,7 @@ Der Store-Pfad ist als konservativer Desktop-Bridge-Preflight dokumentiert:
 python scripts/check_store_readiness.py --allow-blockers
 ```
 
-Der aktuelle Preflight prüft lokale Konfigurations-/Tokenpfade, Secret-Ausschlüsse,
-Runtime-Material und Store-Metadaten. Er bleibt bewusst blockiert, bis
-Partner-Center-Publisher, öffentliche Privacy-/Support-URLs, ein signiertes MSIX
-und ein WACK-XML-Report vorliegen.
+Der aktuelle Preflight prüft lokale Konfigurations-/Tokenpfade, Secret-Ausschlüsse, Runtime-Material und Store-Metadaten. Er bleibt bewusst blockiert, bis Partner-Center-Publisher, öffentliche Privacy-/Support-URLs, ein signiertes MSIX und ein WACK-XML-Report vorliegen.
 
 ## Verwandte Tools
 

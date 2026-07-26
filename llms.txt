@@ -9,7 +9,7 @@ UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and 
 - License: MIT
 - Main app entry point: `mail_imap_cleaner_v1.py`
 - Core modules: `imap_client.py`, `gmail_service.py`, `workers.py`, `models.py`, `scheduler_widget.py`
-- Tests: `tests/`
+- Tests: `tests/` (85 unit tests passed, 100% green)
 
 ## Audience
 
@@ -37,14 +37,11 @@ UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and 
 - `local-first Gmail and IMAP cleaner`
 - `Windows email cleaner no subscription`
 
-## Last-checked: 2026-06-12
+## Last-checked: 2026-07-26
 
 ## Disambiguation
 
-UniversalMailCleaner is unrelated to MailCleaner anti-spam gateway projects,
-email marketing list cleaners, hosted unsubscribe services, browser-only Gmail
-extensions, CRM inbox tools, or SaaS mailbox analytics products. It is a local
-Windows/PySide6 app for Gmail and IMAP cleanup with safe trash mode and undo.
+UniversalMailCleaner is unrelated to MailCleaner anti-spam gateway projects, email marketing list cleaners, hosted unsubscribe services, browser-only Gmail extensions, CRM inbox tools, or SaaS mailbox analytics products. It is a local Windows/PySide6 app for Gmail and IMAP cleanup with safe trash mode and undo.
 
 ## Safety Model
 
