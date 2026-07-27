@@ -16,6 +16,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `pyproject.toml` with setuptools metadata, GUI entry point, and shared pytest/Ruff configuration
 
 ### Changed
+- German community and contribution documentation now consistently uses UTF-8 umlauts; `llms.txt` records the current repository-hygiene review date.
 - Large-mail account selection now includes Gmail API accounts
 - Folder selection dialog is limited to IMAP accounts because Gmail rules do not use IMAP folders
 - IMAP large-mail deletion now respects the original folder of each selected mail
