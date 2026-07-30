@@ -6,6 +6,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Discoverability, README-Design & SEO Check (2026-07-30): Added `organization: doc-bricks` & Python version shields to `README.md` and `README-DE.md`, updated `pyproject.toml` keywords (`gmail`, `imap`, `mailbox-cleaner`, `pyside6`, `windows`) & URLs (`Documentation`, `Changelog`), verified 65 Pytest unit tests.
 - open-bricks ecosystem badges and `llms.txt` callout notes added to `README.md` and `README-DE.md` for enhanced Discoverability and machine-readable indexing
 - Source-platform smoke (`tests/source_platform_smoke.py`) for macOS and Linux with
   GitHub Actions CI on ubuntu-latest and macos-latest (PySide6 offscreen, 6 checks)

@@ -10,6 +10,8 @@
 [![Version](https://img.shields.io/badge/Version-v1.2.0-blue)](CHANGELOG.md)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#start-here)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)
+[![Organization: doc-bricks](https://img.shields.io/badge/organization-doc--bricks-blue)](https://github.com/doc-bricks)
 [![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blue)](https://github.com/open-bricks)
 
 > [!NOTE]
