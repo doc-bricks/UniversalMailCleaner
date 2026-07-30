@@ -6,6 +6,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- open-bricks ecosystem badges and `llms.txt` callout notes added to `README.md` and `README-DE.md` for enhanced Discoverability and machine-readable indexing
 - Source-platform smoke (`tests/source_platform_smoke.py`) for macOS and Linux with
   GitHub Actions CI on ubuntu-latest and macos-latest (PySide6 offscreen, 6 checks)
 - Gmail cleanup rules now run against Gmail API accounts in addition to IMAP accounts

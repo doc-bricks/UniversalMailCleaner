@@ -37,7 +37,7 @@ UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and 
 - `local-first Gmail and IMAP cleaner`
 - `Windows email cleaner no subscription`
 
-## Last-checked: 2026-07-27
+## Last-checked: 2026-07-30
 
 ## Disambiguation
 

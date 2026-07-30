@@ -10,6 +10,10 @@
 [![Version](https://img.shields.io/badge/Version-v1.2.0-blue)](CHANGELOG.md)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#start-here)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
+[![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blue)](https://github.com/open-bricks)
+
+> [!NOTE]
+> Machine-readable repository summary for AI agents and LLMs available at [`llms.txt`](llms.txt).
 
 UniversalMailCleaner combines rule-based email cleanup, large-mail and Drive scans, scheduler runs, safe trash mode, and undoable deletion workflows in one PySide6 interface.
 
