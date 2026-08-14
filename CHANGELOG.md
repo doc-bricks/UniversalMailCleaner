@@ -33,6 +33,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `mail_imap_cleaner_v1.py` exposes `main()` so editable installs and GUI entry points can launch the existing desktop app without wrapper scripts
 
 ### Fixed
+- `imap_client.py` / `get_search_criteria`: Guard against wildcard matches from empty or whitespace filter values (`sender`, `subject`), non-positive days (`older_than_days <= 0`), and non-positive sizes (`size_mb <= 0`), returning `None` instead of generating queries that match all emails.
+- `workers.py` / `run_rules` & `scan_large`: Safely handle `[None]` data payloads from `search()` without raising `AttributeError`.
 - `mail_imap_cleaner_v1.py`: Die Einstellungen sind in der Hauptnavigation nicht mehr nur über ein einzelnes Zahnrad erreichbar; der Tab zeigt jetzt `⚙ Einstellungen` und erklärt den Bereich zusätzlich per Tooltip.
 - `mail_imap_cleaner_v1.py` / `closeEvent`: Worker is now stopped before `save_config` to avoid a race condition on window close.
 - `mail_imap_cleaner_v1.py` / `save_config`: `OSError` is now caught so a failed config write doesn't crash the app.

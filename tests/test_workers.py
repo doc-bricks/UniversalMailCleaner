@@ -460,5 +460,72 @@ class TestRunRulesSearchError(unittest.TestCase):
         )
 
 
+class TestSearchNoneDataHandling(unittest.TestCase):
+    """Worker must handle IMAP search returning [None] gracefully."""
+
+    def test_run_rules_handles_none_search_data(self):
+        rule = CleanRule("Test", "IMAP Main", "sender", "user@example.com")
+
+        class _NoneDataConn(_FakeImapConn):
+            def search(self, charset, criteria):
+                return "OK", [None]
+
+        class _NoneDataService(_FakeImapService):
+            def __init__(self, log_func):
+                super().__init__(log_func)
+                self.conn = _NoneDataConn()
+
+            def get_search_criteria(self, rule):
+                return '(FROM "user@example.com")'
+
+        imap_account = MailAccount(
+            name="IMAP Main",
+            host="imap.example.com",
+            user="user@example.com",
+            port=993,
+        )
+
+        log_messages = []
+        with patch("workers.ImapService", _NoneDataService):
+            worker = Worker(
+                "rules",
+                {"rules": [rule], "folders": ["INBOX"], "safe_mode": True},
+                [imap_account],
+            )
+            worker.log.connect(log_messages.append)
+            worker.run()
+
+        self.assertTrue(any("no matches" in msg.lower() for msg in log_messages))
+
+    def test_scan_large_handles_none_search_data(self):
+        class _NoneDataConn(_FakeImapConn):
+            def search(self, charset, criteria):
+                return "OK", [None]
+
+        class _NoneDataService(_FakeImapService):
+            def __init__(self, log_func):
+                super().__init__(log_func)
+                self.conn = _NoneDataConn()
+
+        imap_account = MailAccount(
+            name="IMAP Main",
+            host="imap.example.com",
+            user="user@example.com",
+            port=993,
+        )
+
+        received = []
+        with patch("workers.ImapService", _NoneDataService):
+            worker = Worker(
+                "scan_large",
+                {"threshold": 10, "folders": ["INBOX"], "scan_mail": True},
+                [imap_account],
+            )
+            worker.data_ready.connect(lambda items: received.extend(items))
+            worker.run()
+
+        self.assertEqual(received, [])
+
+
 if __name__ == "__main__":
     unittest.main()

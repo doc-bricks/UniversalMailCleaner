@@ -191,16 +191,25 @@ class ImapService:
         try:
             if rule.filter_type == "older_than_days":
                 days = int(rule.value)
+                if days <= 0:
+                    return None
                 cutoff = (datetime.now() - timedelta(days=days)).strftime("%d-%b-%Y")
                 return f'(BEFORE "{cutoff}")'
             elif rule.filter_type == "sender":
-                safe_value = rule.value.replace('\\', '\\\\').replace('"', '')
+                safe_value = rule.value.replace('\\', '\\\\').replace('"', '').strip()
+                if not safe_value:
+                    return None
                 return f'(FROM "{safe_value}")'
             elif rule.filter_type == "subject":
-                safe_value = rule.value.replace('\\', '\\\\').replace('"', '')
+                safe_value = rule.value.replace('\\', '\\\\').replace('"', '').strip()
+                if not safe_value:
+                    return None
                 return f'(SUBJECT "{safe_value}")'
             elif rule.filter_type == "size_mb":
-                bytes_val = int(float(rule.value) * 1024 * 1024)
+                size_mb = float(rule.value)
+                if size_mb <= 0:
+                    return None
+                bytes_val = int(size_mb * 1024 * 1024)
                 return f'(LARGER {bytes_val})'
         except Exception as e:
             logger.warning(f"get_search_criteria error for rule '{rule.name}': {e}")

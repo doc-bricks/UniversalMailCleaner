@@ -146,7 +146,7 @@ class Worker(QThread):
                 if typ != "OK":
                     continue
 
-                ids = data[0].split() if data else []
+                ids = data[0].split() if data and data[0] else []
                 if not ids:
                     self.log.emit("   No matches.")
                     continue
@@ -222,7 +222,7 @@ class Worker(QThread):
             if typ != "OK":
                 continue
 
-            ids = data[0].split() if data else []
+            ids = data[0].split() if data and data[0] else []
             ids = ids[-50:]
 
             for num in ids:

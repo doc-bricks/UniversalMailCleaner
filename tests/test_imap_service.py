@@ -147,6 +147,50 @@ class TestImapServiceSearchCriteria(unittest.TestCase):
         result = self.service.get_search_criteria(rule)
         self.assertIsNone(result)
 
+    def test_older_than_days_zero_or_negative_returns_none(self):
+        """Test: older_than_days mit 0 oder negativem Wert muss None zurückgeben"""
+        for val in ["0", "-1", "-30"]:
+            rule = CleanRule(
+                name="Test", target_account="Alle", filter_type="older_than_days", value=val
+            )
+            self.assertIsNone(
+                self.service.get_search_criteria(rule),
+                f"older_than_days={val} must return None",
+            )
+
+    def test_sender_filter_empty_or_whitespace_returns_none(self):
+        """Test: sender mit leerem Wert oder nur Leerzeichen/Quotes muss None zurückgeben"""
+        for val in ["", "   ", '""', '  ""  ']:
+            rule = CleanRule(
+                name="Test", target_account="Alle", filter_type="sender", value=val
+            )
+            self.assertIsNone(
+                self.service.get_search_criteria(rule),
+                f"sender={val!r} must return None",
+            )
+
+    def test_subject_filter_empty_or_whitespace_returns_none(self):
+        """Test: subject mit leerem Wert oder nur Leerzeichen/Quotes muss None zurückgeben"""
+        for val in ["", "   ", '""', '  ""  ']:
+            rule = CleanRule(
+                name="Test", target_account="Alle", filter_type="subject", value=val
+            )
+            self.assertIsNone(
+                self.service.get_search_criteria(rule),
+                f"subject={val!r} must return None",
+            )
+
+    def test_size_mb_filter_zero_or_negative_returns_none(self):
+        """Test: size_mb mit 0 oder negativem Wert muss None zurückgeben"""
+        for val in ["0", "0.0", "-5", "-0.1"]:
+            rule = CleanRule(
+                name="Test", target_account="Alle", filter_type="size_mb", value=val
+            )
+            self.assertIsNone(
+                self.service.get_search_criteria(rule),
+                f"size_mb={val} must return None",
+            )
+
 
 class TestListFoldersParsing(unittest.TestCase):
     """list_folders must return complete folder names even when they contain spaces."""

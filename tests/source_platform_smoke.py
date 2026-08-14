@@ -12,18 +12,25 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-PASS = "✓"
-FAIL = "✗"
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+PASS = "[OK]"
+FAIL = "[FAIL]"
 results: list[tuple[str, bool, str]] = []
 
 
 def check(name: str, ok: bool, detail: str = "") -> None:
     results.append((name, ok, detail))
     status = PASS if ok else FAIL
-    line = f"  [{status}] {name}"
+    line = f"  {status} {name}"
     if detail:
         line += f": {detail}"
     print(line)
+
 
 
 def run_checks() -> None:

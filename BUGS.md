@@ -21,4 +21,16 @@ Migrate the entire scan→delete→undo chain from sequence-number IDs to UIDs:
 3. Store the UID in the trash folder after the copy for use in `undo_delete`.
 4. Use `UID COPY` and `UID STORE` in `undo_delete` against the trash folder.
 
-**Note:** The existing test `test_undo_restores_messages_for_imap_backend` passes because the fake connection does not model sequence-number semantics. The test is a structural regression guard, not a protocol-correctness check.
+## Resolved
+
+### IMAP-002 — `get_search_criteria` generates wildcard queries for empty or non-positive values
+
+**Severity:** High
+**File:** `imap_client.py`, lines 191-208 (`get_search_criteria`)
+**Status:** Resolved (2026-08-14)
+
+**Description:**
+Empty or whitespace-only values for `sender` and `subject` rules produced `(FROM "")` and `(SUBJECT "")`, which per RFC 3501 match all emails in the selected folder. Similarly, `older_than_days <= 0` produced past/future boundary searches, and `size_mb <= 0` generated `(LARGER 0)` matching all messages.
+
+**Fix:**
+Added input validation guards returning `None` for empty/whitespace filter values, `older_than_days <= 0`, and `size_mb <= 0`. Safely handled `[None]` data payloads in `workers.py` search processing. Added 6 unit tests in `tests/test_imap_service.py` and `tests/test_workers.py`.
