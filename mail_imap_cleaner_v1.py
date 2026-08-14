@@ -649,7 +649,7 @@ class MainWindow(QMainWindow):
         d = RuleDialog(accounts=self.accounts, parent=self)
         if d.exec(): self.rules.append(d.get_rule()); self.save_config(); self.refresh_ui()
 
-    def run_worker(self, mode, params):
+    def run_worker(self, mode, params, action_success_handler=None):
         """Starts a Worker thread for the given mode and parameters.
 
         Args:
@@ -666,6 +666,8 @@ class MainWindow(QMainWindow):
         self.worker = Worker(mode, params, self.accounts)
         self.worker.log.connect(self.log.appendPlainText)
         if mode == "scan_large": self.worker.data_ready.connect(self.fill_large)
+        if action_success_handler is not None:
+            self.worker.action_succeeded.connect(action_success_handler)
         self.worker.finished.connect(lambda x: self.status.setText(x))
         self.worker.start()
 
@@ -757,29 +759,50 @@ class MainWindow(QMainWindow):
         if to_del:
             if QMessageBox.question(self, "Delete", f"Delete {len(to_del)} item(s)?") == QMessageBox.StandardButton.Yes:
                 safe = self.settings["safe_mode"]
-                self.run_worker("delete", {"items": to_del, "safe_mode": safe})
-                if safe:
-                    # Undo ist nur im Safe Mode (Trash) möglich
-                    self._undo_history.append({"items": to_del, "timestamp": datetime.now().isoformat()})
-                    self.b_undo.setEnabled(True)
-                    self.b_undo.setText(f"↩️ Rückgängig ({len(to_del)} Elemente)")
+                self.run_worker(
+                    "delete",
+                    {"items": to_del, "safe_mode": safe},
+                    self._remember_successful_safe_delete if safe else None,
+                )
+
+    def _remember_successful_safe_delete(self, items):
+        """Add only confirmed safe-mode deletions to the undo history."""
+        if not items:
+            return
+        self._undo_history.append({"items": items, "timestamp": datetime.now().isoformat()})
+        self.b_undo.setEnabled(True)
+        self.b_undo.setText(f"↩️ Rückgängig ({len(items)} Elemente)")
 
     def undo_last_action(self):
         """Restores items from the last delete action from the trash."""
         if not self._undo_history:
             QMessageBox.information(self, "Undo", "Keine rückgängig zu machende Aktion vorhanden.")
             return
-        last = self._undo_history.pop()
+        last = self._undo_history[-1]
         items = last["items"]
         if QMessageBox.question(
             self, "Undo",
             f"Letzte Aktion rückgängig machen?\n{len(items)} Element(e) aus dem Papierkorb wiederherstellen."
         ) == QMessageBox.StandardButton.Yes:
-            self.run_worker("undo", {"items": items, "safe_mode": True})
+            self.b_undo.setEnabled(False)
+            self.run_worker(
+                "undo",
+                {"items": items, "safe_mode": True},
+                lambda restored: self._complete_undo(last, restored),
+            )
         else:
-            # Aktion wieder in History legen wenn abgebrochen
-            self._undo_history.append(last)
-        if not self._undo_history:
+            return
+
+    def _complete_undo(self, history_entry, restored_items):
+        """Retain only items whose restore was not fully confirmed."""
+        if self._undo_history and self._undo_history[-1] is history_entry:
+            self._undo_history.pop()
+        remaining = [item for item in history_entry["items"] if item not in restored_items]
+        if remaining:
+            self._undo_history.append({"items": remaining, "timestamp": datetime.now().isoformat()})
+            self.b_undo.setEnabled(True)
+            self.b_undo.setText(f"↩️ Rückgängig ({len(remaining)} Elemente)")
+        else:
             self.b_undo.setEnabled(False)
             self.b_undo.setText("↩️ Letzte Aktion rückgängig")
 

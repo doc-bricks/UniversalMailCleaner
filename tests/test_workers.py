@@ -95,6 +95,8 @@ class _FakeImapConn:
         self.copy_calls = []
         self.store_calls = []
         self.expunge_calls = 0
+        self.uid_calls = []
+        self.status_calls = []
 
     def select(self, mailbox, readonly=False):
         self.select_calls.append((mailbox, readonly))
@@ -111,6 +113,29 @@ class _FakeImapConn:
     def expunge(self):
         self.expunge_calls += 1
         return "OK", [b""]
+
+    def status(self, mailbox, query):
+        self.status_calls.append((mailbox, query))
+        return "OK", [f"{mailbox} (UIDVALIDITY 1)".encode()]
+
+    def capability(self):
+        return "OK", [b"IMAP4rev1 UIDPLUS"]
+
+    def uid(self, command, *args):
+        self.uid_calls.append((command, *args))
+        if command == "COPY":
+            message_set, mailbox = args
+            self.copy_calls.append((message_set, mailbox))
+            return "OK", [f"[COPYUID 1 {message_set} {message_set}]".encode()]
+        if command == "STORE":
+            return self.store(*args)
+        if command == "SEARCH":
+            return self.search(*args)
+        if command == "FETCH":
+            return self.fetch(*args)
+        if command == "EXPUNGE":
+            return self.expunge()
+        raise AssertionError(f"Unexpected UID command: {command}")
 
 
 class _FakeImapService:
@@ -202,9 +227,9 @@ class TestWorkerBackends(unittest.TestCase):
 
     def test_undo_restores_imap_items_to_their_original_folders(self):
         items = [
-            {"account": "IMAP Main", "id": "msg-1", "folder": "Projects"},
-            {"account": "IMAP Main", "id": "msg-2", "folder": "INBOX"},
-            {"account": "IMAP Main", "id": "msg-3", "folder": "Projects"},
+            {"account": "IMAP Main", "id": "1", "trash_uid": "101", "trash_uidvalidity": "1", "folder": "Projects"},
+            {"account": "IMAP Main", "id": "2", "trash_uid": "102", "trash_uidvalidity": "1", "folder": "INBOX"},
+            {"account": "IMAP Main", "id": "3", "trash_uid": "103", "trash_uidvalidity": "1", "folder": "Projects"},
         ]
         imap_account = MailAccount(
             name="IMAP Main",
@@ -222,10 +247,142 @@ class TestWorkerBackends(unittest.TestCase):
         self.assertEqual(fake.conn.select_calls, [("Trash", False)])
         self.assertEqual(
             fake.conn.copy_calls,
-            [("msg-1,msg-3", "Projects"), ("msg-2", "INBOX")],
+            [("101,103", "Projects"), ("102", "INBOX")],
         )
         self.assertEqual(len(fake.conn.store_calls), 2)
         self.assertEqual(fake.conn.expunge_calls, 2)
+
+    def test_delete_and_undo_use_uid_mapping_for_imap(self):
+        """Undo must use the UID assigned in Trash, never the source-folder UID."""
+        items = [
+            {"account": "IMAP Main", "id": "42", "source_uidvalidity": "1", "folder": "INBOX"}
+        ]
+        imap_account = MailAccount(
+            name="IMAP Main", host="imap.example.com", user="user@example.com", port=993
+        )
+
+        class _MappedCopyConn(_FakeImapConn):
+            def status(self, mailbox, query):
+                validity = "77" if mailbox == "Trash" else "1"
+                return "OK", [f"{mailbox} (UIDVALIDITY {validity})".encode()]
+
+            def uid(self, command, *args):
+                if command == "COPY" and args[1] == "Trash":
+                    self.uid_calls.append((command, *args))
+                    self.copy_calls.append((args[0], args[1]))
+                    return "OK", [b"[COPYUID 77 42 9001]"]
+                return super().uid(command, *args)
+
+        class _MappedCopyService(_FakeImapService):
+            def __init__(self, log_func):
+                super().__init__(log_func)
+                self.conn = _MappedCopyConn()
+
+        with patch("workers.ImapService", _MappedCopyService):
+            Worker("delete", {"items": items, "safe_mode": True}, [imap_account]).run()
+            Worker("undo", {"items": items, "safe_mode": True}, [imap_account]).run()
+
+        delete_fake, undo_fake = _FakeImapService.instances[-2:]
+        self.assertEqual(items[0]["trash_uid"], "9001")
+        self.assertEqual(items[0]["trash_uidvalidity"], "77")
+        self.assertIn(("COPY", "42", "Trash"), delete_fake.conn.uid_calls)
+        self.assertIn(("COPY", "9001", "INBOX"), undo_fake.conn.uid_calls)
+
+    def test_delete_does_not_remove_source_without_complete_copyuid_mapping(self):
+        """Missing UIDPLUS mapping must fail closed before the source is deleted."""
+        items = [
+            {"account": "IMAP Main", "id": "42", "source_uidvalidity": "1", "folder": "INBOX"}
+        ]
+
+        class _NoCopyUidConn(_FakeImapConn):
+            def uid(self, command, *args):
+                if command == "COPY":
+                    self.uid_calls.append((command, *args))
+                    self.copy_calls.append((args[0], args[1]))
+                    return "OK", [b"COPY completed"]
+                return super().uid(command, *args)
+
+        class _NoCopyUidService(_FakeImapService):
+            def __init__(self, log_func):
+                super().__init__(log_func)
+                self.conn = _NoCopyUidConn()
+
+        imap_account = MailAccount(
+            name="IMAP Main", host="imap.example.com", user="user@example.com", port=993
+        )
+        with patch("workers.ImapService", _NoCopyUidService):
+            Worker("delete", {"items": items, "safe_mode": True}, [imap_account]).run()
+
+        fake = _FakeImapService.instances[-1]
+        self.assertEqual(fake.conn.store_calls, [])
+        self.assertEqual(fake.conn.expunge_calls, 0)
+        self.assertNotIn("trash_uid", items[0])
+
+    def test_delete_aborts_before_copy_without_uidplus(self):
+        """Safe mode must not create an untracked trash copy without UIDPLUS."""
+        items = [
+            {"account": "IMAP Main", "id": "42", "source_uidvalidity": "1", "folder": "INBOX"}
+        ]
+
+        class _NoUidPlusConn(_FakeImapConn):
+            def capability(self):
+                return "OK", [b"IMAP4rev1"]
+
+        class _NoUidPlusService(_FakeImapService):
+            def __init__(self, log_func):
+                super().__init__(log_func)
+                self.conn = _NoUidPlusConn()
+
+        imap_account = MailAccount(
+            name="IMAP Main", host="imap.example.com", user="user@example.com", port=993
+        )
+        with patch("workers.ImapService", _NoUidPlusService):
+            Worker("delete", {"items": items, "safe_mode": True}, [imap_account]).run()
+
+        fake = _FakeImapService.instances[-1]
+        self.assertEqual(fake.conn.copy_calls, [])
+        self.assertEqual(fake.conn.store_calls, [])
+
+    def test_delete_aborts_when_source_uidvalidity_changed(self):
+        """A UID from a different mailbox epoch must never be acted upon."""
+        items = [
+            {"account": "IMAP Main", "id": "42", "source_uidvalidity": "1", "folder": "INBOX"}
+        ]
+
+        class _ChangedEpochConn(_FakeImapConn):
+            def status(self, mailbox, query):
+                return "OK", [b"INBOX (UIDVALIDITY 2)"]
+
+        class _ChangedEpochService(_FakeImapService):
+            def __init__(self, log_func):
+                super().__init__(log_func)
+                self.conn = _ChangedEpochConn()
+
+        imap_account = MailAccount(
+            name="IMAP Main", host="imap.example.com", user="user@example.com", port=993
+        )
+        with patch("workers.ImapService", _ChangedEpochService):
+            Worker("delete", {"items": items, "safe_mode": True}, [imap_account]).run()
+
+        fake = _FakeImapService.instances[-1]
+        self.assertEqual(fake.conn.copy_calls, [])
+        self.assertEqual(fake.conn.store_calls, [])
+
+    def test_permanent_delete_uses_uid_specific_expunge(self):
+        """Unsafe mode must not issue a mailbox-wide EXPUNGE."""
+        items = [
+            {"account": "IMAP Main", "id": "42", "source_uidvalidity": "1", "folder": "INBOX"}
+        ]
+        imap_account = MailAccount(
+            name="IMAP Main", host="imap.example.com", user="user@example.com", port=993
+        )
+
+        with patch("workers.ImapService", _FakeImapService):
+            Worker("delete", {"items": items, "safe_mode": False}, [imap_account]).run()
+
+        fake = _FakeImapService.instances[-1]
+        self.assertIn(("STORE", "42", "+FLAGS", "\\Deleted"), fake.conn.uid_calls)
+        self.assertIn(("EXPUNGE", "42"), fake.conn.uid_calls)
 
 
 class TestDeleteItemsImap(unittest.TestCase):
@@ -315,6 +472,16 @@ class TestScanLargeMissingDateHeader(unittest.TestCase):
             def fetch(self, num, parts):
                 return "OK", [(meta, raw_headers), b")"]
 
+            def status(self, mailbox, query):
+                return "OK", [f"{mailbox} (UIDVALIDITY 1)".encode()]
+
+            def uid(self, command, *args):
+                if command == "SEARCH":
+                    return self.search(*args)
+                if command == "FETCH":
+                    return self.fetch(*args)
+                raise AssertionError(f"Unexpected UID command: {command}")
+
         class _Svc:
             def __init__(self, log_func):
                 self.conn = _Conn()
@@ -373,6 +540,16 @@ class TestScanLargeSearchError(unittest.TestCase):
                     f"{{{len(raw)}}})"
                 ).encode()
                 return "OK", [(meta, raw), b")"]
+
+            def status(self, mailbox, query):
+                return "OK", [f"{mailbox} (UIDVALIDITY 1)".encode()]
+
+            def uid(self, command, *args):
+                if command == "SEARCH":
+                    return self.search(*args)
+                if command == "FETCH":
+                    return self.fetch(*args)
+                raise AssertionError(f"Unexpected UID command: {command}")
 
         class _Svc:
             def __init__(self, log_func):

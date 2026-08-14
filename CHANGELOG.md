@@ -33,6 +33,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `mail_imap_cleaner_v1.py` exposes `main()` so editable installs and GUI entry points can launch the existing desktop app without wrapper scripts
 
 ### Fixed
+- `workers.py`: IMAP large-mail scan, deletion, and undo now use UIDs with `UIDVALIDITY` epochs. Safe-mode deletion requires UIDPLUS before copying, verifies the complete `COPYUID` mapping, and every deletion uses UID-specific `EXPUNGE`, preventing unsafe references, orphaned copies, and unrelated expunges.
 - `imap_client.py` / `get_search_criteria`: Guard against wildcard matches from empty or whitespace filter values (`sender`, `subject`), non-positive days (`older_than_days <= 0`), and non-positive sizes (`size_mb <= 0`), returning `None` instead of generating queries that match all emails.
 - `workers.py` / `run_rules` & `scan_large`: Safely handle `[None]` data payloads from `search()` without raising `AttributeError`.
 - `mail_imap_cleaner_v1.py`: Die Einstellungen sind in der Hauptnavigation nicht mehr nur über ein einzelnes Zahnrad erreichbar; der Tab zeigt jetzt `⚙ Einstellungen` und erklärt den Bereich zusätzlich per Tooltip.

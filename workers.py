@@ -4,8 +4,9 @@ Contains the Worker QThread class for IMAP and Gmail API operations.
 """
 
 import email
-import logging
 import imaplib
+import logging
+import re
 from typing import List
 
 from PySide6.QtCore import QThread, Signal
@@ -16,6 +17,81 @@ from models import MailAccount
 
 APP_NAME = "MailCleaner_V8_Universal"
 logger = logging.getLogger(APP_NAME)
+
+
+def _expand_uid_set(value: str) -> list[str]:
+    """Expand an IMAP UID set only when every member is a positive integer."""
+    uids = []
+    for part in value.split(","):
+        if not part:
+            return []
+        bounds = part.split(":", 1)
+        if not all(bound.isdigit() and int(bound) > 0 for bound in bounds):
+            return []
+        start = int(bounds[0])
+        end = int(bounds[-1])
+        if end < start:
+            return []
+        uids.extend(str(uid) for uid in range(start, end + 1))
+    return uids
+
+
+def _copyuid_mapping(copy_data) -> dict[str, str]:
+    """Return the source-to-destination UID map from a UIDPLUS COPY response."""
+    for response in copy_data or []:
+        text = (
+            response.decode("ascii", errors="ignore")
+            if isinstance(response, bytes)
+            else str(response)
+        )
+        match = re.search(r"COPYUID\s+\d+\s+([^\s]+)\s+([^\s\]]+)", text)
+        if not match:
+            continue
+        source_uids = _expand_uid_set(match.group(1))
+        destination_uids = _expand_uid_set(match.group(2))
+        if source_uids and len(source_uids) == len(destination_uids):
+            return dict(zip(source_uids, destination_uids))
+    return {}
+
+
+def _copyuid_uidvalidity(copy_data) -> str | None:
+    """Extract the destination UIDVALIDITY epoch from a UIDPLUS COPY response."""
+    for response in copy_data or []:
+        text = response.decode("ascii", errors="ignore") if isinstance(response, bytes) else str(response)
+        match = re.search(r"COPYUID\s+(\d+)\s+", text)
+        if match and int(match.group(1)) > 0:
+            return match.group(1)
+    return None
+
+
+def _uidvalidity(conn, mailbox: str) -> str | None:
+    """Read the current UIDVALIDITY epoch for a mailbox without guessing."""
+    try:
+        status, data = conn.status(mailbox, "(UIDVALIDITY)")
+    except imaplib.IMAP4.error:
+        return None
+    if status != "OK":
+        return None
+    for response in data or []:
+        text = response.decode("ascii", errors="ignore") if isinstance(response, bytes) else str(response)
+        match = re.search(r"UIDVALIDITY\s+(\d+)", text)
+        if match and int(match.group(1)) > 0:
+            return match.group(1)
+    return None
+
+
+def _supports_uidplus(conn) -> bool:
+    """Require UIDPLUS before a safe-mode action could create an untracked copy."""
+    try:
+        status, data = conn.capability()
+    except imaplib.IMAP4.error:
+        return False
+    if status != "OK":
+        return False
+    return any(
+        "UIDPLUS" in (value.decode("ascii", errors="ignore") if isinstance(value, bytes) else str(value))
+        for value in data or []
+    )
 
 
 class Worker(QThread):
@@ -32,6 +108,7 @@ class Worker(QThread):
 
     log = Signal(str)
     data_ready = Signal(list)
+    action_succeeded = Signal(list)
     finished = Signal(str)
 
     def __init__(self, mode: str, params: dict, accounts: List[MailAccount]) -> None:
@@ -48,6 +125,7 @@ class Worker(QThread):
         self.accounts = list(accounts)  # snapshot — protects against GUI-thread mutations
         self.service = None
         self.safe_mode = params.get("safe_mode", True)
+        self.successful_items = []
 
     def run(self) -> None:
         """Main loop of the worker (called automatically by QThread)."""
@@ -61,6 +139,8 @@ class Worker(QThread):
         if not to_process:
             self.log.emit("No account selected.")
             self.finished.emit("Aborted.")
+            if self.mode in {"delete", "undo"}:
+                self.action_succeeded.emit([])
             return
 
         for acc in to_process:
@@ -87,6 +167,8 @@ class Worker(QThread):
                     self.service.disconnect()
 
         self.finished.emit("Operation completed.")
+        if self.mode in {"delete", "undo"}:
+            self.action_succeeded.emit(self.successful_items)
 
     def _connect_service(self, acc: MailAccount):
         """Create and authenticate the backend service for one account."""
@@ -213,9 +295,13 @@ class Worker(QThread):
             except Exception as exc:  # noqa: BLE001
                 self.log.emit(f"Cannot select folder '{folder}': {exc}")
                 continue
+            source_uidvalidity = _uidvalidity(self.service.conn, folder)
+            if source_uidvalidity is None:
+                self.log.emit(f"Cannot scan folder '{folder}': UIDVALIDITY is unavailable.")
+                continue
 
             try:
-                typ, data = self.service.conn.search(None, f"(LARGER {limit_bytes})")
+                typ, data = self.service.conn.uid("SEARCH", None, f"(LARGER {limit_bytes})")
             except imaplib.IMAP4.error as exc:
                 self.log.emit(f"Cannot search folder '{folder}': {exc}")
                 continue
@@ -229,7 +315,8 @@ class Worker(QThread):
                 if self.isInterruptionRequested():
                     break
                 try:
-                    _res, fetch_data = self.service.conn.fetch(
+                    _res, fetch_data = self.service.conn.uid(
+                        "FETCH",
                         num, "(RFC822.SIZE BODY.PEEK[HEADER.FIELDS (SUBJECT DATE)])"
                     )
 
@@ -256,7 +343,8 @@ class Worker(QThread):
                         results.append({
                             "account": acc.name,
                             "folder": folder,
-                            "id": num.decode(),
+                            "id": num.decode(),  # UID in the currently selected source folder
+                            "source_uidvalidity": source_uidvalidity,
                             "subject": subject,
                             "size": size_bytes / (1024 * 1024),
                             "date": date_str,
@@ -308,19 +396,41 @@ class Worker(QThread):
         self.log.emit(f"Restoring {len(my_items)} emails from trash in {acc.name}...")
         try:
             self.service.conn.select(trash)
+            trash_uidvalidity = _uidvalidity(self.service.conn, trash)
+            if trash_uidvalidity is None:
+                self.log.emit("   Cannot safely restore emails: trash UIDVALIDITY is unavailable.")
+                return
+            if not _supports_uidplus(self.service.conn):
+                self.log.emit("   Cannot safely restore emails: server lacks UIDPLUS support.")
+                return
             grouped_items = {}
             for item in my_items:
                 grouped_items.setdefault(item.get("folder", "INBOX"), []).append(item)
 
             restored_total = 0
             for folder, folder_items in grouped_items.items():
-                ids = [item["id"].encode() for item in folder_items]
-                id_str = b",".join(ids).decode()
-                copy_res = self.service.conn.copy(id_str, folder)
+                trash_uids = [str(item.get("trash_uid", "")) for item in folder_items]
+                if not all(trash_uids) or not all(
+                    item.get("trash_uidvalidity") == trash_uidvalidity for item in folder_items
+                ):
+                    self.log.emit(
+                        f"   Cannot safely restore emails to {folder}: missing or stale trash UID; "
+                        "rescan first."
+                    )
+                    continue
+                uid_set = ",".join(trash_uids)
+                copy_res = self.service.conn.uid("COPY", uid_set, folder)
                 if copy_res[0] == "OK":
-                    self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                    self.service.conn.expunge()
+                    store_res = self.service.conn.uid("STORE", uid_set, "+FLAGS", "\\Deleted")
+                    if store_res[0] != "OK":
+                        self.log.emit(f"   Could not mark restored emails deleted in trash: {store_res}")
+                        continue
+                    expunge_res = self.service.conn.uid("EXPUNGE", uid_set)
+                    if expunge_res[0] != "OK":
+                        self.log.emit(f"   Could not expunge restored emails from trash: {expunge_res}")
+                        continue
                     restored_total += len(folder_items)
+                    self.successful_items.extend(folder_items)
                     self.log.emit(f"   {len(folder_items)} email(s) restored to {folder}.")
                 else:
                     self.log.emit(f"   Could not restore emails to {folder}: {copy_res}")
@@ -346,18 +456,22 @@ class Worker(QThread):
         ]
         restored_messages = 0
         restored_drive_files = 0
+        restored_items = []
 
         self.log.emit(f"Restoring {len(my_items)} item(s) from trash in {acc.name}...")
         for item in message_items:
             if self.service.restore_mail(item["id"]):
                 restored_messages += 1
+                restored_items.append(item)
         for item in drive_items:
             if self.service.restore_drive_file(item["id"]):
                 restored_drive_files += 1
+                restored_items.append(item)
 
         self.log.emit(
             f"   Restored {restored_messages} email(s) and {restored_drive_files} Drive file(s)."
         )
+        self.successful_items.extend(restored_items)
 
     def delete_items(self, acc: MailAccount) -> None:
         """Deletes selected emails from the 'Large Emails' tab."""
@@ -383,18 +497,65 @@ class Worker(QThread):
                 break
             try:
                 self.service.conn.select(folder)
-                ids = [item["id"].encode() for item in folder_items]
-                id_str = b",".join(ids).decode()
+                source_uidvalidity = _uidvalidity(self.service.conn, folder)
+                if source_uidvalidity is None or not all(
+                    item.get("source_uidvalidity") == source_uidvalidity for item in folder_items
+                ):
+                    self.log.emit(
+                        f"   Cannot safely delete emails from {folder}: source UIDVALIDITY changed; "
+                        "rescan first."
+                    )
+                    continue
+                source_uids = [str(item["id"]) for item in folder_items]
+                uid_set = ",".join(source_uids)
 
                 if self.safe_mode:
-                    if self.service.conn.copy(id_str, trash)[0] == "OK":
-                        self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                        self.service.conn.expunge()
-                    else:
-                        self.log.emit(f"   Could not move to trash from {folder}.")
+                    if not _supports_uidplus(self.service.conn):
+                        self.log.emit(
+                            f"   Cannot safely move emails to trash from {folder}: server lacks UIDPLUS."
+                        )
+                        continue
+                    copy_res = self.service.conn.uid("COPY", uid_set, trash)
+                    trash_uid_by_source = (
+                        _copyuid_mapping(copy_res[1]) if copy_res[0] == "OK" else {}
+                    )
+                    if not all(source_uid in trash_uid_by_source for source_uid in source_uids):
+                        self.log.emit(
+                            f"   Could not safely move emails to trash from {folder}: "
+                            "server did not return a complete COPYUID mapping."
+                        )
+                        continue
+                    trash_uidvalidity = _copyuid_uidvalidity(copy_res[1])
+                    if trash_uidvalidity is None:
+                        self.log.emit(
+                            f"   Could not safely move emails to trash from {folder}: missing COPYUID epoch."
+                        )
+                        continue
+                    store_res = self.service.conn.uid("STORE", uid_set, "+FLAGS", "\\Deleted")
+                    if store_res[0] != "OK":
+                        self.log.emit(f"   Could not mark emails deleted in {folder}: {store_res}")
+                        continue
+                    expunge_res = self.service.conn.uid("EXPUNGE", uid_set)
+                    if expunge_res[0] != "OK":
+                        self.log.emit(f"   Could not expunge emails in {folder}: {expunge_res}")
+                        continue
+                    for item in folder_items:
+                        item["trash_uid"] = trash_uid_by_source[str(item["id"])]
+                        item["trash_uidvalidity"] = trash_uidvalidity
+                    self.successful_items.extend(folder_items)
                 else:
-                    self.service.conn.store(id_str, "+FLAGS", "\\Deleted")
-                    self.service.conn.expunge()
+                    if not _supports_uidplus(self.service.conn):
+                        self.log.emit(
+                            f"   Cannot permanently delete emails from {folder}: server lacks UIDPLUS."
+                        )
+                        continue
+                    store_res = self.service.conn.uid("STORE", uid_set, "+FLAGS", "\\Deleted")
+                    if store_res[0] != "OK":
+                        self.log.emit(f"   Could not mark emails deleted in {folder}: {store_res}")
+                        continue
+                    expunge_res = self.service.conn.uid("EXPUNGE", uid_set)
+                    if expunge_res[0] != "OK":
+                        self.log.emit(f"   Could not expunge emails in {folder}: {expunge_res}")
             except imaplib.IMAP4.error as exc:
                 self.log.emit(f"   IMAP error in folder '{folder}': {exc}")
             except Exception as exc:  # noqa: BLE001
@@ -430,3 +591,5 @@ class Worker(QThread):
             "   Processed "
             f"{processed_messages} email(s) and {processed_drive_files} Drive file(s)."
         )
+        if processed_messages + processed_drive_files == len(my_items):
+            self.successful_items.extend(my_items)
