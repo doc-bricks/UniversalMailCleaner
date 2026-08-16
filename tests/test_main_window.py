@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from PySide6.QtWidgets import QApplication, QPushButton, QTabWidget
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QApplication, QPushButton, QTabWidget
 
 _APP = QApplication.instance() or QApplication([])
 

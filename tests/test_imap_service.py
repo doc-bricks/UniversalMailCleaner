@@ -1,13 +1,13 @@
 """Unit Tests für ImapService"""
 
-import unittest
 import sys
-from pathlib import Path
+import unittest
 from datetime import datetime, timedelta
+from pathlib import Path
 
 # Import der zu testenden Module
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from mail_imap_cleaner_v1 import ImapService, CleanRule
+from mail_imap_cleaner_v1 import CleanRule, ImapService
 
 
 class TestImapServiceSearchCriteria(unittest.TestCase):

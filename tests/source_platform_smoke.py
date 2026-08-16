@@ -3,8 +3,8 @@ Source-platform smoke for UniversalMailCleaner.
 Runs headless on macOS and Linux (QT_QPA_PLATFORM=offscreen).
 Exit 0 = all checks passed, Exit 1 = at least one check failed.
 """
-import sys
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -36,9 +36,9 @@ def check(name: str, ok: bool, detail: str = "") -> None:
 def run_checks() -> None:
     # --- Check 1: Non-GUI module imports ---
     try:
-        import models  # noqa: F401
-        import imap_client  # noqa: F401
         import gmail_service  # noqa: F401
+        import imap_client  # noqa: F401
+        import models  # noqa: F401
         import profile_exchange  # noqa: F401
         check("Non-GUI imports (models, imap_client, gmail_service, profile_exchange)", True)
     except Exception as exc:
@@ -46,16 +46,16 @@ def run_checks() -> None:
 
     # --- Check 2: PySide6 import ---
     try:
-        from PySide6.QtWidgets import QApplication  # noqa: F401
         from PySide6.QtCore import Qt  # noqa: F401
+        from PySide6.QtWidgets import QApplication  # noqa: F401
         check("PySide6 import (QApplication, Qt)", True)
     except Exception as exc:
         check("PySide6 import", False, str(exc))
 
     # --- Check 3: Profile write + read roundtrip with German umlauts ---
     try:
-        from models import MailAccount, CleanRule
-        from profile_exchange import write_profile, read_profile
+        from models import CleanRule, MailAccount
+        from profile_exchange import read_profile, write_profile
 
         account = MailAccount(name="Büro Köln", host="imap.example.de", user="müller@example.de")
         rule = CleanRule(name="Alte Ü-Mails", target_account="Büro Köln",
@@ -89,7 +89,7 @@ def run_checks() -> None:
 
     # --- Check 5: MailAccount + CleanRule dict roundtrip ---
     try:
-        from models import MailAccount, CleanRule
+        from models import CleanRule, MailAccount
         acc = MailAccount(name="Privat", host="imap.gmx.net", user="test@gmx.de", port=993)
         rule = CleanRule(name="Spam", target_account="Privat",
                          filter_type="sender", value="spam@junk.de")
@@ -104,7 +104,7 @@ def run_checks() -> None:
     # --- Check 6: Headless MainWindow start ---
     try:
         from PySide6.QtWidgets import QApplication
-        app = QApplication.instance() or QApplication(sys.argv[:1])
+        _app = QApplication.instance() or QApplication(sys.argv[:1])
         import mail_imap_cleaner_v1 as m
         win = m.MainWindow()
         assert win is not None

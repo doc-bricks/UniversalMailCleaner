@@ -6,6 +6,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Discoverability, README-Design, Badges & Metadata Parity Check (2026-08-16):
+  - Synchronized badges across `README.md`, `README-DE.md`, and `README_de.md` (81 Tests Passed, Version 1.2.0, `doc-bricks` organization, `open-bricks` ecosystem umbrella, `llms.txt` discovery).
+  - Integrated interactive bilingual Mermaid system architecture diagrams in documentation.
+  - Linked sibling tools matrix across `doc-bricks`, `file-bricks`, and `open-bricks` suites (`MailProcessor`, `UniversalDocsGrabber`, `UniversalInvoiceMail`, `DokuZen`, `PDFtoPDFocr`, `MediaBrain`, `ProFiler`).
+  - Added automated metadata, manifest, and discoverability test suite in `tests/test_metadata.py` (5/5 checks passed, total 81 passed).
+  - Configured `[tool.ruff]` and `[tool.ruff.lint]` in `pyproject.toml` (100% clean check).
+  - Updated `llms.txt` with ecosystem pointers and verified last-checked timestamp `2026-08-16`.
 - Discoverability, README-Design & SEO Check (2026-07-30): Added `organization: doc-bricks` & Python version shields to `README.md` and `README-DE.md`, updated `pyproject.toml` keywords (`gmail`, `imap`, `mailbox-cleaner`, `pyside6`, `windows`) & URLs (`Documentation`, `Changelog`), verified 65 Pytest unit tests.
 - open-bricks ecosystem badges and `llms.txt` callout notes added to `README.md` and `README-DE.md` for enhanced Discoverability and machine-readable indexing
 - Source-platform smoke (`tests/source_platform_smoke.py`) for macOS and Linux with

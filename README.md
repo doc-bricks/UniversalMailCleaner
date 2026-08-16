@@ -2,7 +2,7 @@
 
 # UniversalMailCleaner
 
-**🇬🇧 English** · **[🇩🇪 Deutsche Dokumentation](README-DE.md)**
+**🇬🇧 English** · **[🇩🇪 Deutsche Dokumentation](README_de.md)**
 
 > Local-first Windows desktop app for cleaning IMAP and Gmail mailboxes — rule-based cleanup, large-mail scans, scheduler, safe trash mode.
 
@@ -11,8 +11,10 @@
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#start-here)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)
+[![Tests: 81 Passed](https://img.shields.io/badge/Tests-81%20Passed-brightgreen)](tests)
 [![Organization: doc-bricks](https://img.shields.io/badge/organization-doc--bricks-blue)](https://github.com/doc-bricks)
 [![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blue)](https://github.com/open-bricks)
+[![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blue)](llms.txt)
 
 > [!NOTE]
 > Machine-readable repository summary for AI agents and LLMs available at [`llms.txt`](llms.txt).
@@ -24,6 +26,29 @@ UniversalMailCleaner combines rule-based email cleanup, large-mail and Drive sca
 ## Why UniversalMailCleaner
 
 UniversalMailCleaner is built for people who want to reduce mailbox storage and newsletter clutter without handing their inbox to another cloud service. It runs locally, keeps passwords out of the project config, supports standard IMAP providers, and can use the Gmail API when OAuth2 account features are needed.
+
+## Architecture
+
+```mermaid
+graph TD
+    UI["PySide6 MainWindow UI"] --> AC["Account Manager"]
+    UI --> RL["Rules Engine"]
+    UI --> LS["Large Mail & Drive Scanner"]
+    UI --> SC["Scheduler (QTimer)"]
+    UI --> ST["Safe Trash & Undo Manager"]
+
+    AC --> KR["OS Keyring (Encrypted Credentials)"]
+    RL --> WK["Background Worker Thread"]
+    LS --> WK
+    SC --> WK
+    ST --> WK
+
+    WK --> IMAP["ImapService (SSL IMAP4 / UIDPLUS)"]
+    WK --> GMAIL["GmailService (OAuth2 & Drive API)"]
+
+    IMAP --> SRV[("IMAP Mail Servers (GMX, Outlook, Gmail)")]
+    GMAIL --> GOOG[("Google Mail & Drive APIs")]
+```
 
 ## Start Here
 
@@ -45,9 +70,7 @@ Use it for:
 ## Features
 
 - Multi-account support for IMAP providers plus Gmail API via OAuth2
-- Google client libraries are only loaded when a Gmail API account is
-  authenticated, so IMAP-only setups can still start without the optional
-  Gmail packages
+- Google client libraries are only loaded when a Gmail API account is authenticated, so IMAP-only setups start without optional dependencies
 - Secure password storage via `keyring` with session-only fallback
 - Rule-based filters for age, sender, subject, and size
 - Multi-folder support beyond INBOX-only processing
@@ -57,7 +80,7 @@ Use it for:
 - Gmail-specific tabs for storage statistics and label-based cleanup
 - Secrets-free profile export/import for rules, account metadata, and scheduler presets
 - Configurable logging via `UMAIL_CLEANER_LOG_LEVEL`
-- Modular architecture: `imap_client.py`, `models.py`, `workers.py`
+- Modular architecture: `imap_client.py`, `models.py`, `workers.py`, `profile_exchange.py`, `scheduler_widget.py`
 
 ## Discovery Keywords
 
@@ -131,11 +154,9 @@ For IMAP, enable two-factor authentication and create an App Password:
 [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
 
 For Gmail API accounts, place `credentials.json` next to the application and complete the OAuth2 browser login.
-The optional Google client packages are only required for this Gmail API path;
-pure IMAP usage can still start without them.
+The optional Google client packages are only required for this Gmail API path; pure IMAP usage starts without them.
 
-If you upgrade from an older Gmail-only token and Drive cleanup stays unavailable, delete
-`%LOCALAPPDATA%\\UniversalMailCleaner\\gmail_token.json` once and authenticate again so the new Drive scope can be granted.
+If you upgrade from an older Gmail-only token and Drive cleanup stays unavailable, delete `%LOCALAPPDATA%\UniversalMailCleaner\gmail_token.json` once and authenticate again so the new Drive scope can be granted.
 
 **Keyring is missing?**
 Install via `pip install keyring`.
@@ -143,15 +164,19 @@ Install via `pip install keyring`.
 **Trash folder not detected?**
 Set it manually in the account dialog.
 
-## Related Tools
+## Ecosystem & Sibling Tools
 
-Part of the [doc-bricks](https://github.com/doc-bricks) mail suite:
+UniversalMailCleaner is part of the **doc-bricks** document and productivity tools family, under the **open-bricks** ecosystem umbrella:
 
-| Tool | Description |
-|------|-------------|
-| [MailProcessor](https://github.com/doc-bricks/MailProcessor) | System tray launcher for all Universal Mail Tools |
-| [UniversalDocsGrabber](https://github.com/doc-bricks/UniversalDocsGrabber) | Download documents and attachments from IMAP mail |
-| [UniversalInvoiceMail](https://github.com/doc-bricks/UniversalInvoiceMail) | Extract invoices and receipts from IMAP mail |
+| Tool | Focus & Purpose | Status |
+|---|---|---|
+| [MailProcessor](https://github.com/doc-bricks/MailProcessor) | System tray launcher and orchestrator for all Universal Mail Tools | Production |
+| [UniversalDocsGrabber](https://github.com/doc-bricks/UniversalDocsGrabber) | Rule-based attachment and document extraction from IMAP mailboxes | Production |
+| [UniversalInvoiceMail](https://github.com/doc-bricks/UniversalInvoiceMail) | Automated invoice and receipt retrieval and sorting from email | Production |
+| [DokuZen](https://github.com/doc-bricks/DokuZen) | Local document and PDF management suite (22 tools in PySide6) | Production |
+| [PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) | Optical character recognition (OCR) desktop app for scanned PDFs | Production |
+| [MediaBrain](https://github.com/doc-bricks/MediaBrain) | Multi-format media and document metadata analyzer and converter | Production |
+| [ProFiler](https://github.com/file-bricks/ProFiler) | Fast desktop file management, organization, and batch workflow tool | Production |
 
 ## License
 

@@ -2,14 +2,14 @@
 
 Contains ImapService (IMAP connection/operations) and decode_header_str helper.
 """
-import imaplib
 import email
 import email.header
+import imaplib
 import logging
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 
-from models import MailAccount, CleanRule
+from models import CleanRule, MailAccount
 
 try:
     import keyring

@@ -2,7 +2,7 @@
 
 Contains dataclasses for IMAP account configuration and cleanup rules.
 """
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 
 @dataclass

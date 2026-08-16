@@ -4,15 +4,21 @@ Provides ScheduleConfig (dataclass) and SchedulerWidget (QWidget) that
 can be embedded in any PySide6 application to trigger recurring tasks.
 """
 
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass
 from datetime import datetime
 
+from PySide6.QtCore import QDateTime, QTimer, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
-    QGroupBox, QCheckBox, QSpinBox, QLabel, QPushButton,
+    QCheckBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, Signal, QTimer, QDateTime
-
 
 # ---------------------------------------------------------------------------
 # Data model

@@ -12,20 +12,51 @@ Modules:
     imap_client.py -- IMAP connection logic (ImapService, decode_header_str)
     workers.py     -- Background worker thread (Worker)
 """
-import sys
 import json
-import os
 import logging
-import imaplib
-import email
-import email.header
+import os
+import sys
+from datetime import datetime
 from pathlib import Path
-from datetime import datetime, timedelta
-from typing import List, Optional, Callable
+from typing import List, Optional
+
+from PySide6.QtCore import QSignalBlocker, Qt, QThread, Signal
+from PySide6.QtGui import QColor, QPalette
+
+# GUI Imports
+from PySide6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QPlainTextEdit,
+    QPushButton,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QTabWidget,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+
+from imap_client import ImapService
 
 # Import from modules
-from models import MailAccount, CleanRule
-from imap_client import ImapService, decode_header_str
+from models import CleanRule, MailAccount
 from profile_exchange import (
     default_profile_settings,
     merge_profile_settings,
@@ -33,18 +64,6 @@ from profile_exchange import (
     write_profile,
 )
 from workers import Worker
-
-# GUI Imports
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
-                             QHBoxLayout, QLabel, QPushButton, QTableWidget,
-                             QTableWidgetItem, QHeaderView, QMessageBox, QDialog,
-                             QFormLayout, QPlainTextEdit, QComboBox, QGroupBox,
-                             QCheckBox, QTabWidget, QDialogButtonBox,
-                             QSpinBox, QMenu, QTreeWidget, QTreeWidgetItem, QLineEdit,
-                             QFileDialog,
-                             QInputDialog)
-from PySide6.QtCore import Qt, QThread, Signal, QUrl, QSignalBlocker
-from PySide6.QtGui import QDesktopServices, QColor, QPalette
 
 # Security
 try:
@@ -55,7 +74,9 @@ except ImportError:
 
 # ==================== CONFIGURATION ====================
 
+__version__ = "1.2.0"
 APP_NAME = "UniversalMailCleaner"
+APP_VERSION = __version__
 BASE_DIR = Path.home() / ".mail_cleaner"
 BASE_DIR.mkdir(parents=True, exist_ok=True)
 CONFIG_FILE = BASE_DIR / "config.json"
@@ -497,7 +518,7 @@ class MainWindow(QMainWindow):
         )
 
         # TAB 5: SCHEDULER
-        from scheduler_widget import SchedulerWidget, ScheduleConfig
+        from scheduler_widget import ScheduleConfig, SchedulerWidget
         t_sched = QWidget(); l_sched = QVBoxLayout(t_sched)
         self._scheduler = SchedulerWidget()
         self._scheduler.run_requested.connect(self._on_scheduler_run)
@@ -629,9 +650,9 @@ class MainWindow(QMainWindow):
         menu = QMenu()
         if item:
             rule = item.data(0, Qt.ItemDataRole.UserRole)
-            act_del = menu.addAction("Delete")
+            menu.addAction("Delete")
         else:
-            act_new = menu.addAction("New Rule")
+            menu.addAction("New Rule")
 
         action = menu.exec(self.tree_rules.mapToGlobal(pos))
 

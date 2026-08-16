@@ -6,9 +6,9 @@ and trash restoration.
 """
 
 import json
-import os
-import math
 import logging
+import math
+import os
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -55,11 +55,11 @@ def _ensure_google_dependencies() -> bool:
         return False
 
     try:
-        from googleapiclient.discovery import build as build_fn
-        from google_auth_oauthlib.flow import InstalledAppFlow as installed_app_flow_cls
+        from google.auth.exceptions import RefreshError as refresh_error_cls
         from google.auth.transport.requests import Request as request_cls
         from google.oauth2.credentials import Credentials as credentials_cls
-        from google.auth.exceptions import RefreshError as refresh_error_cls
+        from google_auth_oauthlib.flow import InstalledAppFlow as installed_app_flow_cls
+        from googleapiclient.discovery import build as build_fn
     except ImportError as exc:
         GOOGLE_AVAIL = False
         _GOOGLE_IMPORT_ERROR = exc
