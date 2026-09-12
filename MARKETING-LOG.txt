@@ -1,0 +1,119 @@
+# MARKETING-LOG — doc-bricks/UniversalMailCleaner
+# Tracked Pfad B Discoverability, Visual Architecture, Governance & Verification Milestones
+
+================================================================================
+[2026-09-12 16:00 CEST] [PFAD_B_DISCOVERABILITY_AND_DESIGN]
+Repository:        doc-bricks/UniversalMailCleaner
+Local Canonical:   C:\_Local_DEV\repos\REL-PUB_UniversalMailCleaner-tasksolver-1159-current
+Branch:            master
+Version:           1.2.0
+License:           MIT (SPDX-License-Identifier: MIT)
+Maintainer:        Lukas Geiger (support@lukasgeiger.com)
+Security Contact:  security@open-bricks.org, security@doc-bricks.org
+
+1. DISCOVERABILITY, NAVIGATION & PEP 621 METADATA
+--------------------------------------------------------------------------------
+- Upgraded quick navigation to 15 items across README.md, README_de.md, and README-DE.md
+  with 100% reciprocal anchor parity:
+  1. #architecture / #architektur
+  2. #workflow-lifecycle / #workflow-lebenszyklus
+  3. #core-capabilities--security-invariants / #kernfähigkeiten--sicherheitsinvarianten
+  4. #target-personas--use-cases / #zielgruppen--anwendungsfälle
+  5. #comparative-matrix--alternatives / #vergleichsmatrix--alternativen
+  6. #feature-highlights / #funktions-highlights
+  7. #visual-interface--screenshot / #visuelle-oberfläche--screenshot
+  8. #supported-providers / #unterstützte-anbieter
+  9. #quick-start--setup / #schnellstart--installation
+  10. #configuration--credential-safety / #konfiguration--zugangsdaten-sicherheit
+  11. #scheduler--automated-maintenance / #zeitplaner--automatisierte-wartung
+  12. #ecosystem--sibling-tools / #ökosystem--geschwister-werkzeuge
+  13. #third-party-licenses--compliance / #drittanbieter-lizenzen--compliance
+  14. #security-policy--slas / #sicherheitsrichtlinie--slas
+  15. #license--faq / #lizenz--faq
+- Added dedicated Section "Third-Party Licenses & Compliance" documenting
+  direct runtime packages (PySide6 LGPL-3.0, keyring MIT, google-auth-oauthlib Apache-2.0,
+  google-api-python-client Apache-2.0) and unbundled OS credential storage.
+- Expanded pyproject.toml PEP 621 [project.urls] with:
+  * "Third-Party Licenses" -> THIRD_PARTY_LICENSES.md
+  * "Marketing Log" -> MARKETING-LOG.txt
+  * "LLM Ready" -> llms.txt
+  * "Security Policy" -> SECURITY.md
+  * "Issues" -> https://github.com/doc-bricks/UniversalMailCleaner/issues
+- Shields.io badge suite fully refreshed:
+  * License-MIT-green.svg
+  * Version-v1.2.0-blue.svg
+  * Tests-81%20Passed-brightgreen.svg
+  * Security%20SLA-48h%20%7C%205d-blue.svg
+  * Platform-Windows-blue.svg
+  * UI-PySide6-41cd52.svg
+  * Python-3.10%2B-blue.svg
+  * organization-doc--bricks-blue.svg
+  * ecosystem-open--bricks-blue.svg
+  * LLM--Ready-llms.txt-blue.svg
+  * Last--checked-2026--09--12-informational.svg
+
+2. TARGET PERSONAS & VALUE PROPOSITIONS
+--------------------------------------------------------------------------------
+- Persona 1: Privacy-Conscious Professionals & GDPR Officers
+  * Pain: Need inbox hygiene, data retention compliance, and newsletter purges without
+    routing sensitive business or client emails through third-party cloud aggregators.
+  * Solution: 100% Local-First Execution (INV-LOCAL-01) with encrypted OS Keyring isolation
+    and zero telemetry or data harvesting.
+- Persona 2: Storage-Constrained Gmail & IMAP Account Holders
+  * Pain: Hitting storage limits on Gmail (15GB shared quota) or corporate IMAP accounts;
+    faced with expensive monthly cloud storage upsells.
+  * Solution: Tabular multi-criteria scanner for large emails and Drive files, freeing
+    gigabytes locally with rule-based precision.
+- Persona 3: Power Users & Digital Minimalists
+  * Pain: Managing multiple email inboxes (GMX, Outlook, Gmail, Web.de) cluttered with
+    thousands of obsolete marketing mails and notifications.
+  * Solution: Multi-account switching, background scheduler maintenance, and safe trash mode
+    with instant undo safety net.
+- Persona 4: Solo Developers & System Administrators
+  * Pain: Commercial mailbox cleanup tools are subscription SaaS traps that harvest email
+    metadata or sell unsubscribe lead lists.
+  * Solution: Free, open-source MIT Python desktop utility with transparent code, lazy dependency
+    loading, and secrets-free configuration portability.
+
+3. HIGH-INTENT KEYWORD MATRIX (EN / DE)
+--------------------------------------------------------------------------------
+- English: "local first email cleaner", "gmail storage cleanup tool", "imap mailbox cleaner windows",
+  "safe delete email trash mode", "large email attachment finder", "desktop email cleanup app",
+  "pyside6 mail manager", "gmail api oauth2 cleanup", "free alternative to cleanfox",
+  "mailstrom alternative open source", "gdpr compliant email purger"
+- Deutsch: "lokaler E-Mail Bereiniger", "Gmail Speicherplatz freigeben", "IMAP Postfach aufräumen",
+  "sicherer Papierkorb Modus E-Mail", "große E-Mails finden Windows", "Desktop Mailbox Cleaner",
+  "PySide6 Mail Cleaner", "DSGVO konforme E-Mail Bereinigung", "kostenlose Cleanfox Alternative",
+  "Mailstrom Alternative Open Source", "lokales Mail-Management"
+
+4. 5-WAY COMPETITIVE MATRIX (10 DIMENSIONS)
+--------------------------------------------------------------------------------
+| Dimension | UniversalMailCleaner | Cloud Mailbox Cleaners (Cleanfox) | Commercial Aggregators (Mailstrom) | Webmail / Native Mail Clients | Ad-Hoc Scripts |
+|---|---|---|---|---|---|
+| Architecture & Privacy | 100% Local Desktop (Zero-Egress) | Cloud Backend Processing | Cloud SaaS Polling | Local / Cloud Client | Local CLI Script |
+| Email Body / Metadata | Processed strictly on-device | Harvested on vendor servers | Stored in vendor cloud | Provider-managed | Local terminal |
+| Data Monetization | Zero (MIT Open Source) | Aggregated & sold for marketing | Paid subscription lock-in | Ecosystem tracking | None |
+| Safe Mode & Undo | Safe Trash + 1-Click Undo | Trash only / Unsubscribe | Trash only | Manual move / Undo send only | Hard EXPUNGE risk |
+| Credential Security | OS Keyring (Windows DPAPI) | Cloud OAuth / Stored credentials | Cloud IMAP / OAuth stored | Native credential cache | Plaintext / Env vars |
+| Automated Scheduler | Local QTimer Scheduler | Cloud background polling | Scheduled cloud sweeps | Server rules (limited) | OS Cron / TaskScheduler |
+| Large-Item Discovery | Tabular Multi-Source (Mail+Drive) | Sender-level summaries | Category-based bundling | Search query bar | Custom IMAP query |
+| Cost & Licensing | 100% Free & Open Source (MIT) | "Free" with data harvesting | $9 - $30 / month | Free with account | Free |
+| Dependency Isolation | Standalone + Lazy Google loading | Hosted service | Hosted service | Heavy native app | Python stdlib |
+| Sibling Ecosystem | doc-bricks & open-bricks | Proprietary silo | Proprietary silo | Vendor silo | Isolated |
+
+5. SECURITY & RUNTIME INVARIANTS AUDIT
+--------------------------------------------------------------------------------
+- Verified and enforced 10 Governance & Runtime Invariants:
+  * INV-LOCAL-01: 100% Local-First Execution (Zero-Egress)
+  * INV-CRED-02: Encrypted Credential Isolation (Windows DPAPI Keyring)
+  * INV-SAFE-03: Safe-by-Default Deletion (Trash folder move)
+  * INV-UNDO-04: Transactional Undo Capability (In-memory UID buffer)
+  * INV-CONFIRM-05: Explicit Hard-Delete Opt-In (Modal warning dialog)
+  * INV-TLS-06: Enforced TLS Transport Security (IMAP4_SSL & HTTPS)
+  * INV-LEASTPRIV-07: Least-Privilege OAuth2 Scopes (Minimal Gmail/Drive)
+  * INV-LAZYLOAD-08: Lazy Optional Dependency Boundary (Dynamic Google imports)
+  * INV-PORTABLE-09: Secrets-Free Profile Portability (profile_exchange.py)
+  * INV-SLA-10: 48h Security SLA & 5-Day Triage (SECURITY.md)
+- Confirmed zero secret serialization in profile_exchange.py and config.json.
+- Validated THIRD_PARTY_LICENSES.md supply chain integrity confirming permissive/weak-copyleft
+  licensing and clean dependency boundaries.

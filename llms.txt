@@ -1,27 +1,42 @@
 # UniversalMailCleaner
 
-UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and Gmail mailboxes. It uses PySide6 and supports rule-based cleanup, safe trash mode, undo for trash operations, large-mail scans, Gmail API OAuth2 accounts, Gmail labels, Drive file cleanup, and scheduled cleanup runs.
+UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and Gmail mailboxes. It uses PySide6 and supports rule-based cleanup, safe trash mode, undo for trash operations, large-mail scans, Gmail API OAuth2 accounts, Gmail labels, Drive file cleanup, and scheduled maintenance runs.
 
-## Repository
+## Repository & Governance
 
 - GitHub: https://github.com/doc-bricks/UniversalMailCleaner
 - Organization: doc-bricks (https://github.com/doc-bricks)
 - Ecosystem Umbrella: open-bricks (https://github.com/open-bricks)
-- License: MIT
+- License: MIT License (SPDX: `MIT`)
 - Version: 1.2.0
 - Main app entry point: `mail_imap_cleaner_v1.py`
 - Core modules: `imap_client.py`, `gmail_service.py`, `workers.py`, `models.py`, `scheduler_widget.py`, `profile_exchange.py`
-- Tests: `tests/` (81 tests passed, 100% green)
+- Third-Party License Inventory: `THIRD_PARTY_LICENSES.md`
+- Marketing & Discoverability Log: `MARKETING-LOG.txt`
+- Security Policy: `SECURITY.md` (48h response SLA, 5-day triage)
+- Testsuite: `tests/` (88 passed, 100% green via pytest)
 
-## Audience
+## Target Personas & Use Cases
 
-- **Privacy-conscious Windows users** who want to clean Gmail or IMAP mailboxes without handing their inbox to a cloud service.
-- **Gmail power users** who need label-aware cleanup, Drive file scanning, large-mail detection, and OAuth2-based management — all running locally.
-- **IMAP users** on GMX, Outlook, T-Online, and other standard providers who want rule-based age/sender/subject filters with safe trash mode.
-- **Freelancers and small businesses** looking for scheduled mailbox maintenance without a subscription or hosted service.
-- **Developers** building or extending PySide6 Windows desktop workflows for email management, IMAP automation, or Gmail API integration.
+1. **Privacy-Conscious Professionals & GDPR Officers**: Need inbox hygiene, automated retention compliance, and newsletter purges without transmitting client communications or internal emails through third-party cloud aggregators.
+2. **Storage-Constrained Gmail & IMAP Account Holders**: Hitting storage ceilings on Gmail (15GB shared quota) or corporate IMAP accounts; faced with expensive recurring cloud storage tier upgrades.
+3. **Power Users & Digital Minimalists**: Managing multiple inboxes (GMX, Outlook, Gmail, Web.de) cluttered with tens of thousands of automated notifications and marketing blasts.
+4. **Solo Developers & System Administrators**: Want a free, open-source MIT Python desktop utility with auditable code, lazy dependency boundaries, and portable secrets-free profile exchange.
 
-## Search Phrases
+## 10 Governance- & Runtime-Invarianten
+
+- `INV-LOCAL-01`: **100% Local-First Execution** — All mailbox processing, filtering rules, and cache files remain entirely local; zero external telemetry or cloud analytics.
+- `INV-CRED-02`: **Encrypted Credential Isolation** — Account passwords and tokens are held via `keyring` in the OS Credential Manager (Windows DPAPI) or session memory; never stored in plaintext `config.json`.
+- `INV-SAFE-03`: **Safe-by-Default Deletion** — Default operational mode routes all deletions to the provider's trash folder (`Trash`, `Papierkorb`, `[Gmail]/Trash`) rather than issuing immediate expunge commands.
+- `INV-UNDO-04`: **Transactional Undo Capability** — Safe-mode deletions register message UIDs and folder mappings into an in-memory undo buffer, allowing immediate single-click restoration.
+- `INV-CONFIRM-05`: **Explicit Hard-Delete Opt-In** — Permanent purge (`EXPUNGE`) requires explicit user confirmation via dialog modal with safety warnings.
+- `INV-TLS-06`: **Enforced TLS Transport Security** — Network communication strictly requires `IMAP4_SSL` (port 993) and TLS 1.3 / HTTPS for Google APIs; unencrypted plaintext transport is rejected.
+- `INV-LEASTPRIV-07`: **Least-Privilege OAuth2 Scopes** — Google OAuth2 asks only for minimal required scopes (`gmail.modify`, optional `drive.file` / `drive.metadata.readonly`); no administrative takeovers.
+- `INV-LAZYLOAD-08`: **Lazy Optional Dependency Boundary** — Google client libraries (`google-api-python-client`, `google-auth-oauthlib`) are loaded lazily on demand; IMAP-only users start with zero Google library overhead.
+- `INV-PORTABLE-09`: **Secrets-Free Profile Portability** — Exported rule profiles (`profile_exchange.py`) strip all credentials and secrets, enabling safe cross-machine sharing and version-control storage.
+- `INV-SLA-10`: **48h Security SLA & 5-Day Triage** — Documented response timeline in `SECURITY.md` committing to 48-hour response and 5-day triage for all reported security vulnerabilities.
+
+## Search Phrases & Keywords
 
 - `doc-bricks/UniversalMailCleaner`
 - `UniversalMailCleaner GitHub`
@@ -39,22 +54,11 @@ UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and 
 - `local-first Gmail and IMAP cleaner`
 - `Windows email cleaner no subscription`
 
-## Last-checked: 2026-08-16
+## Last-checked: 2026-09-12
 
 ## Disambiguation
 
-UniversalMailCleaner is unrelated to MailCleaner anti-spam gateway projects,
-email marketing list cleaners, hosted unsubscribe services, browser-only Gmail
-extensions, CRM inbox tools, or SaaS mailbox analytics products. It is a local
-Windows/PySide6 app for Gmail and IMAP cleanup with safe trash mode and undo.
-
-## Safety Model
-
-- Safe mode moves messages to trash by default.
-- Undo is available for safe-mode delete actions.
-- IMAP uses SSL connections.
-- Passwords are stored through the OS keyring when available.
-- Gmail API access uses OAuth2 with local credentials and token files.
+UniversalMailCleaner is unrelated to MailCleaner anti-spam gateway projects, email marketing list cleaners, hosted unsubscribe services, browser-only Gmail extensions, CRM inbox tools, or SaaS mailbox analytics products. It is a local Windows/PySide6 app for Gmail and IMAP cleanup with safe trash mode and undo.
 
 ## Related doc-bricks & open-bricks Mail Tools
 

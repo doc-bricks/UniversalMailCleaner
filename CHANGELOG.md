@@ -5,7 +5,20 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-12
+
 ### Added
+- **Pfad B Discoverability, Visual Architecture & Governance Parity (2026-09-12):**
+  - Upgraded documentation with 15-point quick navigation across `README.md`, `README_de.md`, and `README-DE.md` with 100% reciprocal anchor parity.
+  - Implemented Dual-Mermaid diagrams: 4-layer system architecture (`flowchart TD`) and transactional email cleanup & safe-trash lifecycle (`sequenceDiagram`), fully validated via `lint_mermaid.py`.
+  - Audited and documented 10 Governance- and Runtime-Invariants (`INV-LOCAL-01` through `INV-SLA-10`).
+  - Cataloged 4 Target Personas (Privacy-Conscious Professionals & GDPR Officers, Storage-Constrained Account Holders, Power Users, and Solo Developers).
+  - Designed 5-way comparative matrix across 10 architectural and operational dimensions.
+  - Generated comprehensive third-party license inventory `THIRD_PARTY_LICENSES.md` auditing runtime dependencies (PySide6, keyring, google packages), transitive libraries, and unbundled OS services.
+  - Published dedicated repository marketing log `MARKETING-LOG.txt`.
+  - Added PEP 621 extended project URLs (`Third-Party Licenses`, `Marketing Log`, `LLM Ready`, `Security Policy`, `Issues`) in `pyproject.toml`.
+  - Expanded contract testsuite in `tests/test_metadata.py` covering navigation anchors, 10 invariants, personas, comparative matrix, license audit, and German README parity.
+  - Updated `llms.txt` with current 2026-09-12 timestamp, invariants, personas, and ecosystem pointers.
 - Discoverability, README-Design, Badges & Metadata Parity Check (2026-08-16):
   - Synchronized badges across `README.md`, `README-DE.md`, and `README_de.md` (81 Tests Passed, Version 1.2.0, `doc-bricks` organization, `open-bricks` ecosystem umbrella, `llms.txt` discovery).
   - Integrated interactive bilingual Mermaid system architecture diagrams in documentation.
