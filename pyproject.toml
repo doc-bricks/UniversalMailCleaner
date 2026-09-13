@@ -52,6 +52,9 @@ Changelog = "https://github.com/doc-bricks/UniversalMailCleaner/blob/master/CHAN
 "LLM Ready" = "https://github.com/doc-bricks/UniversalMailCleaner/blob/master/llms.txt"
 "Security Policy" = "https://github.com/doc-bricks/UniversalMailCleaner/blob/master/SECURITY.md"
 Issues = "https://github.com/doc-bricks/UniversalMailCleaner/issues"
+"Bug Tracker" = "https://github.com/doc-bricks/UniversalMailCleaner/issues"
+"Parent Organization" = "https://github.com/doc-bricks"
+"Umbrella Ecosystem" = "https://github.com/open-bricks"
 
 [tool.setuptools]
 py-modules = [
@@ -68,11 +71,12 @@ py-modules = [
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 pythonpath = ["."]
+addopts = "-ra -v"
 
 [tool.ruff]
 target-version = "py310"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
+select = ["E", "F", "W", "I", "C4"]
 ignore = ["E501", "E701", "E702", "E741", "E402"]

@@ -128,7 +128,7 @@ def test_llms_txt_structure():
     assert "MIT" in content
     assert "Search Phrases" in content
     assert "Disambiguation" in content
-    assert "Last-checked: 2026-09-12" in content
+    assert "Last-checked: 2026-09-14" in content
     assert "THIRD_PARTY_LICENSES.md" in content
     assert "MARKETING-LOG.txt" in content
     for inv in INVARIANTS:
@@ -258,4 +258,110 @@ def test_utf8_hygiene():
                 content = path.read_text(encoding="utf-8")
                 assert "\ufffd" not in content, f"Replacement character found in {path}"
             except UnicodeDecodeError as exc:
-                raise AssertionError(f"Invalid UTF-8 encoding in {path}: {exc}")
+                raise AssertionError(f"Invalid UTF-8 encoding in {path}: {exc}") from exc
+
+
+def test_ci_workflows_timeout_and_concurrency():
+    """Verify all GitHub Actions workflows define timeout-minutes and concurrency guards."""
+    workflows_dir = ROOT / ".github" / "workflows"
+    assert workflows_dir.exists() and workflows_dir.is_dir(), ".github/workflows directory missing"
+
+    workflow_files = list(workflows_dir.glob("*.yml"))
+    assert len(workflow_files) >= 3, f"Expected at least 3 workflow files, found {len(workflow_files)}"
+
+    for wf_path in workflow_files:
+        content = wf_path.read_text(encoding="utf-8")
+        assert "timeout-minutes:" in content, f"Workflow {wf_path.name} is missing timeout-minutes runaway guard"
+        if wf_path.name in ["ci.yml", "source-platform-smoke.yml"]:
+            assert "concurrency:" in content, f"Workflow {wf_path.name} is missing concurrency configuration"
+            assert "cancel-in-progress: true" in content, f"Workflow {wf_path.name} is missing cancel-in-progress"
+
+
+def test_stale_workflow_present_and_valid():
+    """Verify stale.yml workflow presence, action version, and configuration."""
+    stale_path = ROOT / ".github" / "workflows" / "stale.yml"
+    assert stale_path.exists(), "stale.yml workflow missing"
+    content = stale_path.read_text(encoding="utf-8")
+    assert "actions/stale@v9" in content
+    assert "cron: '30 1 * * *'" in content
+    assert "timeout-minutes: 10" in content
+    assert "issues: write" in content
+    assert "pull-requests: write" in content
+
+
+def test_gitignore_multihost_and_canonical_lock_defense():
+    """Verify .gitignore blocks multi-host sync conflicts, locks, and temporary artifacts."""
+    gitignore_path = ROOT / ".gitignore"
+    assert gitignore_path.exists(), ".gitignore missing"
+    content = gitignore_path.read_text(encoding="utf-8")
+
+    expected_patterns = [
+        "* (kopie)*",
+        "* (copy)*",
+        "*conflicted copy*",
+        "*-ASUS*",
+        "*-WORKSTATION*",
+        "*-LAPTOP*",
+        "*.sync-conflict-*",
+        "LOCK",
+        "LOCK.*",
+        "LOCK.permissions.json",
+        "uv.lock",
+        ".coverage",
+        ".ruff_cache/",
+        ".pytest_cache/",
+    ]
+    for pat in expected_patterns:
+        assert pat in content, f"Pattern {pat} missing from .gitignore"
+
+
+def test_pytest_configuration_and_pep621_urls():
+    """Verify pytest addopts, ruff rules, and extended PEP 621 URLs in pyproject.toml."""
+    pyproject_path = ROOT / "pyproject.toml"
+    with open(pyproject_path, "rb") as f:
+        data = tomllib.load(f)
+
+    # Pytest configuration
+    pytest_opts = data.get("tool", {}).get("pytest", {}).get("ini_options", {})
+    assert "addopts" in pytest_opts, "addopts missing from [tool.pytest.ini_options]"
+    assert "-ra -v" in pytest_opts["addopts"], "Expected '-ra -v' in pytest addopts"
+
+    # Ruff configuration
+    ruff_select = data.get("tool", {}).get("ruff", {}).get("lint", {}).get("select", [])
+    assert "C4" in ruff_select, "C4 rule missing from [tool.ruff.lint] select"
+
+    # Extended URLs
+    urls = data["project"]["urls"]
+    assert "Bug Tracker" in urls
+    assert "Parent Organization" in urls
+    assert "Umbrella Ecosystem" in urls
+
+
+def test_security_policy_bilingual_and_sla():
+    """Verify SECURITY.md contains bilingual policy, supported versions, contacts, and 48h SLA."""
+    sec_path = ROOT / "SECURITY.md"
+    assert sec_path.exists(), "SECURITY.md missing"
+    content = sec_path.read_text(encoding="utf-8")
+
+    assert "## Deutsch" in content
+    assert "## English" in content
+    assert "48 Stunden" in content or "48 hours" in content
+    assert "INV-SLA-10" in content
+    assert "INV-LOCAL-01" in content
+    assert "INV-CRED-02" in content
+    assert "INV-SAFE-03" in content
+    assert "security@doc-bricks.org" in content
+    assert "support@lukasgeiger.com" in content
+    assert "1.2.x" in content
+
+
+def test_changelog_and_marketing_pfad_a_records():
+    """Verify CHANGELOG.md and MARKETING-LOG.txt document Pfad A technical hygiene."""
+    changelog_content = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    marketing_content = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
+
+    assert "Pfad A Technical Hygiene" in changelog_content
+    assert "2026-09-14" in changelog_content
+
+    assert "PFAD_A_TECHNICAL_HYGIENE_AND_CI_HARDENING" in marketing_content
+    assert "2026-09-14" in marketing_content

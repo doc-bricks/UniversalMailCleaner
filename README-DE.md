@@ -1,4 +1,4 @@
-<img src="assets/banner.svg" width="100%" alt="UniversalMailCleaner Banner">
+<img src="assets/banner.png" width="100%" alt="UniversalMailCleaner Banner">
 
 # UniversalMailCleaner
 
@@ -11,7 +11,7 @@
 [![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-blue?logo=windows)](#schnellstart--installation)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)
-[![Tests: 88 Bestanden](https://img.shields.io/badge/Tests-88%20Bestanden-brightgreen)](tests)
+[![Tests: 94 Bestanden](https://img.shields.io/badge/Tests-94%20Bestanden-brightgreen)](tests)
 [![Sicherheits-SLA: 48h / 5d](https://img.shields.io/badge/Sicherheits--SLA-48h%20%2F%205d-blue)](SECURITY.md)
 [![Organisation: doc-bricks](https://img.shields.io/badge/organisation-doc--bricks-blue)](https://github.com/doc-bricks)
 [![Ökosystem: open-bricks](https://img.shields.io/badge/ökosystem-open--bricks-blue)](https://github.com/open-bricks)

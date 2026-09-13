@@ -1,4 +1,4 @@
-﻿# ---- Python ----
+# ---- Python ----
 __pycache__/
 *.py[cod]
 *$py.class
@@ -15,17 +15,58 @@ venv/
 env/
 .env/
 
-# ---- Interne Steuerungsdateien ----
+# ---- Interne Steuerungsdateien & Multi-Agent Lock-System ----
 docs/superpowers/
 AUFGABEN.txt
 TEST.txt
 TESTS.txt
-LOCK*.txt
 TESTERGEBNISSE.txt
 BUGREPORT.md
 DIAGNOSE_REPORT.md
 SKILL.md
 tmpclaude-*
+LOCK
+LOCK.*
+LOCK*.txt
+LOCK.permissions.json
+uv.lock
+!package-lock.json
+
+# ---- Multi-Host & Cloud-Sync Konflikt-Schutz ----
+* (kopie)*
+* (Kopie)*
+* (copy)*
+* (Copy)*
+*conflicted copy*
+*-ASUS*
+*-ASUS-GEI*
+*-WORKSTATION*
+*-WORKSTATION-LG*
+*-LAPTOP*
+*-Mac Studio*
+*.sync-conflict-*
+*.conflict
+*-CONFLIT-*
+*.sync-temp-*
+
+# ---- Test, Coverage & Linter Caches ----
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.turbo/
+.hypothesis/
+wheelhouse/
+.wheel-smoke/
+
+# ---- Temporäre Backup- & Patch-Dateien ----
+*.orig
+*.rej
+*.tmp
+*.bak
 
 # ---- Sensible Daten ----
 _USER/

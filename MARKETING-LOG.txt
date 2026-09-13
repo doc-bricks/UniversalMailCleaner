@@ -117,3 +117,57 @@ Security Contact:  security@open-bricks.org, security@doc-bricks.org
 - Confirmed zero secret serialization in profile_exchange.py and config.json.
 - Validated THIRD_PARTY_LICENSES.md supply chain integrity confirming permissive/weak-copyleft
   licensing and clean dependency boundaries.
+
+================================================================================
+[2026-09-14 01:25 CEST] [PFAD_A_TECHNICAL_HYGIENE_AND_CI_HARDENING]
+Repository:        doc-bricks/UniversalMailCleaner
+Local Canonical:   C:\_Local_DEV\repos\REL-PUB_UniversalMailCleaner-tasksolver-1159-current
+Branch:            master
+Version:           1.2.0
+Trigger:           GITHUBBOT_ONE_REPO_CLEANER (Pfad A Turnuslauf)
+
+6. CI/CD WORKFLOW HARDENING & TIMEOUT GUARDRAILS
+--------------------------------------------------------------------------------
+- Configured multi-OS CI matrix (.github/workflows/ci.yml) targeting Windows, Ubuntu,
+  and macOS across Python 3.10, 3.11, and 3.12 with pip caching, bytecode check,
+  Ruff linting, and Pytest test suite (-ra -v).
+- Hardened job timeouts across all workflows with strict runaway guards:
+  * ci.yml: timeout-minutes: 15
+  * source-platform-smoke.yml: timeout-minutes: 15
+  * stale.yml: timeout-minutes: 10
+- Enforced concurrency groups with cancel-in-progress: true to terminate obsolete runs.
+- Added Stale Issues & PRs lifecycle automation (.github/workflows/stale.yml) with
+  actions/stale@v9, daily 01:30 UTC schedule, 30-day stale / 7-day close thresholds.
+
+7. MULTI-HOST CLOUD-SYNC & LOCK DEFENSE
+--------------------------------------------------------------------------------
+- Hardened .gitignore with multi-host cloud-sync conflict patterns (* (kopie)*,
+  * (copy)*, *conflicted copy*, *-ASUS*, *-WORKSTATION*, *-LAPTOP*, *.sync-conflict-*).
+- Blocked multi-agent lock patterns (LOCK, LOCK.*, LOCK.permissions.json, uv.lock).
+- Excluded test, coverage, and linter caches (.coverage, .ruff_cache, .mypy_cache, .tox).
+
+8. BILINGUAL SECURITY POLICY & PEP 621 STANDARDIZATION
+--------------------------------------------------------------------------------
+- Upgraded SECURITY.md to comprehensive bilingual (DE/EN) security policy:
+  * Documented 48-hour response SLA and 5-day triage commitment (INV-SLA-10).
+  * Direct security coordinator emails (security@doc-bricks.org, support@lukasgeiger.com).
+  * Private GitHub security vulnerability advisory workflow link.
+  * Supported versions matrix (1.2.x active support).
+  * Local-first, zero-egress, safe trash deletion, and non-elevated user-mode guarantees.
+- Expanded pyproject.toml PEP 621 project URLs:
+  * "Bug Tracker" -> https://github.com/doc-bricks/UniversalMailCleaner/issues
+  * "Parent Organization" -> https://github.com/doc-bricks
+  * "Umbrella Ecosystem" -> https://github.com/open-bricks
+- Configured [tool.pytest.ini_options] addopts = "-ra -v".
+- Expanded [tool.ruff.lint] select ruleset with C4 (flake8-comprehensions).
+
+9. CONTRACT TEST EXPANSION & VERIFICATION
+--------------------------------------------------------------------------------
+- Expanded tests/test_metadata.py with 6 new automated contract tests:
+  * test_ci_workflows_timeout_and_concurrency
+  * test_stale_workflow_present_and_valid
+  * test_gitignore_multihost_and_canonical_lock_defense
+  * test_pytest_configuration_and_pep621_urls
+  * test_security_policy_bilingual_and_sla
+  * test_changelog_and_marketing_pfad_a_records
+- Full verification suite: 100% green tests via Pytest, ruff check clean, compileall clean, git diff --check clean.

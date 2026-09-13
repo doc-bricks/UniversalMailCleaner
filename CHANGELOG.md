@@ -5,6 +5,16 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Pfad A Technical Hygiene, CI/CD Hardening, Multi-Host Defense & Security Policy (2026-09-14):**
+  - Configured multi-OS CI/CD workflow (`.github/workflows/ci.yml`) spanning Windows, Ubuntu, and macOS with Python 3.10-3.12 matrix, pip caching, bytecode compilation verification (`compileall`), Ruff linting, and automated Pytest test suite with 15-minute runaway timeout guardrail and concurrency isolation (`cancel-in-progress: true`).
+  - Hardened source-platform smoke workflow (`.github/workflows/source-platform-smoke.yml`) with job-level `timeout-minutes: 15` and concurrency group.
+  - Added automated Stale Issues & PRs lifecycle workflow (`.github/workflows/stale.yml`) with `actions/stale@v9`, daily 01:30 UTC schedule, 30-day stale / 7-day close thresholds, and `timeout-minutes: 10`.
+  - Hardened `.gitignore` against multi-host cloud-sync conflicts (`* (kopie)*`, `* (copy)*`, `*conflicted copy*`, `*-ASUS*`, `*-WORKSTATION*`, `*-LAPTOP*`, `*.sync-conflict-*`), multi-agent lock systems (`LOCK`, `LOCK.*`, `LOCK.permissions.json`, `uv.lock`), and coverage/build artifacts.
+  - Standardized PEP 621 project URLs in `pyproject.toml` with `Bug Tracker`, `Parent Organization`, and `Umbrella Ecosystem` pointers; configured `[tool.pytest.ini_options]` with `addopts = "-ra -v"`; expanded Ruff linter rulesets with `C4` (flake8-comprehensions).
+  - Authored comprehensive bilingual Security Policy (`SECURITY.md`) establishing 48-hour response SLA and 5-day triage (`INV-SLA-10`), supported versions lifecycle (1.2.x), direct security coordinator contacts, private vulnerability advisory paths, and architectural local-first / zero-egress / non-elevated user-mode guarantees.
+  - Added 6 automated metadata contract tests in `tests/test_metadata.py` validating CI timeouts and concurrency, stale lifecycle automation, gitignore multi-host and lock defense, PEP 621 URL definitions and pytest options, bilingual security policy invariants, and changelog/marketing log recency.
+
 ## [1.2.0] - 2026-09-12
 
 ### Added
