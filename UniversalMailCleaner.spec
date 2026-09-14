@@ -5,7 +5,7 @@ a = Analysis(
     ['mail_imap_cleaner_v1.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('assets', 'assets')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

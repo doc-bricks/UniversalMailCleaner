@@ -6,6 +6,15 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **App-Icon-Generator & Multi-Variant-Asset-System (2026-09-14):**
+  - Aufbereitung und Hochskalierung des Original-App-Icons auf ein verlustfreies 1024x1024 Master-Icon (`UniversalMailCleaner_icon.png`, `icon.png`, `DesktopIcon.png`).
+  - Generierung vollständiger 7-Layer Multi-Resolution Windows ICO-Dateien (`UniversalMailCleaner_icon.ico`, `icon.ico`, `DesktopIcon.ico`) mit den standardisierten Dimensionen 16x16, 24x24, 32x32, 48x48, 64x64, 128x128 und 256x256 Pixeln.
+  - Bereitstellung von 4-Layer Favicons (`favicon.ico`: 16x16, 24x24, 32x32, 48x48) im Root-, `assets/`- und `mobile_icons/`-Verzeichnis sowie `favicon.png` (32x32) und Apple Touch Icons (`apple-touch-icon.png`, `apple-touch-icon-180.png`: 180x180).
+  - PWA- und Mobile-Icon-Paket (`mobile_icons/`): Standard- und Maskable-Icons (`icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`) inklusive validem Web-App-Manifest (`manifest.json`) mit Safespace-Pufferung.
+  - Microsoft Store Asset-Paket (`store_assets/`): Standardisierte Windows-Store- und WinGet-Kachelgrößen (`icon_44x44.png`, `Square44x44Logo.png`, `icon_50x50.png`, `StoreLogo.png`, `icon_150x150.png`, `Square150x150Logo.png`, `icon_310x310.png`, `Square310x310Logo.png`, `icon_310x150.png`, `Wide310x150Logo.png`) nebst Dokumentation `store_assets/README.md`.
+  - Laufzeit-Einbindung des Anwendungs-Icons (`get_app_icon()` in `mail_imap_cleaner_v1.py`) für Hauptfenster (`MainWindow.setWindowIcon`) und Prozessinstanz (`QApplication.setWindowIcon`) mit robuster Pfadauflösung (PyInstaller-Bundle `sys._MEIPASS`, Anwendungsroot, Assets-Ordner).
+  - PyInstaller-Spec-Update (`UniversalMailCleaner.spec`) zur Bündelung des `assets/`-Verzeichnisses in Release-Builds.
+  - Automatisierte Vertragstest-Suite in `tests/test_assets_and_icons.py` (5 Vertragstests zur Validierung von Root-Icons, 7 ICO-Layern, PNG-Dimensionen, PWA-Manifest, Store-Kacheln und Laufzeit-Icon-Auflösung).
 - **Pfad A Technical Hygiene, CI/CD Hardening, Multi-Host Defense & Security Policy (2026-09-14):**
   - Configured multi-OS CI/CD workflow (`.github/workflows/ci.yml`) spanning Windows, Ubuntu, and macOS with Python 3.10-3.12 matrix, pip caching, bytecode compilation verification (`compileall`), Ruff linting, and automated Pytest test suite with 15-minute runaway timeout guardrail and concurrency isolation (`cancel-in-progress: true`).
   - Hardened source-platform smoke workflow (`.github/workflows/source-platform-smoke.yml`) with job-level `timeout-minutes: 15` and concurrency group.

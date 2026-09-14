@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from PySide6.QtCore import QSignalBlocker, Qt, QThread, Signal
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QColor, QIcon, QPalette
 
 # GUI Imports
 from PySide6.QtWidgets import (
@@ -89,6 +89,37 @@ if not isinstance(_log_level, int):
 
 logging.basicConfig(level=_log_level, format="%(asctime)s - %(message)s")
 logger = logging.getLogger(APP_NAME)
+
+
+def get_app_icon() -> QIcon:
+    """Resolves and returns the application QIcon from candidate locations."""
+    search_dirs = [
+        getattr(sys, "_MEIPASS", None),
+        Path(__file__).resolve().parent,
+        Path(__file__).resolve().parent / "assets",
+        Path.cwd(),
+        Path.cwd() / "assets",
+    ]
+    candidates = [
+        "UniversalMailCleaner_icon.ico",
+        "icon.ico",
+        "DesktopIcon.ico",
+        "UniversalMailCleaner_icon.png",
+        "icon.png",
+        "DesktopIcon.png",
+    ]
+    for directory in search_dirs:
+        if not directory:
+            continue
+        dir_path = Path(directory)
+        for name in candidates:
+            cand = dir_path / name
+            if cand.is_file():
+                icon = QIcon(str(cand))
+                if not icon.isNull():
+                    return icon
+    return QIcon()
+
 
 # ==================== IMAP LOGIC ====================
 # (Models imported from models.py; ImapService from imap_client.py; Worker from workers.py)
@@ -403,6 +434,9 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         """Builds the main window UI with tabs for accounts, rules, large emails, settings, and log."""
         self.setWindowTitle(APP_NAME)
+        app_icon = get_app_icon()
+        if not app_icon.isNull():
+            self.setWindowIcon(app_icon)
         self.resize(1100, 750)
 
         # Dark theme
@@ -1352,9 +1386,13 @@ class MainWindow(QMainWindow):
         self.save_config()
         self.update_mode_label()
 
+
 def main() -> int:
     """Start the desktop application."""
     app = QApplication(sys.argv)
+    app_icon = get_app_icon()
+    if not app_icon.isNull():
+        app.setWindowIcon(app_icon)
     win = MainWindow()
     win.show()
     return app.exec()
