@@ -88,6 +88,9 @@ class SchedulerWidget(QWidget):
         fl = QFormLayout(g_cfg)
 
         self.chk_enabled = QCheckBox("Scheduler aktivieren")
+        self.chk_enabled.setToolTip("Aktiviert das periodische automatische Ausführen der Bereinigungsregeln.")
+        self.chk_enabled.setAccessibleName("Scheduler aktivieren")
+        self.chk_enabled.setAccessibleDescription("Schaltet die automatische zeitgesteuerte Ausführung der Regeln ein oder aus.")
         self.chk_enabled.toggled.connect(self._on_toggle)
         fl.addRow(self.chk_enabled)
 
@@ -96,6 +99,9 @@ class SchedulerWidget(QWidget):
         self.spin_hours.setRange(1, 168)   # 1 h – 1 week
         self.spin_hours.setValue(24)
         self.spin_hours.setSuffix(" Stunden")
+        self.spin_hours.setToolTip("Zeitabstand in Stunden zwischen automatischen Bereinigungsläufen.")
+        self.spin_hours.setAccessibleName("Ausführungsintervall in Stunden")
+        self.spin_hours.setAccessibleDescription("Intervall in Stunden zwischen 1 und 168 für wiederkehrende Bereinigungen.")
         self.spin_hours.valueChanged.connect(self._on_interval_changed)
         h_interval.addWidget(QLabel("Intervall:"))
         h_interval.addWidget(self.spin_hours)
@@ -103,6 +109,11 @@ class SchedulerWidget(QWidget):
         fl.addRow(h_interval)
 
         self.chk_startup = QCheckBox("Bei Programmstart prüfen")
+        self.chk_startup.setToolTip("Führt fällige Bereinigungsregeln direkt beim Programmstart aus.")
+        self.chk_startup.setAccessibleName("Bei Programmstart prüfen")
+        self.chk_startup.setAccessibleDescription(
+            "Prüft beim Start der Anwendung sofort, ob das definierte Intervall seit dem letzten Lauf überschritten wurde."
+        )
         fl.addRow(self.chk_startup)
 
         lay.addWidget(g_cfg)
@@ -125,6 +136,9 @@ class SchedulerWidget(QWidget):
         # --- Buttons ---
         h_btn = QHBoxLayout()
         self.btn_run = QPushButton("Jetzt ausführen")
+        self.btn_run.setToolTip("Bereinigungsregeln sofort manuell starten.")
+        self.btn_run.setAccessibleName("Bereinigung jetzt ausführen")
+        self.btn_run.setAccessibleDescription("Startet die Ausführung aller aktiven Bereinigungsregeln sofort unabhängig vom Zeitplan.")
         self.btn_run.clicked.connect(self._manual_run)
         h_btn.addWidget(self.btn_run)
         h_btn.addStretch()

@@ -6,6 +6,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Accessibility & UX Navigation Overhaul (2026-09-18):**
+  - Implementierte vollständige Barrierefreiheit nach WCAG 2.1 AA / Screenreader-Standards für alle primären Navigations-Tabs (`Hauptbereiche`) inklusive aussagekräftiger Tooltips für sämtliche 8 Reiter.
+  - Ergänzte semantische `accessibleName`-, `accessibleDescription`- und Tooltip-Attribute für alle zentralen Aktionsschaltflächen, Tabellen und Einstellungssteuerungen über Konten, Filterregeln, Großmail-Scan, Zeitplaner und Gmail-Labels.
+  - Ausstattete Scanergebnis-Zeilen mit kontextbezogenen Checkbox-Tooltips (`Auswählen für Bereinigung: <Betreff> (<Größe> MB)`) und `AccessibleTextRole` für assistive Bildschirmleser.
+  - Ergänzte intuitive Desktop-Tastenkürzel für Kernaktionen: `F5` zum Starten des Großmail-Scans und `Del` / `Entf` zum Bereinigen ausgewählter Elemente.
+  - Erweiterte automatisierte Barrierefreiheits-Vertragstests in `tests/test_main_window.py` und `tests/test_scheduler_widget.py`.
 - **App-Icon-Generator & Multi-Variant-Asset-System (2026-09-14):**
   - Aufbereitung und Hochskalierung des Original-App-Icons auf ein verlustfreies 1024x1024 Master-Icon (`UniversalMailCleaner_icon.png`, `icon.png`, `DesktopIcon.png`).
   - Generierung vollständiger 7-Layer Multi-Resolution Windows ICO-Dateien (`UniversalMailCleaner_icon.ico`, `icon.ico`, `DesktopIcon.ico`) mit den standardisierten Dimensionen 16x16, 24x24, 32x32, 48x48, 64x64, 128x128 und 256x256 Pixeln.

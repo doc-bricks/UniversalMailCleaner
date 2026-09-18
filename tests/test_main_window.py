@@ -302,6 +302,100 @@ class TestPrimaryNavigationAccessibility(unittest.TestCase):
         )
         win.deleteLater()
 
+    def test_all_tabs_have_readable_labels_tooltips_and_accessible_name(self):
+        """All primary navigation tabs must provide readable labels and tooltips."""
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        tabs = win.centralWidget().findChild(QTabWidget)
+
+        self.assertIsNotNone(tabs)
+        self.assertEqual(tabs.accessibleName(), "Hauptbereiche")
+        self.assertGreaterEqual(tabs.count(), 8)
+
+        for index in range(tabs.count()):
+            text = tabs.tabText(index)
+            tooltip = tabs.tabToolTip(index)
+            self.assertTrue(bool(text.strip()), f"Tab {index} has empty label")
+            self.assertTrue(bool(tooltip.strip()), f"Tab {index} ({text}) has empty tooltip")
+            self.assertGreaterEqual(
+                len(tooltip), 15, f"Tab {index} ({text}) tooltip is too short"
+            )
+        win.deleteLater()
+
+    def test_primary_action_controls_expose_accessible_metadata(self):
+        """Primary action buttons and controls must expose accessible names and tooltips."""
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        # Tab 1: Accounts
+        self.assertEqual(win.b_add_a.accessibleName(), "IMAP-Konto hinzufügen")
+        self.assertTrue(win.b_add_a.toolTip())
+        self.assertEqual(win.b_add_gmail.accessibleName(), "Gmail-API-Konto hinzufügen")
+        self.assertTrue(win.b_add_gmail.toolTip())
+        self.assertEqual(win.b_del_a.accessibleName(), "Ausgewähltes Konto löschen")
+        self.assertTrue(win.b_del_a.toolTip())
+
+        # Tab 2: Rules
+        self.assertEqual(win.b_new.accessibleName(), "Neue Regel erstellen")
+        self.assertTrue(win.b_new.toolTip())
+        self.assertEqual(win.b_folders.accessibleName(), "Ordnerauswahl für Regeln")
+        self.assertTrue(win.b_folders.toolTip())
+        self.assertEqual(win.b_run.accessibleName(), "Ausgewählte Regeln ausführen")
+        self.assertTrue(win.b_run.toolTip())
+        self.assertEqual(win.b_run_all.accessibleName(), "Alle aktiven Regeln ausführen")
+        self.assertTrue(win.b_run_all.toolTip())
+
+        # Tab 3: Large Items & Shortcuts
+        self.assertEqual(win.btn_scan.accessibleName(), "Scan nach großen Elementen starten")
+        self.assertEqual(win.btn_scan.shortcut().toString(), "F5")
+        self.assertEqual(win.b_del_sel.accessibleName(), "Markierte Elemente bereinigen")
+        self.assertEqual(win.b_del_sel.shortcut().toString(), "Del")
+        self.assertEqual(win.b_undo.accessibleName(), "Letzte Löschung rückgängig machen")
+        self.assertTrue(win.b_undo.toolTip())
+
+        # Tab 4: Settings
+        self.assertEqual(win.chk_safe.accessibleName(), "Sicherer Löschmodus mit Papierkorb")
+        self.assertTrue(win.chk_safe.toolTip())
+        self.assertEqual(win.b_export_profile.accessibleName(), "Profil exportieren")
+        self.assertEqual(win.b_import_profile.accessibleName(), "Profil importieren")
+
+        # Tab 6 & 7: Stats & Labels
+        self.assertEqual(win.b_load_stats.accessibleName(), "Speicherstatistiken abrufen")
+        self.assertEqual(win.b_load_labels.accessibleName(), "Gmail-Labels laden")
+        self.assertEqual(win.b_create_label.accessibleName(), "Neues Gmail-Label anlegen")
+        win.deleteLater()
+
+    def test_fill_large_items_checkbox_accessible_role_and_tooltip(self):
+        """Checkboxes in scan results must associate subject and size for accessibility."""
+        from PySide6.QtCore import Qt
+
+        from mail_imap_cleaner_v1 import MainWindow
+
+        win = MainWindow()
+        win.fill_large([
+            {
+                "account": "test@example.org",
+                "id": "101",
+                "subject": "Große Präsentation",
+                "size": 42.5,
+                "date": "2026-09-18",
+            }
+        ])
+
+        self.assertEqual(win.table_large.rowCount(), 1)
+        chk_item = win.table_large.item(0, 0)
+        self.assertIsNotNone(chk_item)
+        self.assertEqual(
+            chk_item.toolTip(),
+            "Auswählen für Bereinigung: Große Präsentation (42.5 MB)",
+        )
+        self.assertEqual(
+            chk_item.data(Qt.ItemDataRole.AccessibleTextRole),
+            "Auswahl für Große Präsentation",
+        )
+        win.deleteLater()
+
 
 if __name__ == "__main__":
     unittest.main()

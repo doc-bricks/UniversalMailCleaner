@@ -49,6 +49,17 @@ class TestSchedulerWidget(unittest.TestCase):
         self.assertTrue(self.widget.get_config().last_run)
         self.assertNotEqual(self.widget.lbl_last.text(), "-")
 
+    def test_scheduler_controls_expose_accessible_metadata(self):
+        """Scheduler controls must provide clear tooltips and accessible names."""
+        self.assertEqual(self.widget.chk_enabled.accessibleName(), "Scheduler aktivieren")
+        self.assertIn("periodische", self.widget.chk_enabled.toolTip())
+        self.assertEqual(self.widget.spin_hours.accessibleName(), "Ausführungsintervall in Stunden")
+        self.assertIn("Zeitabstand", self.widget.spin_hours.toolTip())
+        self.assertEqual(self.widget.chk_startup.accessibleName(), "Bei Programmstart prüfen")
+        self.assertIn("Programmstart", self.widget.chk_startup.toolTip())
+        self.assertEqual(self.widget.btn_run.accessibleName(), "Bereinigung jetzt ausführen")
+        self.assertIn("sofort", self.widget.btn_run.toolTip())
+
 
 if __name__ == "__main__":
     unittest.main()
