@@ -20,6 +20,26 @@ except ImportError:
 APP_NAME = "MailCleaner_V8_Universal"
 logger = logging.getLogger(APP_NAME)
 
+IMAP_MONTHS = (
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+)
+
+
+def format_imap_date(dt: datetime) -> str:
+    """Formats a datetime as an RFC 3501 compliant date string (DD-Mon-YYYY).
+
+    Uses fixed English month abbreviations regardless of system locale to ensure
+    IMAP servers accept SEARCH queries on German, French, etc. systems.
+
+    Args:
+        dt: datetime object to format.
+
+    Returns:
+        RFC 3501 date-text string (e.g. '05-Mar-2026').
+    """
+    return f"{dt.day:02d}-{IMAP_MONTHS[dt.month - 1]}-{dt.year}"
+
 
 def decode_header_str(header_val) -> str:
     """Decodes an email header value, handling various encodings.
@@ -193,7 +213,8 @@ class ImapService:
                 days = int(rule.value)
                 if days <= 0:
                     return None
-                cutoff = (datetime.now() - timedelta(days=days)).strftime("%d-%b-%Y")
+                cutoff_dt = datetime.now() - timedelta(days=days)
+                cutoff = format_imap_date(cutoff_dt)
                 return f'(BEFORE "{cutoff}")'
             elif rule.filter_type == "sender":
                 safe_value = rule.value.replace('\\', '\\\\').replace('"', '').strip()

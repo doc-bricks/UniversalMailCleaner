@@ -7,6 +7,7 @@ from pathlib import Path
 
 # Import der zu testenden Module
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from imap_client import format_imap_date
 from mail_imap_cleaner_v1 import CleanRule, ImapService
 
 
@@ -40,11 +41,55 @@ class TestImapServiceSearchCriteria(unittest.TestCase):
         )
         result = self.service.get_search_criteria(rule)
 
-        # Erwartetes Datum berechnen
-        expected_date = (datetime.now() - timedelta(days=7)).strftime("%d-%b-%Y")
+        # Erwartetes Datum berechnen via RFC-3501-konformer Datumsfunktion
+        expected_date = format_imap_date(datetime.now() - timedelta(days=7))
         expected = f'(BEFORE "{expected_date}")'
 
         self.assertEqual(result, expected)
+
+    def test_older_than_days_rfc3501_english_month_in_german_locale(self):
+        """Test: older_than_days muss immer RFC-3501-englische Monatsnamen verwenden, auch unter deutscher Locale."""
+        import locale
+        import re
+        old_locale = locale.setlocale(locale.LC_TIME)
+        try:
+            for loc in ['German_Germany.1252', 'de_DE', 'de_DE.utf8', 'de_DE.UTF-8']:
+                try:
+                    locale.setlocale(locale.LC_TIME, loc)
+                    break
+                except Exception:
+                    pass
+
+            # 180 Tage zurück landet von September aus im März (Mrz vs Mar)
+            rule = CleanRule(
+                name="Test",
+                target_account="Alle",
+                filter_type="older_than_days",
+                value="180"
+            )
+            result = self.service.get_search_criteria(rule)
+            self.assertIsNotNone(result)
+
+            match = re.search(r'\(BEFORE "(\d{2})-([A-Za-z]+)-(\d{4})"\)', result)
+            self.assertIsNotNone(match, f"Suchkriterium entspricht nicht RFC 3501: {result}")
+            month = match.group(2)
+            valid_rfc3501_months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+            self.assertIn(month, valid_rfc3501_months, f"Monatsabkürzung {month!r} ist kein gültiger RFC 3501 Monat")
+            self.assertNotIn(month, {"Mrz", "Mai", "Okt", "Dez"}, f"Lokale deutsche Monatsabkürzung gefunden: {month}")
+        finally:
+            locale.setlocale(locale.LC_TIME, old_locale)
+
+    def test_format_imap_date_all_twelve_months(self):
+        """Test: format_imap_date liefert für alle 12 Monate exakte RFC-3501-konforme englische Monatskürzel."""
+        expected_months = [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ]
+        for month_idx in range(1, 13):
+            dt = datetime(2026, month_idx, 5)
+            formatted = format_imap_date(dt)
+            expected = f"05-{expected_months[month_idx - 1]}-2026"
+            self.assertEqual(formatted, expected)
 
     def test_sender_filter(self):
         """Test: sender Filter mit E-Mail-Adresse"""

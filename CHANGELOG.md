@@ -5,6 +5,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **RFC 3501 IMAP Date Format Locale Isolation (IMAP-003):**
+  - Resolved query syntax errors (`BAD Invalid date in SEARCH command`) during `older_than_days` IMAP rule searches on non-English (e.g. German `de_DE`) host locales.
+  - Implemented `format_imap_date` in `imap_client.py` using fixed RFC 3501 English month tokens (`Jan`..`Dec`) rather than runtime-locale-dependent `strftime("%d-%b-%Y")` (which produced localized abbreviations like `Mrz`, `Mai`, `Okt`, `Dez`).
+  - Added test coverage in `tests/test_imap_service.py` verifying RFC 3501 date-text formatting across all 12 calendar months and explicitly under active German locale.
+
 ### Added
 - **Pfad B Discoverability, Visual Architecture, Level 1 SBOM & Navigation Modernization (2026-09-22):**
   - Standardized documentation quick navigation to the 18-point dual-anchor architecture with reciprocal anchors (`<a id="sec-XX"></a><a id="..."></a>`) across `README.md`, `README_de.md`, and byte-identical `README-DE.md`.
