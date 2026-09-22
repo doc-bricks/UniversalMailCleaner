@@ -19,40 +19,65 @@ INVARIANTS = [
     "INV-SLA-10",
 ]
 
-EXPECTED_EN_ANCHORS = [
-    "#architecture",
-    "#workflow-lifecycle",
-    "#core-capabilities--security-invariants",
-    "#target-personas--use-cases",
-    "#comparative-matrix--alternatives",
-    "#feature-highlights",
-    "#visual-interface--screenshot",
-    "#supported-providers",
-    "#quick-start--setup",
-    "#configuration--credential-safety",
-    "#scheduler--automated-maintenance",
-    "#ecosystem--sibling-tools",
-    "#third-party-licenses--compliance",
-    "#security-policy--slas",
-    "#license--faq",
+EXPECTED_SECTION_ANCHORS = [f"#sec-{i:02d}" for i in range(1, 19)]
+
+LEGACY_EN_ANCHORS = [
+    "architecture",
+    "workflow-lifecycle",
+    "visual-interface--screenshot",
+    "core-capabilities--security-invariants",
+    "feature-highlights",
+    "target-personas--use-cases",
+    "comparative-matrix--alternatives",
+    "supported-providers",
+    "quick-start--setup",
+    "configuration--credential-safety",
+    "scheduler--automated-maintenance",
+    "ecosystem--sibling-tools",
+    "third-party-licenses--compliance",
+    "security-policy--slas",
+    "license--faq",
 ]
 
-EXPECTED_DE_ANCHORS = [
-    "#architektur",
-    "#workflow-lebenszyklus",
-    "#kernfähigkeiten--sicherheitsinvarianten",
-    "#zielgruppen--anwendungsfälle",
-    "#vergleichsmatrix--alternativen",
-    "#funktions-highlights",
-    "#visuelle-oberfläche--screenshot",
-    "#unterstützte-anbieter",
-    "#schnellstart--installation",
-    "#konfiguration--zugangsdaten-sicherheit",
-    "#zeitplaner--automatisierte-wartung",
-    "#ökosystem--geschwister-werkzeuge",
-    "#drittanbieter-lizenzen--compliance",
-    "#sicherheitsrichtlinie--slas",
-    "#lizenz--faq",
+LEGACY_DE_ANCHORS = [
+    "architektur",
+    "workflow-lebenszyklus",
+    "visuelle-oberflaeche--screenshot",
+    "kernfaehigkeiten--sicherheitsinvarianten",
+    "funktions-highlights",
+    "zielgruppen--anwendungsfaelle",
+    "vergleichsmatrix--alternativen",
+    "unterstuetzte-anbieter",
+    "schnellstart--installation",
+    "konfiguration--zugangsdaten-sicherheit",
+    "zeitplaner--automatisierte-wartung",
+    "oekosystem--geschwister-werkzeuge",
+    "drittanbieter-lizenzen--compliance",
+    "sicherheitsrichtlinie--slas",
+    "lizenz--urheberrecht",
+]
+
+EXPECTED_TOPICS = [
+    "desktop-app",
+    "email",
+    "email-management",
+    "imap",
+    "pyside6",
+    "mail-cleaner",
+    "email-cleanup",
+    "gmail-api",
+    "gmail-cleaner",
+    "local-first",
+    "oauth2",
+    "privacy-first",
+    "scheduler",
+    "imap-cleaner",
+    "large-email-finder",
+    "mailbox-cleaner",
+    "mailbox-cleanup",
+    "safe-delete",
+    "gmail-cleanup",
+    "inbox-cleanup",
 ]
 
 
@@ -100,6 +125,7 @@ def test_manifest_files_exist():
         "llms.txt",
         "CHANGELOG.md",
         "LICENSE",
+        "NOTICE",
         "SECURITY.md",
         "mail_imap_cleaner_v1.py",
         "imap_client.py",
@@ -115,6 +141,18 @@ def test_manifest_files_exist():
         assert p.stat().st_size > 0, f"Manifest file is empty: {filename}"
 
 
+def test_root_notice_attribution():
+    """Verify root NOTICE file structure, copyright, and third-party references."""
+    notice_path = ROOT / "NOTICE"
+    assert notice_path.exists(), "NOTICE file missing"
+    content = notice_path.read_text(encoding="utf-8")
+    assert "UniversalMailCleaner" in content
+    assert "Lukas Geiger" in content
+    assert "doc-bricks" in content
+    assert "open-bricks" in content
+    assert "THIRD_PARTY_LICENSES.md" in content
+
+
 def test_llms_txt_structure():
     """Verify llms.txt structure and metadata."""
     llms_path = ROOT / "llms.txt"
@@ -126,11 +164,13 @@ def test_llms_txt_structure():
     assert "doc-bricks" in content
     assert "open-bricks" in content
     assert "MIT" in content
+    assert "NOTICE" in content
     assert "Search Phrases" in content
     assert "Disambiguation" in content
-    assert "Last-checked: 2026-09-14" in content
+    assert "Last-checked: 2026-09-22" in content
     assert "THIRD_PARTY_LICENSES.md" in content
     assert "MARKETING-LOG.txt" in content
+    assert "§ 521 BGB" in content
     for inv in INVARIANTS:
         assert inv in content, f"Invariant {inv} missing in llms.txt"
 
@@ -145,6 +185,7 @@ def test_ecosystem_and_badges_parity():
             assert "open-bricks" in content
             assert "llms.txt" in content
             assert "LICENSE" in content or "MIT" in content
+            assert "NOTICE" in content
 
 
 def test_german_readme_parity():
@@ -156,19 +197,24 @@ def test_german_readme_parity():
     assert de_path1.read_bytes() == de_path2.read_bytes(), "README_de.md and README-DE.md must be byte-identical"
 
 
-def test_navigation_anchors_bilingual_parity():
-    """Verify 15-point quick navigation anchor parity in README.md and README_de.md."""
+def test_18_point_navigation_and_reciprocal_anchors():
+    """Verify 18-point quick navigation and reciprocal anchor parity across README.md and README_de.md."""
     en_content = (ROOT / "README.md").read_text(encoding="utf-8")
     de_content = (ROOT / "README_de.md").read_text(encoding="utf-8")
 
-    assert len(EXPECTED_EN_ANCHORS) == 15, "Expected 15 EN navigation anchors"
-    assert len(EXPECTED_DE_ANCHORS) == 15, "Expected 15 DE navigation anchors"
+    assert len(EXPECTED_SECTION_ANCHORS) == 18, "Expected 18 section anchors"
 
-    for anchor in EXPECTED_EN_ANCHORS:
-        assert f"({anchor})" in en_content, f"Anchor {anchor} missing from README.md navigation"
+    for anchor in EXPECTED_SECTION_ANCHORS:
+        assert f"({anchor})" in en_content, f"Section link {anchor} missing in README.md"
+        assert f'id="{anchor[1:]}"' in en_content, f"Anchor id {anchor[1:]} missing in README.md"
+        assert f"({anchor})" in de_content, f"Section link {anchor} missing in README_de.md"
+        assert f'id="{anchor[1:]}"' in de_content, f"Anchor id {anchor[1:]} missing in README_de.md"
 
-    for anchor in EXPECTED_DE_ANCHORS:
-        assert f"({anchor})" in de_content, f"Anchor {anchor} missing from README_de.md navigation"
+    for legacy in LEGACY_EN_ANCHORS:
+        assert f'id="{legacy}"' in en_content, f"Legacy EN anchor {legacy} missing in README.md"
+
+    for legacy in LEGACY_DE_ANCHORS:
+        assert f'id="{legacy}"' in de_content, f"Legacy DE anchor {legacy} missing in README_de.md"
 
 
 def test_ten_governance_invariants():
@@ -201,6 +247,11 @@ def test_target_personas_present():
     assert "Power-User" in de_content
     assert "Solo-Entwickler" in de_content
 
+    assert "PERSONA-01" in en_content
+    assert "PERSONA-02" in en_content
+    assert "PERSONA-03" in en_content
+    assert "PERSONA-04" in en_content
+
     assert "Persona 1:" in mkt_content
     assert "Persona 2:" in mkt_content
     assert "Persona 3:" in mkt_content
@@ -216,8 +267,8 @@ def test_comparative_matrix_present():
     assert "Zero-Egress" in en_content
 
 
-def test_third_party_licenses_audit():
-    """Verify THIRD_PARTY_LICENSES.md structure and content."""
+def test_third_party_licenses_audit_and_sbom():
+    """Verify THIRD_PARTY_LICENSES.md structure, Level 1 SBOM, and NOTICE cross-reference."""
     tpl_path = ROOT / "THIRD_PARTY_LICENSES.md"
     assert tpl_path.exists(), "THIRD_PARTY_LICENSES.md missing"
     content = tpl_path.read_text(encoding="utf-8")
@@ -229,22 +280,61 @@ def test_third_party_licenses_audit():
     assert "MIT" in content
     assert "LGPL-3.0" in content
     assert "Apache-2.0" in content
+    assert "NOTICE" in content
+    assert "Level 1 SBOM Invariant Cross-Reference Matrix" in content
+    for inv in INVARIANTS:
+        assert inv in content, f"Invariant {inv} missing from SBOM table in THIRD_PARTY_LICENSES.md"
 
 
-def test_pep621_project_urls():
-    """Verify PEP 621 extended project URLs in pyproject.toml."""
+def test_pep621_metadata_and_topics():
+    """Verify PEP 621 extended project URLs, license-files, and 20 topics in pyproject.toml."""
     pyproject_path = ROOT / "pyproject.toml"
     with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
 
-    urls = data["project"]["urls"]
+    # license-files
+    project = data["project"]
+    assert "license-files" in project
+    assert "NOTICE" in project["license-files"]
+    assert "LICENSE" in project["license-files"]
+    assert "THIRD_PARTY_LICENSES.md" in project["license-files"]
+
+    # 20 topics / keywords
+    keywords = project.get("keywords", [])
+    assert len(keywords) == 20, f"Expected 20 keywords in pyproject.toml, found {len(keywords)}"
+    for topic in EXPECTED_TOPICS:
+        assert topic in keywords, f"Topic {topic} missing from pyproject.toml keywords"
+
+    # URLs
+    urls = project["urls"]
     assert "Third-Party Licenses" in urls
     assert "Marketing Log" in urls
     assert "LLM Ready" in urls
     assert "Security Policy" in urls
     assert "Issues" in urls
     assert "Changelog" in urls
-    assert "blob/master/CHANGELOG.md" in urls["Changelog"]
+    assert "Notice" in urls
+    assert "blob/master/NOTICE" in urls["Notice"]
+    assert "Bug Tracker" in urls
+    assert "Parent Organization" in urls
+    assert "Umbrella Ecosystem" in urls
+
+
+def test_statutory_notice_and_version_freeze():
+    """Verify Section 18 statutory notice (§ 521 BGB) and strict version freeze (T-20260920-167562623)."""
+    en_content = (ROOT / "README.md").read_text(encoding="utf-8")
+    de_content = (ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    assert "§ 521 BGB" in en_content
+    assert "Gefälligkeitsrecht" in en_content
+    assert "§ 521 BGB" in de_content
+    assert "Gefälligkeitsrecht" in de_content
+
+    # Strict version freeze: version must be 1.2.0 across pyproject and main
+    pyproject_path = ROOT / "pyproject.toml"
+    with open(pyproject_path, "rb") as f:
+        data = tomllib.load(f)
+    assert data["project"]["version"] == "1.2.0"
 
 
 def test_utf8_hygiene():
@@ -330,12 +420,6 @@ def test_pytest_configuration_and_pep621_urls():
     ruff_select = data.get("tool", {}).get("ruff", {}).get("lint", {}).get("select", [])
     assert "C4" in ruff_select, "C4 rule missing from [tool.ruff.lint] select"
 
-    # Extended URLs
-    urls = data["project"]["urls"]
-    assert "Bug Tracker" in urls
-    assert "Parent Organization" in urls
-    assert "Umbrella Ecosystem" in urls
-
 
 def test_security_policy_bilingual_and_sla():
     """Verify SECURITY.md contains bilingual policy, supported versions, contacts, and 48h SLA."""
@@ -355,13 +439,15 @@ def test_security_policy_bilingual_and_sla():
     assert "1.2.x" in content
 
 
-def test_changelog_and_marketing_pfad_a_records():
-    """Verify CHANGELOG.md and MARKETING-LOG.txt document Pfad A technical hygiene."""
+def test_changelog_and_marketing_records():
+    """Verify CHANGELOG.md and MARKETING-LOG.txt document Pfad A and Pfad B records."""
     changelog_content = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     marketing_content = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
 
     assert "Pfad A Technical Hygiene" in changelog_content
     assert "2026-09-14" in changelog_content
-
     assert "PFAD_A_TECHNICAL_HYGIENE_AND_CI_HARDENING" in marketing_content
-    assert "2026-09-14" in marketing_content
+
+    assert "PFAD_B_DISCOVERABILITY_AND_DESIGN" in marketing_content
+    assert "2026-09-22" in marketing_content
+    assert "18-POINT BILINGUAL NAVIGATION" in marketing_content

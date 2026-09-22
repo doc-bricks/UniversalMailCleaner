@@ -171,3 +171,32 @@ Trigger:           GITHUBBOT_ONE_REPO_CLEANER (Pfad A Turnuslauf)
   * test_security_policy_bilingual_and_sla
   * test_changelog_and_marketing_pfad_a_records
 - Full verification suite: 100% green tests via Pytest, ruff check clean, compileall clean, git diff --check clean.
+
+================================================================================
+[2026-09-22 10:10 CEST] [PFAD_B_DISCOVERABILITY_AND_DESIGN]
+Repository:        doc-bricks/UniversalMailCleaner
+Local Canonical:   C:\_Local_DEV\repos\REL-PUB_UniversalMailCleaner-tasksolver-1159-current
+Branch:            master
+Version:           1.2.0 (Strictly frozen per T-20260920-167562623)
+Trigger:           GITHUBBOT_ONE_REPO_MARKETING_AND_DESIGN (Pfad B Turnuslauf)
+
+10. 18-POINT BILINGUAL NAVIGATION, DUAL RECIPROCAL ANCHORS & LEVEL 1 SBOM
+--------------------------------------------------------------------------------
+- Standardized Quick Navigation to the 18-point dual-anchor architecture:
+  * 18 indexed sections with dual reciprocal anchors (<a id="sec-XX"></a><a id="..."></a>) across README.md and README_de.md.
+  * Preserved full backwards compatibility with all 15 legacy anchor names.
+  * Synchronized byte-identical German documentation (README_de.md & README-DE.md).
+- Created canonical root NOTICE file declaring copyright (c) 2026 Lukas Geiger, doc-bricks, and open-bricks.
+- Modernized PEP 621 metadata in pyproject.toml:
+  * Added license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md"].
+  * Added "Notice" URL pointing to canonical root NOTICE.
+  * Expanded keywords to 20 saturated topics matching GitHub repository topics.
+  * Preserved version = "1.2.0" strictly frozen per T-20260920-167562623.
+- Upgraded THIRD_PARTY_LICENSES.md:
+  * Updated Audit Date to 2026-09-22.
+  * Added Section 7: Level 1 SBOM Invariant Cross-Reference Matrix table (INV-LOCAL-01 to INV-SLA-10).
+  * Referenced canonical root NOTICE in Section 1.
+- Integrated Section 18 Statutory Notice (§ 521 BGB Gefälligkeitsrecht) and 48h Security Response SLA.
+- Updated llms.txt with 2026-09-22 check date, NOTICE link, Level 1 SBOM, and § 521 BGB disclaimer.
+- Expanded automated contract testsuite in tests/test_metadata.py covering root NOTICE, 20 PEP 621 keywords,
+  18-point navigation, reciprocal anchors, Section 18 statutory notice, and version freeze discipline.

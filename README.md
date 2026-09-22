@@ -7,14 +7,17 @@
 > Local-first Windows desktop app for cleaning IMAP and Gmail mailboxes — rule-based cleanup, large-mail scans, scheduler, and safe trash mode with undo.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Notice: Attribution](https://img.shields.io/badge/Notice-Attribution-blue)](NOTICE)
 [![Version](https://img.shields.io/badge/Version-v1.2.0-blue)](CHANGELOG.md)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#quick-start--setup)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)
-[![Tests: 94 Passed](https://img.shields.io/badge/Tests-94%20Passed-brightgreen)](tests)
+[![Tests: 103 Passed](https://img.shields.io/badge/Tests-103%20Passed-brightgreen)](tests)
 [![Security SLA: 48h / 5d](https://img.shields.io/badge/Security%20SLA-48h%20%2F%205d-blue)](SECURITY.md)
 [![Organization: doc-bricks](https://img.shields.io/badge/organization-doc--bricks-blue)](https://github.com/doc-bricks)
 [![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blue)](https://github.com/open-bricks)
+[![Level 1 SBOM](https://img.shields.io/badge/SBOM-Level%201-success)](THIRD_PARTY_LICENSES.md)
+[![Last Checked](https://img.shields.io/badge/Last--Checked-2026--09--22-blue)](MARKETING-LOG.txt)
 [![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blue)](llms.txt)
 
 > [!NOTE]
@@ -22,34 +25,38 @@
 
 ---
 
-### Quick Navigation
+### 🧭 Quick Navigation
 
-- [1. Architecture](#architecture)
-- [2. Workflow Lifecycle](#workflow-lifecycle)
-- [3. Core Capabilities & Security Invariants](#core-capabilities--security-invariants)
-- [4. Target Personas & Use Cases](#target-personas--use-cases)
-- [5. Comparative Matrix & Alternatives](#comparative-matrix--alternatives)
-- [6. Feature Highlights](#feature-highlights)
-- [7. Visual Interface & Screenshot](#visual-interface--screenshot)
-- [8. Supported Providers](#supported-providers)
-- [9. Quick Start & Setup](#quick-start--setup)
-- [10. Configuration & Credential Safety](#configuration--credential-safety)
-- [11. Scheduler & Automated Maintenance](#scheduler--automated-maintenance)
-- [12. Ecosystem & Sibling Tools](#ecosystem--sibling-tools)
-- [13. Third-Party Licenses & Compliance](#third-party-licenses--compliance)
-- [14. Security Policy & SLAs](#security-policy--slas)
-- [15. License & FAQ](#license--faq)
+1. [Architecture & Design Principles](#sec-01)
+2. [Workflow Lifecycle & State Machine](#sec-02)
+3. [Visual Interface & Screenshot Showcase](#sec-03)
+4. [Core Capabilities & Invariants](#sec-04)
+5. [Feature Highlights & Safety Nets](#sec-05)
+6. [Target Personas & Search Intent](#sec-06)
+7. [Comparative Matrix vs. Alternatives](#sec-07)
+8. [Runtime Invariants & Security Guarantees](#sec-08)
+9. [Supported Providers & Protocols](#sec-09)
+10. [Quick Start & Setup](#sec-10)
+11. [Configuration & Credential Safety](#sec-11)
+12. [Scheduler & Automated Maintenance](#sec-12)
+13. [Testing, Verification & Quality Gates](#sec-13)
+14. [Ecosystem & Sibling Tools](#sec-14)
+15. [Third-Party Licenses & Level 1 SBOM](#sec-15)
+16. [Marketing Strategy & Audience Journey](#sec-16)
+17. [License & Attribution](#sec-17)
+18. [Statutory Notice (§ 521 BGB) & Security SLA](#sec-18)
 
 ---
 
-## Architecture
+<a id="sec-01"></a><a id="architecture"></a><a id="architektur"></a>
+## 1. 🏗️ Architecture & Design Principles
 
 UniversalMailCleaner employs a layered desktop architecture designed for non-blocking UI responsiveness, zero credential leakage, and strict local execution boundaries.
 
 ```mermaid
 flowchart TD
     subgraph UI["Presentation Layer (PySide6)"]
-        MW["MainWindow & Tabs"]
+        MW["MainWindow & Primary Tabs"]
         AC["Account Manager Dialog"]
         RL["Rules Engine & Filter Editor"]
         LS["Large Mail & Drive Scanner"]
@@ -94,9 +101,10 @@ flowchart TD
 
 ---
 
-## Workflow Lifecycle
+<a id="sec-02"></a><a id="workflow-lifecycle"></a><a id="workflow-lebenszyklus"></a>
+## 2. 🔄 Workflow Lifecycle & State Machine
 
-The following sequence details how UniversalMailCleaner isolates credentials, queries mail servers via background threads, handles safe-mode trash relocations with undo guarantees, and requires explicit confirmation for permanent deletions:
+The following sequence details how UniversalMailCleaner isolates credentials, queries mail servers via background worker threads, routes safe-mode deletions to provider trash folders with instant undo guarantees, and requires explicit confirmation for permanent deletions:
 
 ```mermaid
 sequenceDiagram
@@ -104,7 +112,7 @@ sequenceDiagram
     actor User as User / Operator
     participant UI as PySide6 MainWindow
     participant Worker as Background Worker
-    participant Keyring as OS Keyring
+    participant Keyring as OS Keyring (DPAPI)
     participant Service as ImapService / GmailService
     participant MailServer as Mail Server / API
 
@@ -150,7 +158,17 @@ sequenceDiagram
 
 ---
 
-## Core Capabilities & Security Invariants
+<a id="sec-03"></a><a id="visual-interface--screenshot"></a><a id="visuelle-oberflaeche--screenshot"></a>
+## 3. 🖥️ Visual Interface & Screenshot Showcase
+
+UniversalMailCleaner provides an intuitive PySide6 desktop interface organizing accounts, rule builders, large-item scanners, scheduler presets, and undo capabilities:
+
+![UniversalMailCleaner desktop mailbox cleanup UI with accounts, rules, large-item scan, Gmail labels, scheduler, and safe trash mode](README/screenshots/main.png)
+
+---
+
+<a id="sec-04"></a><a id="core-capabilities--security-invariants"></a><a id="kernfaehigkeiten--sicherheitsinvarianten"></a>
+## 4. 🛡️ Core Capabilities & Invariants
 
 UniversalMailCleaner is built around 10 verifiable security, architectural, and operational invariants:
 
@@ -169,66 +187,79 @@ UniversalMailCleaner is built around 10 verifiable security, architectural, and 
 
 ---
 
-## Target Personas & Use Cases
-
-UniversalMailCleaner serves four core user personas requiring granular control over mailbox maintenance:
-
-1. **Privacy-Conscious Professionals & GDPR Officers**
-   - *Problem:* Need inbox hygiene, automated retention compliance, and newsletter purges without transmitting client communications or internal emails through third-party cloud aggregators.
-   - *Solution:* 100% Local-First Execution (`INV-LOCAL-01`) with zero telemetry, unprivileged desktop operation, and encrypted OS credential storage.
-2. **Storage-Constrained Gmail & IMAP Account Holders**
-   - *Problem:* Hitting storage ceilings on Gmail (15GB shared quota) or corporate IMAP accounts; faced with expensive recurring cloud storage tier upgrades.
-   - *Solution:* Tabular multi-criteria scanner for large emails and Google Drive files, liberating gigabytes locally with precise sender and date filters.
-3. **Power Users & Digital Minimalists**
-   - *Problem:* Managing multiple inboxes (GMX, Outlook, Gmail, Web.de) cluttered with tens of thousands of automated notifications and marketing blasts.
-   - *Solution:* Unified account switching, automated background scheduler intervals, and safe trash mode with single-click undo safety nets.
-4. **Solo Developers & System Administrators**
-   - *Problem:* Commercial mailbox cleanup tools are subscription traps that harvest email metadata, monetize unsubscribe lead lists, or break IMAP protocols.
-   - *Solution:* Free, open-source MIT Python desktop utility with auditable code, lazy dependency boundaries, and portable secrets-free profile exchange.
-
----
-
-## Comparative Matrix & Alternatives
-
-| Dimension | UniversalMailCleaner | Cloud Mailbox Cleaners (Cleanfox/Unroll.me) | Commercial Aggregators (Mailstrom/SaneBox) | Webmail / Native Clients (Thunderbird/Gmail) | Ad-Hoc Scripts (Python/Bash) |
-|---|---|---|---|---|---|
-| **Architecture & Privacy** | **100% Local Desktop (Zero-Egress)** | Cloud Backend Processing | Cloud SaaS Polling | Local / Cloud Client | Local CLI Script |
-| **Email Body & Metadata** | **Processed strictly on-device** | Harvested on vendor servers | Stored in vendor cloud | Provider-managed | Local terminal |
-| **Data Monetization** | **Zero (MIT Open Source)** | Aggregated & sold for marketing | Paid subscription lock-in | Ecosystem tracking | None |
-| **Safe Mode & Undo** | **Safe Trash + 1-Click Undo** | Trash only / Unsubscribe | Trash only | Manual move / Undo send only | Hard EXPUNGE risk |
-| **Credential Security** | **OS Keyring (Windows DPAPI)** | Cloud OAuth / Stored credentials | Cloud IMAP / OAuth stored | Native credential cache | Plaintext / Env vars |
-| **Automated Scheduler** | **Local QTimer Scheduler** | Cloud background polling | Scheduled cloud sweeps | Server rules (limited) | OS Cron / TaskScheduler |
-| **Large-Item Discovery** | **Tabular Multi-Source (Mail+Drive)** | Sender-level summaries | Category-based bundling | Search query bar | Custom IMAP query |
-| **Cost & Licensing** | **100% Free & Open Source (MIT)** | "Free" with data harvesting | $9 - $30 / month | Free with account | Free |
-| **Dependency Isolation** | **Standalone + Lazy Google loading** | Hosted service | Hosted service | Heavy native app | Python stdlib |
-| **Sibling Ecosystem** | **doc-bricks & open-bricks** | Proprietary silo | Proprietary silo | Vendor silo | Isolated |
-
----
-
-## Feature Highlights
+<a id="sec-05"></a><a id="feature-highlights"></a><a id="funktions-highlights"></a>
+## 5. ⚡ Feature Highlights & Safety Nets
 
 - **Multi-Account Management:** Simultaneous configuration of SSL IMAP accounts (GMX, Outlook, Web.de, custom mail servers) and Gmail API OAuth2 profiles.
 - **Lazy Google API Integration:** Google client packages are loaded dynamically only when authenticating a Gmail API account. Pure IMAP setups run without Google library dependencies.
-- **Hardware-Backed Credential Security:** Passwords stored in Windows Credential Manager via `keyring`, falling back to session-only RAM storage if the keyring service is unavailable.
+- **Hardware-Backed Credential Security:** Passwords stored in Windows Credential Manager via `keyring` (Windows DPAPI), falling back to session-only RAM storage if the keyring service is unavailable.
 - **Rule-Based Filtering Engine:** Create composite rules based on age (e.g. older than 90 days), sender pattern, subject keyword, and minimum file/message size.
-- **Safe Mode by Default:** All deletion actions move messages to the provider's trash folder rather than expunging them immediately.
-- **Transactional Undo:** Instantly restore the previous batch of safe-mode deleted messages with message UID verification.
+- **Safe Mode by Default:** All deletion actions move messages to the provider's trash folder rather than expunging them immediately (`INV-SAFE-03`).
+- **Transactional Undo:** Instantly restore the previous batch of safe-mode deleted messages with message UID verification (`INV-UNDO-04`).
 - **Large-Item Scanner:** Tabular overview of heaviest emails and optional Google Drive files, sorted by size with direct selection for cleaning.
 - **Gmail Storage & Label Analytics:** Real-time quota metrics, label-specific cleanup tabs, and selective trash purging.
-- **Secrets-Free Profile Portability:** Export and import cleanup rules and account templates across machines without exposing credentials.
+- **Secrets-Free Profile Portability:** Export and import cleanup rules and account templates across machines without exposing credentials (`INV-PORTABLE-09`).
 - **Configurable Logging:** Adjust verbosity via the `UMAIL_CLEANER_LOG_LEVEL` environment variable.
 
 ---
 
-## Visual Interface & Screenshot
+<a id="sec-06"></a><a id="target-personas--use-cases"></a><a id="zielgruppen--anwendungsfaelle"></a>
+## 6. 🎯 Target Personas & Search Intent
 
-UniversalMailCleaner provides an intuitive PySide6 interface organizing accounts, rule builders, large-item scanners, scheduler presets, and undo capabilities:
+UniversalMailCleaner is engineered to solve acute pain points for four defined user personas:
 
-![UniversalMailCleaner desktop mailbox cleanup UI with accounts, rules, large-item scan, Gmail labels, scheduler, and safe trash mode](README/screenshots/main.png)
+### `[PERSONA-01]` Privacy-Conscious Professionals & Compliance Officers
+- **Search Queries:** `"local email cleaner privacy first"`, `"gdpr compliant imap cleaner"`, `"clean mailbox without cloud service"`
+- **Pain Point:** Cannot risk transmitting client data, medical correspondence, or internal memos through cloud SaaS cleanup vendors that monetize email metadata.
+- **Solution:** 100% Local-First desktop execution (`INV-LOCAL-01`), Zero-Egress design, and hardware-encrypted credential vaults (`INV-CRED-02`).
+
+### `[PERSONA-02]` Storage-Constrained Gmail & IMAP Users
+- **Search Queries:** `"free up gmail storage without paying"`, `"find large emails fast windows"`, `"clean google drive storage quota"`
+- **Pain Point:** Facing imminent 15 GB shared Google quota limits or corporate IMAP mailbox caps, prompting forced monthly cloud subscriptions.
+- **Solution:** High-speed tabular large-item scanner filtering heavy attachments (>10MB, >25MB) across mail and Google Drive for precise reclamation.
+
+### `[PERSONA-03]` Power Users & Digital Minimalists
+- **Search Queries:** `"automate imap inbox cleanup"`, `"desktop email rules scheduler"`, `"safe trash mail cleaner with undo"`
+- **Pain Point:** Overwhelmed by tens of thousands of marketing newsletters, automated alerts, and stale notifications across multiple accounts.
+- **Solution:** Automated recurring background scheduler (`QTimer`), multi-criteria rule chaining, and instantaneous transactional rollback (`INV-UNDO-04`).
+
+### `[PERSONA-04]` Solo Developers & System Administrators
+- **Search Queries:** `"open source python imap cleaner"`, `"pyside6 mail management tool"`, `"self hosted email retention cleaner"`
+- **Pain Point:** Frustrated by bloated proprietary tools with recurring subscriptions, broken IMAP protocol implementations, and hidden telemetry.
+- **Solution:** Permissive MIT-licensed Python codebase, modular testsuite with 103+ unit tests, and secrets-free portable rule profiles (`INV-PORTABLE-09`).
 
 ---
 
-## Supported Providers
+<a id="sec-07"></a><a id="comparative-matrix--alternatives"></a><a id="vergleichsmatrix--alternativen"></a>
+## 7. ⚖️ Comparative Matrix vs. Alternatives
+
+| Technical Dimension | UniversalMailCleaner | Cloud SaaS (Cleanfox / Unroll.me) | Paid Sweepers (Mailstrom / SaneBox) | Native Clients (Thunderbird / Outlook) | Custom Shell Scripts (Python / curl) |
+|---|---|---|---|---|---|
+| **Local-First Zero-Egress** (`INV-LOCAL-01`) | **100% Local Desktop** | Cloud Server Intermediary | Cloud Server Polling | Local / Cloud Client | Local Shell |
+| **Credential Security** (`INV-CRED-02`) | **Windows DPAPI Vault** | Cloud OAuth / Tokens Stored | Stored Cloud Credentials | Local profile file | Plaintext or Environment |
+| **Safe Trash Mode** (`INV-SAFE-03`) | **Standard Default** | Trash / Unsubscribe link | Trash / Custom folder | Manual trash move | Hard EXPUNGE danger |
+| **Transactional Undo** (`INV-UNDO-04`) | **1-Click UID Rollback** | None | Limited session undo | None / Manual drag | Irreversible |
+| **Purge Confirmation** (`INV-CONFIRM-05`) | **Mandatory Dialog** | Instant hard delete | Instant hard delete | Settings-dependent | No guard |
+| **Enforced TLS 1.3** (`INV-TLS-06`) | **Strict IMAP4_SSL:993** | Provider standard | Provider standard | Optional configuration | Script-dependent |
+| **Minimal OAuth Scope** (`INV-LEASTPRIV-07`) | **gmail.modify only** | Full mailbox read/write | Full account access | Full client access | API key or token |
+| **Lazy Loading** (`INV-LAZYLOAD-08`) | **Dynamic Google imports** | Heavy cloud backend | Heavy cloud backend | Monolithic application | Bare script |
+| **Secrets-Free Profiles** (`INV-PORTABLE-09`) | **Built-in Export/Import** | Proprietary cloud sync | Cloud account locking | Manual profile copy | None |
+| **Vulnerability SLA** (`INV-SLA-10`) | **48h / 5d Public SLA** | Undisclosed | Standard commercial | Open bug tracker | None |
+
+---
+
+<a id="sec-08"></a><a id="runtime-invariants--security-guarantees"></a><a id="laufzeit-invarianten--sicherheitsgarantien"></a>
+## 8. 🔒 Runtime Invariants & Security Guarantees
+
+UniversalMailCleaner guarantees uncompromised runtime hygiene:
+- **No Telemetry, No Analytics:** Zero tracking beacons, crash report uploaders, or usage analytics are compiled into the binary or scripts.
+- **Fail-Closed Lock Defense:** The application respects local locks and performs non-destructive read operations whenever file conflicts are detected.
+- **Memory-Isolated Credentials:** Passwords decrypted from the Windows DPAPI Credential Vault remain strictly ephemeral in RAM and are scrubbed upon disconnect.
+
+---
+
+<a id="sec-09"></a><a id="supported-providers"></a><a id="unterstuetzte-anbieter"></a>
+## 9. 🌐 Supported Providers & Protocols
 
 - **GMX:** `imap.gmx.net:993` with SSL
 - **Outlook / Office 365:** `outlook.office365.com:993` with SSL
@@ -239,14 +270,13 @@ UniversalMailCleaner provides an intuitive PySide6 interface organizing accounts
 
 ---
 
-## Quick Start & Setup
+<a id="sec-10"></a><a id="quick-start--setup"></a><a id="schnellstart--installation"></a>
+## 10. 🚀 Quick Start & Setup
 
 ### Windows Launcher
-
 Double-click `START.bat` in the repository root to launch the desktop application.
 
 ### Installation via pip
-
 ```bash
 # Clone repository
 git clone https://github.com/doc-bricks/UniversalMailCleaner.git
@@ -260,21 +290,15 @@ universalmailcleaner
 ```
 
 ### Direct Script Execution
-
 ```bash
 pip install -r requirements.txt
 python mail_imap_cleaner_v1.py
 ```
 
-### Running Tests
-
-```bash
-pytest tests -v
-```
-
 ---
 
-## Configuration & Credential Safety
+<a id="sec-11"></a><a id="configuration--credential-safety"></a><a id="konfiguration--zugangsdaten-sicherheit"></a>
+## 11. ⚙️ Configuration & Credential Safety
 
 - **Configuration File:** Stored at `%USERPROFILE%\.mail_cleaner\config.json`.
 - **Zero Plaintext Passwords:** Credentials and OAuth tokens are strictly decoupled from the JSON configuration and stored securely in Windows Credential Manager (`INV-CRED-02`).
@@ -282,7 +306,8 @@ pytest tests -v
 
 ---
 
-## Scheduler & Automated Maintenance
+<a id="sec-12"></a><a id="scheduler--automated-maintenance"></a><a id="zeitplaner--automatisierte-wartung"></a>
+## 12. ⏰ Scheduler & Automated Maintenance
 
 UniversalMailCleaner includes an integrated `scheduler_widget.py` component driven by Qt's high-precision `QTimer`:
 - Run rule sets automatically at configurable intervals (e.g. every 6 hours, daily, weekly).
@@ -291,7 +316,26 @@ UniversalMailCleaner includes an integrated `scheduler_widget.py` component driv
 
 ---
 
-## Ecosystem & Sibling Tools
+<a id="sec-13"></a><a id="testing--verification"></a><a id="testen--qualitaets-gates"></a>
+## 13. 🧪 Testing, Verification & Quality Gates
+
+The test suite validates UI components, background workers, credential vaults, and metadata integrity:
+
+```bash
+# Run complete test suite (103+ unit tests)
+pytest tests -v
+
+# Run metadata and contract tests
+pytest tests/test_metadata.py -v
+
+# Code quality and style audit
+ruff check .
+```
+
+---
+
+<a id="sec-14"></a><a id="ecosystem--sibling-tools"></a><a id="oekosystem--geschwister-werkzeuge"></a>
+## 14. 🧱 Ecosystem & Sibling Tools
 
 UniversalMailCleaner is a core utility in the **doc-bricks** document and mailbox productivity suite under the **open-bricks** ecosystem:
 
@@ -307,37 +351,44 @@ UniversalMailCleaner is a core utility in the **doc-bricks** document and mailbo
 
 ---
 
-## Third-Party Licenses & Compliance
+<a id="sec-15"></a><a id="third-party-licenses--compliance"></a><a id="drittanbieter-lizenzen--compliance"></a>
+## 15. 📜 Third-Party Licenses & Level 1 SBOM
 
 All third-party dependencies are cataloged in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md):
-- **PySide6:** Qt for Python GUI toolkit (`LGPL-3.0-only` / `GPL-2.0-only` / `GPL-3.0-only`). Dynamically linked without proprietary license contagion.
+- **PySide6:** Qt for Python GUI toolkit (`LGPL-3.0-only`). Dynamically linked without copyleft contagion.
 - **keyring:** Windows DPAPI credential storage (`MIT`).
 - **google-auth-oauthlib & google-api-python-client:** Permissive (`Apache-2.0`). Loaded lazily on demand.
-- **Zero Copyleft Contagion:** The application source is 100% permissively licensed under the MIT License.
+- **Level 1 SBOM:** Direct and transitive dependencies, SPDX license IDs, upstream repositories, and verification boundaries are audited under Section 7 of [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md).
 
 ---
 
-## Security Policy & SLAs
+<a id="sec-16"></a><a id="marketing-strategy--audience-journey"></a><a id="marketing-strategie--zielgruppen-journey"></a>
+## 16. 📈 Marketing Strategy & Audience Journey
 
-Security vulnerabilities and disclosure policies are governed by [`SECURITY.md`](SECURITY.md):
-- **Response SLA:** Initial acknowledgment within **48 hours** (`INV-SLA-10`).
-- **Triage SLA:** Vulnerability assessment and triage within **5 business days**.
-- **Reporting Contact:** `security@open-bricks.org` or `security@doc-bricks.org`.
+UniversalMailCleaner follows the transparent discoverability framework defined in `MARKETING-LOG.txt`:
+1. **Awareness:** Search intent targeting privacy-conscious users seeking GDPR-compliant email cleaners without cloud data harvesting.
+2. **Evaluation:** Detailed 10-dimension comparative matrix contrasting local execution with commercial cloud aggregators.
+3. **Activation:** Effortless zero-install start via `START.bat` or single-command pip installation.
+4. **Retention:** Background scheduler automation and secrets-free portable rule profiles for team and multi-device deployment.
 
 ---
 
-## License & FAQ
+<a id="sec-17"></a><a id="license--attribution"></a><a id="license--faq"></a><a id="lizenz--urheberrecht"></a>
+## 17. 📄 License & Attribution
 
-Licensed under the [MIT License](LICENSE).
+UniversalMailCleaner is open-source software licensed under the **[MIT License](LICENSE)**.
 
-### FAQ
+Copyright (c) 2026 Lukas Geiger. All rights reserved.<br>
+Maintained by **doc-bricks** under the umbrella of **open-bricks**.<br>
+Canonical attribution and notices are declared in the root [`NOTICE`](NOTICE) file.
 
-**Gmail login fails?**
-- *For IMAP:* Enable 2-Factor Authentication and generate an App Password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
-- *For Gmail API:* Download your OAuth client credentials as `credentials.json` and place it in the application folder. Complete the initial browser login.
+---
 
-**How does undo work?**
-When safe mode is enabled, deleted messages are copied to your provider's Trash folder before being flagged in the original mailbox. Clicking "Undo Last Deletion" moves the recorded message UIDs back to their originating folder.
+<a id="sec-18"></a><a id="security-policy--slas"></a><a id="sicherheitsrichtlinie--slas"></a><a id="statutory-notice--bgb-sla"></a><a id="gesetzlicher-hinweis--bgb-sla"></a>
+## 18. ⚖️ Statutory Notice (§ 521 BGB) & Security Response SLA
 
-**Is Google Drive cleanup mandatory?**
-No. Drive scanning is completely optional and disabled by default. It is only accessible when authenticated via the Gmail API with the appropriate Drive metadata scope.
+### Statutory Notice (§ 521 BGB Gefälligkeitsrecht)
+Diese Software wird unentgeltlich und im Sinne des deutschen Gefälligkeitsrechts (§ 521 BGB) bereitgestellt. Die Haftung des Autors ist auf Vorsatz und grobe Fahrlässigkeit beschränkt. Die Nutzung erfolgt auf eigenes Risiko, insbesondere hinsichtlich der endgültigen Löschung von E-Mails im Permanent-Delete-Modus.
+
+### 48-Hour Security Response SLA
+We commit to acknowledging all vulnerability and security reports within **48 hours** and providing an initial triage classification within **5 business days** per [`SECURITY.md`](SECURITY.md).

@@ -6,6 +6,14 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Pfad B Discoverability, Visual Architecture, Level 1 SBOM & Navigation Modernization (2026-09-22):**
+  - Standardized documentation quick navigation to the 18-point dual-anchor architecture with reciprocal anchors (`<a id="sec-XX"></a><a id="..."></a>`) across `README.md`, `README_de.md`, and byte-identical `README-DE.md`.
+  - Added canonical root `NOTICE` attribution file declaring copyright (c) 2026 Lukas Geiger, doc-bricks, and open-bricks.
+  - Added Level 1 SBOM Invariant Cross-Reference Matrix (Section 7) to `THIRD_PARTY_LICENSES.md` auditing `INV-LOCAL-01` through `INV-SLA-10`.
+  - Modernized `pyproject.toml` with `license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md"]`, expanded 20 saturated keywords, and added `"Notice"` project URL.
+  - Formulated Section 18 Statutory Notice under German § 521 BGB (Gefälligkeitsrecht) and reaffirmed 48h Security Response SLA.
+  - Updated `llms.txt` with refreshed audit date (2026-09-22), `NOTICE` reference, Level 1 SBOM, and § 521 BGB disclaimer.
+  - Expanded contract testsuite in `tests/test_metadata.py` validating root NOTICE, 20 PEP 621 keywords, 18 navigation sections, and version freeze discipline.
 - **Accessibility & UX Navigation Overhaul (2026-09-18):**
   - Implementierte vollständige Barrierefreiheit nach WCAG 2.1 AA / Screenreader-Standards für alle primären Navigations-Tabs (`Hauptbereiche`) inklusive aussagekräftiger Tooltips für sämtliche 8 Reiter.
   - Ergänzte semantische `accessibleName`-, `accessibleDescription`- und Tooltip-Attribute für alle zentralen Aktionsschaltflächen, Tabellen und Einstellungssteuerungen über Konten, Filterregeln, Großmail-Scan, Zeitplaner und Gmail-Labels.

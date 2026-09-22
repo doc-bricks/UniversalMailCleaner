@@ -1,17 +1,18 @@
 # Third-Party Licenses & Dependency Inventory
 
-**Project:** UniversalMailCleaner (`doc-bricks/UniversalMailCleaner`)  
-**Canonical Project License:** MIT License (`MIT`)  
-**Audit Date:** 2026-09-12  
-**Auditor:** Antigravity / Gemini (via GithubBot Pfad B)  
-**Version:** `1.2.0`  
-**Umbrella Ecosystem:** `open-bricks` / `doc-bricks`  
+**Project:** UniversalMailCleaner (`doc-bricks/UniversalMailCleaner`)<br>
+**Canonical Project License:** MIT License (`MIT`)<br>
+**Audit Date:** 2026-09-22 (Initial Pfad B: 2026-09-12)<br>
+**Auditor:** Antigravity / Gemini (via GithubBot Pfad B)<br>
+**Version:** `1.2.0`<br>
+**Umbrella Ecosystem:** `open-bricks` / `doc-bricks`<br>
+**Notice Attribution:** See canonical root [`NOTICE`](NOTICE) file.
 
 ---
 
 ## 1. Overview & Compliance Architecture
 
-UniversalMailCleaner is an open-source, local-first Windows desktop application for managing, filtering, and cleaning IMAP and Gmail mailboxes. The application is licensed under the permissive **MIT License**. All direct runtime libraries, transitive packages, and development toolchains have been cataloged and audited for license compatibility, non-infringement, security vulnerability floors, and strict local execution guarantees.
+UniversalMailCleaner is an open-source, local-first Windows desktop application for managing, filtering, and cleaning IMAP and Gmail mailboxes. The application is licensed under the permissive **MIT License**. All direct runtime libraries, transitive packages, and development toolchains have been cataloged and audited for license compatibility, non-infringement, security vulnerability floors, and strict local execution guarantees. Canonical attribution is declared in the root [`NOTICE`](NOTICE) file.
 
 This inventory is derived directly from `pyproject.toml`, `requirements.txt`, and runtime dependency inspection.
 
@@ -102,3 +103,20 @@ This inventory is derived directly from `pyproject.toml`, `requirements.txt`, an
 2. **Zero Plaintext Secret Storage:** Passwords, app tokens, and OAuth refresh tokens must never be written to JSON config files or logs.
 3. **Lazy Dependency Isolation:** The application must remain fully functional for all standard IMAP providers without requiring Google client libraries to be installed or initialized.
 4. **Vulnerability Defense:** Pinned minimum version floors eliminate known CVEs across transitive packages.
+
+---
+
+## 7. Level 1 SBOM Invariant Cross-Reference Matrix
+
+| Invariant Code | Core Invariant Guarantee | Primary Verification Boundary | Runtime Defense / Mitigation |
+|---|---|---|---|
+| `INV-LOCAL-01` | 100% Local-First Execution | `mail_imap_cleaner_v1.py` | Localhost processing only; zero outbound analytics, metrics, or cloud telemetry. |
+| `INV-CRED-02` | Encrypted Credential Isolation | `imap_client.py`, `keyring` | Windows DPAPI / OS Credential Vault; passwords never written to plaintext disk config. |
+| `INV-SAFE-03` | Safe-by-Default Deletion | `workers.py` | Messages routed to server trash folder instead of issuing immediate hard expunge. |
+| `INV-UNDO-04` | Transactional Undo Capability | `workers.py`, `mail_imap_cleaner_v1.py` | In-memory UID mapping buffer tracks trash relocations for one-click rollback. |
+| `INV-CONFIRM-05` | Explicit Hard-Delete Opt-In | `mail_imap_cleaner_v1.py` | Permanent purge requires explicit user modal confirmation with warning dialog. |
+| `INV-TLS-06` | Enforced TLS Transport Security | `imap_client.py` | SSL/TLS forced (`IMAP4_SSL`, port 993) and HTTPS OAuth endpoints; unencrypted links rejected. |
+| `INV-LEASTPRIV-07` | Least-Privilege OAuth2 Scopes | `gmail_service.py` | Minimal scopes requested (`gmail.modify`); full admin access or wider account takeovers avoided. |
+| `INV-LAZYLOAD-08` | Lazy Optional Dependency Boundary | `gmail_service.py` | Google client modules imported on-demand; zero startup overhead for standard IMAP accounts. |
+| `INV-PORTABLE-09` | Secrets-Free Profile Portability | `profile_exchange.py` | Profile import/export strips all credentials; safe for version control and cross-machine sync. |
+| `INV-SLA-10` | 48h Security SLA & 5-Day Triage | `SECURITY.md` | Documented 48-hour response and 5-day triage commitment with defined escalation channels. |
