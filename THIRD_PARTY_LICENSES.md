@@ -2,8 +2,8 @@
 
 **Project:** UniversalMailCleaner (`doc-bricks/UniversalMailCleaner`)<br>
 **Canonical Project License:** MIT License (`MIT`)<br>
-**Audit Date:** 2026-09-22 (Initial Pfad B: 2026-09-12)<br>
-**Auditor:** Antigravity / Gemini (via GithubBot Pfad B)<br>
+**Audit Date:** 2026-09-26 (Pfad A Technical Hygiene; Previous: 2026-09-22)<br>
+**Auditor:** Antigravity / Gemini (via GithubBot Pfad A)<br>
 **Version:** `1.2.0`<br>
 **Umbrella Ecosystem:** `open-bricks` / `doc-bricks`<br>
 **Notice Attribution:** See canonical root [`NOTICE`](NOTICE) file.
@@ -103,6 +103,7 @@ This inventory is derived directly from `pyproject.toml`, `requirements.txt`, an
 2. **Zero Plaintext Secret Storage:** Passwords, app tokens, and OAuth refresh tokens must never be written to JSON config files or logs.
 3. **Lazy Dependency Isolation:** The application must remain fully functional for all standard IMAP providers without requiring Google client libraries to be installed or initialized.
 4. **Vulnerability Defense:** Pinned minimum version floors eliminate known CVEs across transitive packages.
+5. **Unprivileged User Mode / RunAsInvoker (`INV-USER-02`):** UniversalMailCleaner executes entirely in unprivileged standard user mode without requiring Administrator elevation, UAC prompts, or ring-0 drivers.
 
 ---
 

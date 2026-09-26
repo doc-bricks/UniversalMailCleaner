@@ -28,7 +28,11 @@ tmpclaude-*
 LOCK
 LOCK.*
 LOCK*.txt
+LOCK.user.*
+LOCK.until.*
+LOCK.condition.*
 LOCK.permissions.json
+.automation-lock
 uv.lock
 !package-lock.json
 
@@ -42,8 +46,14 @@ uv.lock
 *-ASUS-GEI*
 *-WORKSTATION*
 *-WORKSTATION-LG*
+*_WORKSTATION*
+*_WORKSTATION-LG*
+*-WORKSTATION.*
+*-WORKSTATION-LG.*
 *-LAPTOP*
 *-Mac Studio*
+*-MacBook*
+*-IDEAPAD*
 *.sync-conflict-*
 *.conflict
 *-CONFLIT-*
@@ -56,6 +66,9 @@ coverage/
 htmlcov/
 .ruff_cache/
 .mypy_cache/
+.pytest_temp/
+.pytest_tmp*/
+.nyc_output/
 .tox/
 .turbo/
 .hypothesis/

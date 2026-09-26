@@ -167,7 +167,7 @@ def test_llms_txt_structure():
     assert "NOTICE" in content
     assert "Search Phrases" in content
     assert "Disambiguation" in content
-    assert "Last-checked: 2026-09-22" in content
+    assert "Last-checked: 2026-09-26" in content
     assert "THIRD_PARTY_LICENSES.md" in content
     assert "MARKETING-LOG.txt" in content
     assert "§ 521 BGB" in content
@@ -281,6 +281,9 @@ def test_third_party_licenses_audit_and_sbom():
     assert "LGPL-3.0" in content
     assert "Apache-2.0" in content
     assert "NOTICE" in content
+    assert "2026-09-26" in content
+    assert "RunAsInvoker" in content
+    assert "INV-USER-02" in content
     assert "Level 1 SBOM Invariant Cross-Reference Matrix" in content
     for inv in INVARIANTS:
         assert inv in content, f"Invariant {inv} missing from SBOM table in THIRD_PARTY_LICENSES.md"
@@ -298,6 +301,7 @@ def test_pep621_metadata_and_topics():
     assert "NOTICE" in project["license-files"]
     assert "LICENSE" in project["license-files"]
     assert "THIRD_PARTY_LICENSES.md" in project["license-files"]
+    assert "THIRD_PARTY_LICENSES.txt" in project["license-files"]
 
     # 20 topics / keywords
     keywords = project.get("keywords", [])
@@ -357,14 +361,13 @@ def test_ci_workflows_timeout_and_concurrency():
     assert workflows_dir.exists() and workflows_dir.is_dir(), ".github/workflows directory missing"
 
     workflow_files = list(workflows_dir.glob("*.yml"))
-    assert len(workflow_files) >= 3, f"Expected at least 3 workflow files, found {len(workflow_files)}"
+    assert len(workflow_files) >= 4, f"Expected at least 4 workflow files, found {len(workflow_files)}"
 
     for wf_path in workflow_files:
         content = wf_path.read_text(encoding="utf-8")
         assert "timeout-minutes:" in content, f"Workflow {wf_path.name} is missing timeout-minutes runaway guard"
-        if wf_path.name in ["ci.yml", "source-platform-smoke.yml"]:
-            assert "concurrency:" in content, f"Workflow {wf_path.name} is missing concurrency configuration"
-            assert "cancel-in-progress: true" in content, f"Workflow {wf_path.name} is missing cancel-in-progress"
+        assert "concurrency:" in content, f"Workflow {wf_path.name} is missing concurrency configuration"
+        assert "cancel-in-progress: true" in content, f"Workflow {wf_path.name} is missing cancel-in-progress"
 
 
 def test_stale_workflow_present_and_valid():
@@ -375,6 +378,19 @@ def test_stale_workflow_present_and_valid():
     assert "actions/stale@v9" in content
     assert "cron: '30 1 * * *'" in content
     assert "timeout-minutes: 10" in content
+    assert "cancel-in-progress: true" in content
+    assert "issues: write" in content
+    assert "pull-requests: write" in content
+
+
+def test_welcome_workflow_present_and_valid():
+    """Verify welcome.yml workflow presence, action version, permissions, and timeouts."""
+    welcome_path = ROOT / ".github" / "workflows" / "welcome.yml"
+    assert welcome_path.exists(), "welcome.yml workflow missing"
+    content = welcome_path.read_text(encoding="utf-8")
+    assert "actions/first-interaction@v3" in content
+    assert "timeout-minutes: 5" in content
+    assert "cancel-in-progress: true" in content
     assert "issues: write" in content
     assert "pull-requests: write" in content
 
@@ -390,16 +406,31 @@ def test_gitignore_multihost_and_canonical_lock_defense():
         "* (copy)*",
         "*conflicted copy*",
         "*-ASUS*",
+        "*-ASUS-GEI*",
         "*-WORKSTATION*",
+        "*-WORKSTATION-LG*",
+        "*_WORKSTATION*",
+        "*_WORKSTATION-LG*",
+        "*-WORKSTATION.*",
+        "*-WORKSTATION-LG.*",
         "*-LAPTOP*",
+        "*-Mac Studio*",
+        "*-MacBook*",
+        "*-IDEAPAD*",
         "*.sync-conflict-*",
         "LOCK",
         "LOCK.*",
+        "LOCK.user.*",
+        "LOCK.until.*",
+        "LOCK.condition.*",
         "LOCK.permissions.json",
+        ".automation-lock",
         "uv.lock",
         ".coverage",
         ".ruff_cache/",
-        ".pytest_cache/",
+        ".pytest_temp/",
+        ".pytest_tmp*/",
+        ".nyc_output/",
     ]
     for pat in expected_patterns:
         assert pat in content, f"Pattern {pat} missing from .gitignore"
@@ -413,8 +444,12 @@ def test_pytest_configuration_and_pep621_urls():
 
     # Pytest configuration
     pytest_opts = data.get("tool", {}).get("pytest", {}).get("ini_options", {})
+    assert pytest_opts.get("minversion") == "7.0"
     assert "addopts" in pytest_opts, "addopts missing from [tool.pytest.ini_options]"
-    assert "-ra -v" in pytest_opts["addopts"], "Expected '-ra -v' in pytest addopts"
+    assert "-ra -v --basetemp=.pytest_temp" in pytest_opts["addopts"]
+    norecursedirs = pytest_opts.get("norecursedirs", [])
+    assert ".pytest_temp" in norecursedirs
+    assert ".hypothesis" in norecursedirs
 
     # Ruff configuration
     ruff_select = data.get("tool", {}).get("ruff", {}).get("lint", {}).get("select", [])
@@ -445,8 +480,11 @@ def test_changelog_and_marketing_records():
     marketing_content = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
 
     assert "Pfad A Technical Hygiene" in changelog_content
+    assert "2026-09-26" in changelog_content
     assert "2026-09-14" in changelog_content
+    assert "welcome.yml" in changelog_content
     assert "PFAD_A_TECHNICAL_HYGIENE_AND_CI_HARDENING" in marketing_content
+    assert "2026-09-26" in marketing_content
 
     assert "PFAD_B_DISCOVERABILITY_AND_DESIGN" in marketing_content
     assert "2026-09-22" in marketing_content

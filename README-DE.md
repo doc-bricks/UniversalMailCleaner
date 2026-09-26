@@ -12,12 +12,12 @@
 [![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-blue?logo=windows)](#sec-10)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)
-[![Tests: 103 Bestanden](https://img.shields.io/badge/Tests-103%20Bestanden-brightgreen)](tests)
+[![Tests: 108 Bestanden](https://img.shields.io/badge/Tests-108%20Bestanden-brightgreen)](tests)
 [![Sicherheits-SLA: 48h / 5d](https://img.shields.io/badge/Sicherheits--SLA-48h%20%2F%205d-blue)](SECURITY.md)
 [![Organisation: doc-bricks](https://img.shields.io/badge/organisation-doc--bricks-blue)](https://github.com/doc-bricks)
 [![Ökosystem: open-bricks](https://img.shields.io/badge/ökosystem-open--bricks-blue)](https://github.com/open-bricks)
 [![Level 1 SBOM](https://img.shields.io/badge/SBOM-Level%201-success)](THIRD_PARTY_LICENSES.md)
-[![Zuletzt Geprüft](https://img.shields.io/badge/Zuletzt--Gepr%C3%BCft-2026--09--22-blue)](MARKETING-LOG.txt)
+[![Zuletzt Geprüft](https://img.shields.io/badge/Zuletzt--Gepr%C3%BCft-2026--09--26-blue)](MARKETING-LOG.txt)
 [![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blue)](llms.txt)
 
 > [!NOTE]
@@ -226,7 +226,7 @@ UniversalMailCleaner adressiert vier zentrale Anwender-Zielgruppen:
 ### `[PERSONA-04]` Solo-Entwickler & Administratoren
 - **Suchintentionen:** `"open source python email cleaner"`, `"pyside6 mail management tool"`, `"self hosted email retention cleaner"`
 - **Herausforderung:** Genervt von überladenen Abofallen mit proprietären Silos, fehlerhaften IMAP-Implementationen und verdeckter Telemetrie.
-- **Lösung:** Quelloffenes Python-Projekt unter MIT-Lizenz, modulare Testsuite mit 103+ Tests und portable geheimnisfreie Regelprofile (`INV-PORTABLE-09`).
+- **Lösung:** Quelloffenes Python-Projekt unter MIT-Lizenz, modulare Testsuite mit 108+ Tests und portable geheimnisfreie Regelprofile (`INV-PORTABLE-09`).
 
 ---
 
@@ -322,7 +322,7 @@ UniversalMailCleaner enthält die Komponente `scheduler_widget.py`, die auf Qt's
 Die Testsuite prüft UI-Komponenten, Hintergrund-Worker, Zugangsdaten-Tresore und Metadaten-Integrität:
 
 ```bash
-# Gesamte Testsuite ausführen (103+ Unit-Tests)
+# Gesamte Testsuite ausführen (108+ Unit-Tests)
 pytest tests -v
 
 # Metadaten- und Kontrakt-Tests ausführen

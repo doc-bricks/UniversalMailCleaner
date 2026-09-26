@@ -12,6 +12,14 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
   - Added test coverage in `tests/test_imap_service.py` verifying RFC 3501 date-text formatting across all 12 calendar months and explicitly under active German locale.
 
 ### Added
+- **Pfad A Technical Hygiene, CI Lifecycle Hardening, Multi-Host Defense & Contract Test Expansion (2026-09-26):**
+  - Added `.github/workflows/welcome.yml` with `actions/first-interaction@v3`, 5-minute timeout guardrail, concurrency isolation (`cancel-in-progress: true`), and least-privilege permissions (`issues: write`, `pull-requests: write`).
+  - Hardened `.github/workflows/stale.yml` with concurrency isolation group `stale-${{ github.ref }}` and `cancel-in-progress: true`.
+  - Expanded `.gitignore` multi-host conflict defense (`*-ASUS-GEI*`, `*-MacBook*`, `*-IDEAPAD*`, `*_WORKSTATION*`, `*_WORKSTATION-LG*`, `*-WORKSTATION.*`, `*-WORKSTATION-LG.*`), canonical multi-agent lock patterns (`LOCK.user.*`, `LOCK.until.*`, `LOCK.condition.*`, `.automation-lock`), and test cache directories (`.pytest_temp/`, `.pytest_tmp*/`, `.nyc_output/`).
+  - Hardened `pyproject.toml` PEP 621 metadata: included `THIRD_PARTY_LICENSES.txt` in `license-files`, specified `minversion = "7.0"`, hardened `addopts = "-ra -v --basetemp=.pytest_temp"`, and added comprehensive `norecursedirs` list; strictly preserved version `1.2.0` under freeze discipline `T-20260920-167562623`.
+  - Re-audited `THIRD_PARTY_LICENSES.md` for Stand 2026-09-26 and added `RunAsInvoker` unprivileged user mode execution certification (`INV-USER-02`).
+  - Synchronized documentation badges, verification timestamps (2026-09-26), and LLM context index (`llms.txt`).
+  - Expanded automated contract test suite in `tests/test_metadata.py` with contract tests for welcome workflow, stale concurrency, gitignore patterns, and PEP 621 pytest configuration.
 - **Pfad B Discoverability, Visual Architecture, Level 1 SBOM & Navigation Modernization (2026-09-22):**
   - Standardized documentation quick navigation to the 18-point dual-anchor architecture with reciprocal anchors (`<a id="sec-XX"></a><a id="..."></a>`) across `README.md`, `README_de.md`, and byte-identical `README-DE.md`.
   - Added canonical root `NOTICE` attribution file declaring copyright (c) 2026 Lukas Geiger, doc-bricks, and open-bricks.
