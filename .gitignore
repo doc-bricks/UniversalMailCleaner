@@ -31,8 +31,12 @@ LOCK*.txt
 LOCK.user.*
 LOCK.until.*
 LOCK.condition.*
+LOCK.dev.*
+LOCK.antigravity.*
+LOCK.bugsearch.*
 LOCK.permissions.json
 .automation-lock
+TASKPLAN_*.md
 uv.lock
 !package-lock.json
 
@@ -54,6 +58,7 @@ uv.lock
 *-Mac Studio*
 *-MacBook*
 *-IDEAPAD*
+*-IDEAPAD-GEI*
 *.sync-conflict-*
 *.conflict
 *-CONFLIT-*
@@ -118,6 +123,7 @@ logs/
 
 # ---- Betriebssystem ----
 desktop.ini
+Desktop.ini
 Thumbs.db
 .DS_Store
 ehthumbs.db

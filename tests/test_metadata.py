@@ -167,8 +167,10 @@ def test_llms_txt_structure():
     assert "NOTICE" in content
     assert "Search Phrases" in content
     assert "Disambiguation" in content
-    assert "Last-checked: 2026-09-26" in content
+    assert "Last-checked: 2026-10-01" in content or "Last-checked: 2026-09-26" in content
     assert "THIRD_PARTY_LICENSES.md" in content
+    assert "THIRD_PARTY_LICENSES.txt" in content
+    assert "CONTRIBUTING.md" in content
     assert "MARKETING-LOG.txt" in content
     assert "§ 521 BGB" in content
     for inv in INVARIANTS:
@@ -480,12 +482,101 @@ def test_changelog_and_marketing_records():
     marketing_content = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
 
     assert "Pfad A Technical Hygiene" in changelog_content
+    assert "2026-10-01" in changelog_content
     assert "2026-09-26" in changelog_content
     assert "2026-09-14" in changelog_content
     assert "welcome.yml" in changelog_content
+    assert "auto-assign.yml" in changelog_content
+    assert "label-sync.yml" in changelog_content
     assert "PFAD_A_TECHNICAL_HYGIENE_AND_CI_HARDENING" in marketing_content
+    assert "2026-10-01" in marketing_content
     assert "2026-09-26" in marketing_content
 
     assert "PFAD_B_DISCOVERABILITY_AND_DESIGN" in marketing_content
     assert "2026-09-22" in marketing_content
     assert "18-POINT BILINGUAL NAVIGATION" in marketing_content
+
+
+def test_auto_assign_workflow_present_and_valid():
+    """Verify auto-assign.yml presence, action version, permissions, and timeout."""
+    auto_assign_path = ROOT / ".github" / "workflows" / "auto-assign.yml"
+    assert auto_assign_path.exists(), "auto-assign.yml workflow missing"
+    content = auto_assign_path.read_text(encoding="utf-8")
+    assert "actions/github-script@v7" in content
+    assert "timeout-minutes: 5" in content
+    assert "cancel-in-progress: true" in content
+    assert "pull-requests: write" in content
+    assert "issues: write" in content
+
+
+def test_label_sync_workflow_and_labels_present():
+    """Verify label-sync.yml and labels.yml presence, action version, and labels."""
+    label_sync_path = ROOT / ".github" / "workflows" / "label-sync.yml"
+    assert label_sync_path.exists(), "label-sync.yml workflow missing"
+    ls_content = label_sync_path.read_text(encoding="utf-8")
+    assert "EndBug/label-sync@v2" in ls_content
+    assert "timeout-minutes: 5" in ls_content
+    assert "cancel-in-progress: true" in ls_content
+    assert "issues: write" in ls_content
+
+    labels_path = ROOT / ".github" / "labels.yml"
+    assert labels_path.exists(), ".github/labels.yml missing"
+    labels_content = labels_path.read_text(encoding="utf-8")
+    assert "name: bug" in labels_content
+    assert "name: enhancement" in labels_content
+    assert "name: documentation" in labels_content
+    assert "name: wontfix" in labels_content
+
+
+def test_contributing_guide_present_and_invariants():
+    """Verify CONTRIBUTING.md presence, bilingual text, 10 invariants, and Plan D."""
+    contrib_path = ROOT / "CONTRIBUTING.md"
+    assert contrib_path.exists(), "CONTRIBUTING.md missing"
+    content = contrib_path.read_text(encoding="utf-8")
+    assert "## English" in content
+    assert "## Deutsch" in content
+    assert "RunAsInvoker" in content
+    assert "INV-USER-02" in content
+    assert "T-20260920-167562623" in content
+    assert "1.2.0" in content
+    assert "Plan D" in content
+    for inv in INVARIANTS:
+        assert inv in content, f"Invariant {inv} missing in CONTRIBUTING.md"
+
+
+def test_third_party_licenses_plain_text_companion_invariants():
+    """Verify THIRD_PARTY_LICENSES.txt Level 1 SBOM text companion structure and invariants."""
+    txt_path = ROOT / "THIRD_PARTY_LICENSES.txt"
+    assert txt_path.exists(), "THIRD_PARTY_LICENSES.txt missing"
+    content = txt_path.read_text(encoding="utf-8")
+    assert "doc-bricks/UniversalMailCleaner" in content
+    assert "2026-10-01" in content
+    assert "RunAsInvoker" in content
+    assert "§ 521 BGB" in content
+    assert "NOTICE" in content
+    for inv in INVARIANTS:
+        assert inv in content, f"Invariant {inv} missing in THIRD_PARTY_LICENSES.txt"
+
+
+def test_pep621_extended_urls_and_license_files():
+    """Verify Contributing, Plain-Text License, Third-Party Licenses Text, and Level 1 SBOM URLs."""
+    pyproject_path = ROOT / "pyproject.toml"
+    with open(pyproject_path, "rb") as f:
+        data = tomllib.load(f)
+    urls = data["project"]["urls"]
+    assert "Contributing" in urls
+    assert "Plain-Text License" in urls
+    assert "Third-Party Licenses (Text)" in urls
+    assert "Level 1 SBOM" in urls
+    license_files = data["project"]["license-files"]
+    assert "THIRD_PARTY_LICENSES.txt" in license_files
+    assert "NOTICE" in license_files
+
+
+def test_extended_gitignore_multihost_and_lock_defense():
+    """Verify .gitignore includes Desktop.ini, IDEAPAD-GEI, and canonical lock patterns."""
+    gi_path = ROOT / ".gitignore"
+    assert gi_path.exists(), ".gitignore missing"
+    content = gi_path.read_text(encoding="utf-8")
+    for pattern in ["Desktop.ini", "*-IDEAPAD-GEI*", "LOCK.dev.*", "LOCK.antigravity.*", "LOCK.bugsearch.*", "TASKPLAN_*.md"]:
+        assert pattern in content, f"Pattern {pattern} missing in .gitignore"

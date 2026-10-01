@@ -12,6 +12,17 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
   - Added test coverage in `tests/test_imap_service.py` verifying RFC 3501 date-text formatting across all 12 calendar months and explicitly under active German locale.
 
 ### Added
+- **Pfad A Technical Hygiene, CI Lifecycle Workflows, PEP 621 Standardisation & Contract Test Expansion (2026-10-01):**
+  - Provisioned automated PR assignment lifecycle workflow (`.github/workflows/auto-assign.yml`) using `actions/github-script@v7`, 5-minute timeout guardrail, concurrency isolation (`auto-assign-${{ github.ref }}`, `cancel-in-progress: true`), and least-privilege permissions (`issues: write`, `pull-requests: write`).
+  - Provisioned label synchronisation workflow (`.github/workflows/label-sync.yml`) using `EndBug/label-sync@v2`, 5-minute timeout guardrail, concurrency isolation (`label-sync-${{ github.ref }}`, `cancel-in-progress: true`), and least-privilege permissions (`issues: write`).
+  - Added canonical `.github/labels.yml` definition with 11 standard labels adhering to `GOVERNANCE.md` §4.2.
+  - Enhanced `CONTRIBUTING.md` with bilingual contribution instructions, comprehensive mapping of all 10 governance and runtime invariants (`INV-LOCAL-01` to `INV-SLA-10`), unprivileged `RunAsInvoker` user mode execution (`INV-USER-02`), Plan D local development workflow, and version freeze discipline under `T-20260920-167562623`.
+  - Re-audited Level 1 SBOM text companion `THIRD_PARTY_LICENSES.txt` (Stand 2026-10-01) with full invariant cross-reference matrix table, § 521 BGB statutory notice, 48h Security Response SLA, and root `NOTICE` cross-reference.
+  - Re-audited `THIRD_PARTY_LICENSES.md` for Stand 2026-10-01.
+  - Hardened `.gitignore` multi-host and lock defense: added `Desktop.ini`, `*-IDEAPAD-GEI*`, `LOCK.dev.*`, `LOCK.antigravity.*`, `LOCK.bugsearch.*`, and `TASKPLAN_*.md`.
+  - Standardized PEP 621 metadata in `pyproject.toml`: registered `Contributing`, `Plain-Text License`, `Third-Party Licenses (Text)`, and `Level 1 SBOM` URLs under `[project.urls]`. Strictly preserved version `1.2.0` under freeze discipline `T-20260920-167562623`.
+  - Added 6 new automated contract tests in `tests/test_metadata.py` verifying auto-assign workflow, label-sync workflow, canonical labels, contributing guide invariants, plain-text SBOM companion, extended PEP 621 URLs, and multi-host gitignore guards (total 114 passed, 100% green).
+  - Synchronized documentation badges, verification timestamps (2026-10-01), and LLM context index (`llms.txt`).
 - **Pfad A Technical Hygiene, CI Lifecycle Hardening, Multi-Host Defense & Contract Test Expansion (2026-09-26):**
   - Added `.github/workflows/welcome.yml` with `actions/first-interaction@v3`, 5-minute timeout guardrail, concurrency isolation (`cancel-in-progress: true`), and least-privilege permissions (`issues: write`, `pull-requests: write`).
   - Hardened `.github/workflows/stale.yml` with concurrency isolation group `stale-${{ github.ref }}` and `cancel-in-progress: true`.

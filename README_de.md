@@ -12,12 +12,14 @@
 [![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-blue?logo=windows)](#sec-10)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)
-[![Tests: 108 Bestanden](https://img.shields.io/badge/Tests-108%20Bestanden-brightgreen)](tests)
+[![Tests: 114 Bestanden](https://img.shields.io/badge/Tests-114%20Bestanden-brightgreen)](tests)
 [![Sicherheits-SLA: 48h / 5d](https://img.shields.io/badge/Sicherheits--SLA-48h%20%2F%205d-blue)](SECURITY.md)
 [![Organisation: doc-bricks](https://img.shields.io/badge/organisation-doc--bricks-blue)](https://github.com/doc-bricks)
 [![Ökosystem: open-bricks](https://img.shields.io/badge/ökosystem-open--bricks-blue)](https://github.com/open-bricks)
 [![Level 1 SBOM](https://img.shields.io/badge/SBOM-Level%201-success)](THIRD_PARTY_LICENSES.md)
-[![Zuletzt Geprüft](https://img.shields.io/badge/Zuletzt--Gepr%C3%BCft-2026--09--26-blue)](MARKETING-LOG.txt)
+[![Level 1 SBOM: Plain Text](https://img.shields.io/badge/Level%201%20SBOM-Plain%20Text-success)](THIRD_PARTY_LICENSES.txt)
+[![Mitwirken](https://img.shields.io/badge/Mitwirken-Leitfaden-orange)](CONTRIBUTING.md)
+[![Zuletzt Geprüft](https://img.shields.io/badge/Zuletzt--Gepr%C3%BCft-2026--10--01-blue)](MARKETING-LOG.txt)
 [![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blue)](llms.txt)
 
 > [!NOTE]

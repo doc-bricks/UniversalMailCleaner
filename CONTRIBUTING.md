@@ -1,113 +1,92 @@
 # Beitragsrichtlinie / Contributing Guide
 
-## Deutsch
-
-Vielen Dank für Ihr Interesse, zu diesem Projekt beizutragen!
-
-### Wie Sie beitragen können
-
-1. **Bug melden:** Erstellen Sie ein Issue mit dem Label `bug`
-2. **Feature vorschlagen:** Erstellen Sie ein Issue mit dem Label `enhancement`
-3. **Code beitragen:** Erstellen Sie einen Pull Request
-
-### Pull Requests
-
-1. Forken Sie das Repository
-2. Erstellen Sie einen Feature-Branch: `git checkout -b feature/mein-feature`
-3. Committen Sie Ihre Änderungen: `git commit -m "Beschreibung der Änderung"`
-4. Pushen Sie den Branch: `git push origin feature/mein-feature`
-5. Erstellen Sie einen Pull Request
-
-### Contributor License Agreement (CLA)
-
-<!-- OPTION A: Für Projekte mit Dual-Licensing (RPX, etc.) -- diesen Block verwenden -->
-Dieses Projekt verwendet ein [Contributor License Agreement (CLA)](CLA.md).
-Bei Ihrem ersten Pull Request bestätigen Sie bitte Ihre Zustimmung durch einen Kommentar:
-
-> I have read and agree to the Contributor License Agreement (CLA).
-
-Sie behalten Ihr Urheberrecht -- das CLA räumt dem Projektinhaber lediglich Nutzungsrechte ein, die eine flexible Lizenzierung des Gesamtprojekts ermöglichen.
-
-<!-- OPTION B: Für Community-Projekte ohne kommerzielle Pläne -- diesen Block stattdessen verwenden
-### Developer Certificate of Origin (DCO)
-
-Dieses Projekt verwendet den [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
-Bitte signieren Sie jeden Commit mit `--signoff`:
-
-    git commit --signoff -m "Beschreibung der Änderung"
-
-Damit bestätigen Sie, dass Sie das Recht haben, den Code unter der Projektlizenz einzureichen.
--->
-
-### Code-Richtlinien
-
-- Python: PEP 8 Stil
-- Encoding: UTF-8 für alle Dateien
-- Sprache: Code und Kommentare auf Deutsch oder Englisch
-- Keine hardcoded Pfade oder API-Keys
-
-### Erste Schritte
-
-```bash
-git clone https://github.com/doc-bricks/UniversalMailCleaner.git
-cd UniversalMailCleaner
-pip install -e .[dev]
-universalmailcleaner
-```
+**UniversalMailCleaner** (`doc-bricks/UniversalMailCleaner`) · Part of the `open-bricks` ecosystem.
 
 ---
 
 ## English
 
-Thank you for your interest in contributing to this project!
+Thank you for your interest in contributing to **UniversalMailCleaner**!
 
-### How to Contribute
+### Core Invariants & Architectural Principles
 
-1. **Report bugs:** Create an issue with the `bug` label
-2. **Suggest features:** Create an issue with the `enhancement` label
-3. **Contribute code:** Create a Pull Request
+All contributions must strictly respect our 10 core governance and runtime invariants:
 
-### Pull Requests
+1. **100% Local-First Execution (`INV-LOCAL-01`)**: All mailbox processing, filtering rules, and cache files remain entirely local; zero external telemetry or cloud analytics.
+2. **Encrypted Credential Isolation (`INV-CRED-02`)**: Account passwords and tokens are held via `keyring` in the OS Credential Manager (Windows DPAPI) or session memory; never stored in plaintext `config.json`.
+3. **Safe-by-Default Deletion (`INV-SAFE-03`)**: Default operational mode routes all deletions to the provider's trash folder (`Trash`, `Papierkorb`, `[Gmail]/Trash`) rather than issuing immediate expunge commands.
+4. **Transactional Undo Capability (`INV-UNDO-04`)**: Safe-mode deletions register message UIDs and folder mappings into an in-memory undo buffer, allowing immediate restoration.
+5. **Explicit Hard-Delete Opt-In (`INV-CONFIRM-05`)**: Permanent purge (`EXPUNGE`) requires explicit user confirmation via dialog modal with safety warnings.
+6. **Enforced TLS Transport Security (`INV-TLS-06`)**: Network communication strictly requires `IMAP4_SSL` (port 993) and TLS 1.3 / HTTPS for Google APIs; unencrypted plaintext transport is rejected.
+7. **Least-Privilege OAuth2 Scopes (`INV-LEASTPRIV-07`)**: Google OAuth2 asks only for minimal required scopes (`gmail.modify`, optional `drive.file` / `drive.metadata.readonly`); no admin or whole-account takeovers.
+8. **Lazy Optional Dependency Boundary (`INV-LAZYLOAD-08`)**: Google client libraries (`google-api-python-client`, `google-auth-oauthlib`) are loaded lazily on demand; IMAP-only users start with zero Google library overhead.
+9. **Secrets-Free Profile Portability (`INV-PORTABLE-09`)**: Exported rule profiles (`profile_exchange.py`) strip all credentials and secrets, enabling safe cross-machine sharing and version-control storage.
+10. **48h Security SLA & 5-Day Triage (`INV-SLA-10`)**: Documented response timeline in `SECURITY.md` committing to 48-hour response and 5-day triage for all reported security vulnerabilities.
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m "Description of change"`
-4. Push the branch: `git push origin feature/my-feature`
-5. Create a Pull Request
+### Unprivileged User Execution / RunAsInvoker (`INV-USER-02`)
 
-### Contributor License Agreement (CLA)
+UniversalMailCleaner operates entirely in standard user mode (`RunAsInvoker`). Contributions must never introduce requirements for Administrator UAC elevation, system driver installation, or privileged registry access.
 
-<!-- OPTION A: For projects with dual licensing (RPX, etc.) -->
-This project uses a [Contributor License Agreement (CLA)](CLA.md).
-On your first pull request, please confirm your agreement by commenting:
+### Strict Version Freeze Discipline
 
-> I have read and agree to the Contributor License Agreement (CLA).
+Under policy `T-20260920-167562623`, the current version `1.2.0` is strictly frozen. Routine hygiene, CI matrix, and documentation changes must not bump version numbers; all updates are recorded under `## [Unreleased]` in `CHANGELOG.md`.
 
-You retain your copyright -- the CLA only grants the project owner usage rights that enable flexible licensing of the overall project.
+### Plan D Local Development Workflow
 
-<!-- OPTION B: For community projects without commercial plans
-### Developer Certificate of Origin (DCO)
+All code modifications and testing must be executed in local Git clones (`C:\_Local_DEV\repos\...`). Cloud storage folders (e.g. OneDrive) serve only as gitless multi-device mirrors and must not be used for direct development.
 
-This project uses the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
-Please sign off every commit with `--signoff`:
-
-    git commit --signoff -m "Description of change"
-
-This certifies that you have the right to submit the code under the project license.
--->
-
-### Code Guidelines
-
-- Python: PEP 8 style
-- Encoding: UTF-8 for all files
-- Language: Code and comments in German or English
-- No hardcoded paths or API keys
-
-### Getting Started
+### Development Setup & Quality Gates
 
 ```bash
+# Clone the repository
 git clone https://github.com/doc-bricks/UniversalMailCleaner.git
 cd UniversalMailCleaner
+
+# Create and activate virtual environment
+python -m venv .venv
+.venv\Scripts\activate
+
+# Install dependencies in editable mode with development tools
 pip install -e .[dev]
-universalmailcleaner
+
+# Run full Pytest test suite
+pytest
+
+# Run Ruff linter and code formatting check
+ruff check .
+
+# Check Python bytecode compilation
+python -m compileall -q .
+
+# Verify git whitespace hygiene
+git diff --check
 ```
+
+---
+
+## Deutsch
+
+Vielen Dank für Ihr Interesse, zu **UniversalMailCleaner** beizutragen!
+
+### Kern-Invarianten & Architektur-Prinzipien
+
+Jeder Beitrag muss unsere 10 Governance- und Laufzeit-Invarianten verbindlich wahren:
+
+1. **100% Local-First (`INV-LOCAL-01`)**: Keine Telemetrie, keine Tracking-Dienste, rein lokale Verarbeitung.
+2. **Verschlüsselte Zugangsdaten (`INV-CRED-02`)**: Passwörter liegen im Windows Credential Manager (DPAPI via `keyring`), niemals im Klartext.
+3. **Sicherheits-Papierkorbmodus (`INV-SAFE-03`)**: Standardmäßig Verschieben in den Papierkorb statt dauerhaftem Löschen.
+4. **Transaktionales Undo (`INV-UNDO-04`)**: Wiederherstellbarkeit gelöschter Nachrichten über UID-Mapppings.
+5. **Explizite Lösch-Bestätigung (`INV-CONFIRM-05`)**: Endgültiges Löschen erfordert gesonderte Nutzerbestätigung.
+6. **Erzwungenes TLS (`INV-TLS-06`)**: Ausschließlich verschlüsselte Verbindungen (IMAP-SSL Port 993, HTTPS).
+7. **Minimalprivilegien (`INV-LEASTPRIV-07`)**: Minimale OAuth2-Scopes für Google-Dienste.
+8. **Lazy Loading (`INV-LAZYLOAD-08`)**: Optionale Google-Bibliotheken werden erst bei Bedarf geladen.
+9. **Geheimnisfreier Profilaustausch (`INV-PORTABLE-09`)**: Exportierte Profile enthalten keine Zugangsdaten.
+10. **48h Sicherheits-SLA (`INV-SLA-10`)**: Verbindliche Reaktionszeiten bei Sicherheitsmeldungen.
+
+### Unprivilegierter Modus / RunAsInvoker (`INV-USER-02`)
+
+Die Anwendung läuft vollständig im unprivilegierten Standard-Benutzermodus ohne Administratorrechte.
+
+### Version-Freeze-Disziplin (T-20260920-167562623)
+
+Die Version `1.2.0` bleibt eingefroren. Alle Änderungen werden unter `## [Unreleased]` im `CHANGELOG.md` erfasst.
