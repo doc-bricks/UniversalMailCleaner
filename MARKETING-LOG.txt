@@ -269,3 +269,52 @@ Trigger:           GITHUBBOT_ONE_REPO_CLEANER (Pfad A Turnuslauf)
 - Synchronized documentation badges across README.md, README_de.md, and README-DE.md
   to 2026-10-01.
 - Updated llms.txt context index with 2026-10-01 timestamp and verified 114 tests baseline.
+
+================================================================================
+[2026-10-03 01:50 CEST] [PFAD_B_DISCOVERABILITY_AND_DESIGN]
+Repository:        doc-bricks/UniversalMailCleaner
+Local Canonical:   C:\_Local_DEV\repos\REL-PUB_UniversalMailCleaner-tasksolver-1159-current
+Branch:            master
+Version:           1.2.0 (Strictly frozen per T-20260920-167562623)
+Trigger:           GITHUBBOT_ONE_REPO_MARKETING_AND_DESIGN (Pfad B Turnuslauf)
+
+13. ASCII FOUR-VIEW ARCHITECTURAL TOPOLOGY, LEVEL 1 SBOM RE-AUDIT & CONTRACT TESTS
+--------------------------------------------------------------------------------
+- Designed and integrated the canonical ASCII Four-View Architectural Topology projection
+  in Section 1 of README.md, README_de.md, and byte-identical README-DE.md:
+  * [VIEW 1: CALLER RUNTIMES, DESKTOP USER INTERACTION & UI CONTROLS]: PySide6 Qt GUI
+    Presentation Layer (MainWindow), multi-tab workspace (Account Manager, Rules Engine,
+    Large Mail Scanner, Scheduler Widget, Gmail Labels), unprivileged user-mode invocation
+    (INV-USER-02 RunAsInvoker), and user safety controls (Safe Trash INV-SAFE-03, 1-Click
+    Undo INV-UNDO-04, and Explicit Modal Purge Dialogs INV-CONFIRM-05).
+  * [VIEW 2: UNIVERSALMAILCLEANER CORE FILTER & ASYNCHRONOUS WORKER ENGINE]: Non-blocking
+    QThread worker thread (INV-LAZYLOAD-08), multi-criteria rule filtering with RFC 3501
+    IMAP-003 date formatting, safe trash UID mapping & undo buffer, secrets-free profile
+    exchange (INV-PORTABLE-09), and lazy dependency loading.
+  * [VIEW 3: SECURE OS KEYRING & PROTOCOL STORAGE TIERS / IMAP & GMAIL APIS]: Windows
+    Credential Manager / DPAPI integration via keyring (INV-CRED-02), RFC 3501 UIDPLUS
+    IMAP4_SSL client with TLS transport (INV-TLS-06), Google REST API adapter with OAuth2
+    and least-privilege scopes (INV-LEASTPRIV-07), and atomic local JSON config storage.
+  * [VIEW 4: AIR-GAP DEFENSE PERIMETER, ZERO-EGRESS & DATA SAFETY BOUNDARIES]: 100%
+    local-first execution (INV-LOCAL-01 zero-egress perimeter), PySide6 LGPL-3.0 dynamic
+    linking compliance, hardened multi-host gitignore defense, statutory liability limitation
+    under German civil code (§ 521 BGB Gefälligkeitsrecht), and 48h Security Response SLA
+    with 5-day triage (INV-SLA-10).
+  * [SICHT 1] bis [SICHT 4] fully mapped in German documentation with 100% invariant parity.
+- Re-audited Level 1 SBOM in THIRD_PARTY_LICENSES.md and plain-text companion
+  THIRD_PARTY_LICENSES.txt for Stand 2026-10-03, verifying weak copyleft isolation,
+  zero runtime telemetry, and canonical root NOTICE attribution cross-reference.
+- Synchronized Shields.io repository badges across README.md, README_de.md, and README-DE.md:
+  * Tests: 117 Passed / 117 Bestanden (brightgreen)
+  * Last-Checked / Zuletzt Geprüft: 2026-10-03 (blue)
+- Updated llms.txt context index with 2026-10-03 timestamp, 117 tests verification baseline,
+  and Four-View Architectural Topology reference.
+- Expanded automated contract testsuite in tests/test_metadata.py:
+  * test_ascii_four_view_architectural_topology_parity: Validates presence of View 1..4 in
+    README.md and Sicht 1..4 in README_de.md with complete invariant cross-linking.
+  * test_recency_and_badge_currency: Validates 2026-10-03 date across badges, llms.txt,
+    THIRD_PARTY_LICENSES, and CHANGELOG.md.
+  * test_third_party_licenses_plain_text_companion_recency: Validates 2026-10-03 audit
+    timestamp in plain-text SBOM companion.
+- Full verification: 117/117 tests passed (100% green via pytest), ruff clean, compileall
+  clean, zero whitespace violations, and version 1.2.0 strictly frozen per T-20260920-167562623.

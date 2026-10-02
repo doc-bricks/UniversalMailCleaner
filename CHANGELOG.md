@@ -12,6 +12,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
   - Added test coverage in `tests/test_imap_service.py` verifying RFC 3501 date-text formatting across all 12 calendar months and explicitly under active German locale.
 
 ### Added
+- **Pfad B Discoverability, Visual 4-View Architecture, Level 1 SBOM Stand 2026-10-03 & Contract Test Expansion (2026-10-03):**
+  - Integrated ASCII Four-View Architectural Topology projection in Section 1 of both `README.md` and `README_de.md` (and byte-identical `README-DE.md`) detailing View 1 (Caller Runtimes, Desktop User Interaction & UI Controls), View 2 (Core Filter & Asynchronous Worker Engine), View 3 (Secure OS Keyring & Protocol Storage Tiers), and View 4 (Air-Gap Defense Perimeter, Zero-Egress & Data Safety Boundaries) with complete invariant mappings (`INV-LOCAL-01` to `INV-SLA-10`).
+  - Re-audited Level 1 SBOM in `THIRD_PARTY_LICENSES.md` and plain-text companion `THIRD_PARTY_LICENSES.txt` for Stand 2026-10-03, verifying weak copyleft isolation for PySide6 LGPL-3.0, unprivileged `RunAsInvoker` user mode execution (`INV-USER-02`), and statutory liability limitation under German civil code (§ 521 BGB Gefälligkeitsrecht).
+  - Synchronized repository verification badges to `2026-10-03` and updated test pass baseline across English and German documentation.
+  - Updated LLM context index (`llms.txt`) with 2026-10-03 currency, Four-View Topology reference, and contract test metrics.
+  - Expanded automated contract test suite in `tests/test_metadata.py` with tests for ASCII Four-View Topology parity, 2026-10-03 verification recency, and Level 1 SBOM audit freshness (total 117 passed, 100% green).
 - **Pfad A Technical Hygiene, CI Lifecycle Workflows, PEP 621 Standardisation & Contract Test Expansion (2026-10-01):**
   - Provisioned automated PR assignment lifecycle workflow (`.github/workflows/auto-assign.yml`) using `actions/github-script@v7`, 5-minute timeout guardrail, concurrency isolation (`auto-assign-${{ github.ref }}`, `cancel-in-progress: true`), and least-privilege permissions (`issues: write`, `pull-requests: write`).
   - Provisioned label synchronisation workflow (`.github/workflows/label-sync.yml`) using `EndBug/label-sync@v2`, 5-minute timeout guardrail, concurrency isolation (`label-sync-${{ github.ref }}`, `cancel-in-progress: true`), and least-privilege permissions (`issues: write`).

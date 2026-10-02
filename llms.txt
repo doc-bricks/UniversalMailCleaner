@@ -17,7 +17,8 @@ UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and 
 - Marketing & Discoverability Log: `MARKETING-LOG.txt`
 - Security Policy: `SECURITY.md` (48h response SLA, 5-day triage)
 - Statutory Notice: § 521 BGB (Gefälligkeitsrecht)
-- Testsuite: `tests/` (114 passed, 100% green via pytest)
+- Testsuite: `tests/` (117 passed, 100% green via pytest)
+- Architectural Topology: Section 1 ASCII Four-View Topology (INV-LOCAL-01 through INV-SLA-10)
 
 ## Target Personas & Use Cases
 
@@ -57,7 +58,7 @@ UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and 
 - `local-first Gmail and IMAP cleaner`
 - `Windows email cleaner no subscription`
 
-## Last-checked: 2026-10-01
+## Last-checked: 2026-10-03
 
 ## Disambiguation
 
