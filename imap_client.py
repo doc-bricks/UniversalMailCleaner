@@ -217,14 +217,16 @@ class ImapService:
                 cutoff = format_imap_date(cutoff_dt)
                 return f'(BEFORE "{cutoff}")'
             elif rule.filter_type == "sender":
-                safe_value = rule.value.replace('\\', '\\\\').replace('"', '').strip()
-                if not safe_value:
+                value = rule.value.strip()
+                if not value.replace('"', '').strip():
                     return None
+                safe_value = value.replace('\\', '\\\\').replace('"', '\\"')
                 return f'(FROM "{safe_value}")'
             elif rule.filter_type == "subject":
-                safe_value = rule.value.replace('\\', '\\\\').replace('"', '').strip()
-                if not safe_value:
+                value = rule.value.strip()
+                if not value.replace('"', '').strip():
                     return None
+                safe_value = value.replace('\\', '\\\\').replace('"', '\\"')
                 return f'(SUBJECT "{safe_value}")'
             elif rule.filter_type == "size_mb":
                 size_mb = float(rule.value)
