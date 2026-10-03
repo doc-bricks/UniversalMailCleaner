@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from PySide6.QtCore import QCoreApplication
 
+from imap_client import ImapService
 from models import CleanRule, MailAccount
 from workers import Worker
 
@@ -635,6 +636,67 @@ class TestRunRulesSearchError(unittest.TestCase):
             any("imap search error" in msg.lower() for msg in log_messages),
             "Error from rule 1 must be logged",
         )
+
+    def test_control_characters_skip_imap_search_while_safe_rule_runs(self):
+        unsafe_rules = [
+            CleanRule("CR sender", "IMAP Main", "sender", "bad\rvalue"),
+            CleanRule("LF subject", "IMAP Main", "subject", "bad\nvalue"),
+            CleanRule("NUL sender", "IMAP Main", "sender", "bad\x00value"),
+            CleanRule("NUL subject", "IMAP Main", "subject", "value\x00"),
+        ]
+        safe_rule = CleanRule("Safe sender", "IMAP Main", "sender", "safe@example.com")
+
+        class _RecordingConn:
+            def __init__(self):
+                self.search_calls = []
+                self.copy_calls = []
+                self.store_calls = []
+                self.expunge_calls = 0
+
+            def select(self, folder):
+                return "OK", [b""]
+
+            def search(self, charset, criteria):
+                self.search_calls.append((charset, criteria))
+                return "OK", [b"42"]
+
+            def copy(self, message_set, folder):
+                self.copy_calls.append((message_set, folder))
+                return "OK", [b""]
+
+            def store(self, *args):
+                self.store_calls.append(args)
+                return "OK", [b""]
+
+            def expunge(self):
+                self.expunge_calls += 1
+                return "OK", [b""]
+
+        account = MailAccount(
+            name="IMAP Main", host="imap.example.com", user="user@example.com"
+        )
+        class _TestImapService(ImapService):
+            def find_trash_folder(self):
+                return "Trash"
+
+        service = _TestImapService(lambda _message: None)
+        service.conn = _RecordingConn()
+        worker = Worker(
+            "rules",
+            {"rules": unsafe_rules + [safe_rule], "folders": ["INBOX"], "safe_mode": True},
+            [account],
+        )
+        worker.service = service
+
+        worker.run_rules(account)
+
+        self.assertEqual(
+            service.conn.search_calls,
+            [(None, '(FROM "safe@example.com")')],
+        )
+        self.assertEqual(service.conn.copy_calls, [("42", "Trash")])
+        self.assertEqual(service.conn.store_calls, [("42", "+FLAGS", "\\Deleted")])
+        self.assertEqual(service.conn.expunge_calls, 1)
 
 
 class TestSearchNoneDataHandling(unittest.TestCase):

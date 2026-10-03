@@ -137,6 +137,19 @@ class TestImapServiceSearchCriteria(unittest.TestCase):
             r'(SUBJECT "Project \\\"Q4\\\"")',
         )
 
+    def test_sender_and_subject_reject_cr_lf_and_nul_before_trimming(self):
+        for filter_type in ("sender", "subject"):
+            for control in ("\r", "\n", "\x00"):
+                for value in (f"{control}target", f"tar{control}get", f"target{control}"):
+                    with self.subTest(filter_type=filter_type, value=value):
+                        rule = CleanRule(
+                            name="Invalid control character",
+                            target_account="Alle",
+                            filter_type=filter_type,
+                            value=value,
+                        )
+                        self.assertIsNone(self.service.get_search_criteria(rule))
+
     def test_size_mb_filter_integer(self):
         """Test: size_mb Filter mit Integer-Wert (10 MB)"""
         rule = CleanRule(
