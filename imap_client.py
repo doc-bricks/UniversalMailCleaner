@@ -216,16 +216,16 @@ class ImapService:
                 cutoff_dt = datetime.now() - timedelta(days=days)
                 cutoff = format_imap_date(cutoff_dt)
                 return f'(BEFORE "{cutoff}")'
-            elif rule.filter_type == "sender":
-                safe_value = rule.value.replace('\\', '\\\\').replace('"', '').strip()
-                if not safe_value:
+            elif rule.filter_type in {"sender", "subject"}:
+                value = rule.value
+                if any(char in value for char in ("\r", "\n", "\x00")):
                     return None
-                return f'(FROM "{safe_value}")'
-            elif rule.filter_type == "subject":
-                safe_value = rule.value.replace('\\', '\\\\').replace('"', '').strip()
-                if not safe_value:
+                value = value.strip()
+                if not value.replace('"', '').strip():
                     return None
-                return f'(SUBJECT "{safe_value}")'
+                safe_value = value.replace('\\', '\\\\').replace('"', '\\"')
+                search_key = "FROM" if rule.filter_type == "sender" else "SUBJECT"
+                return f'({search_key} "{safe_value}")'
             elif rule.filter_type == "size_mb":
                 size_mb = float(rule.value)
                 if size_mb <= 0:

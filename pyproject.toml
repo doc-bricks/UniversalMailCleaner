@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=77.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ version = "1.2.0"
 description = "Local-first Windows desktop app for cleaning IMAP and Gmail mailboxes."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { file = "LICENSE" }
+license = "MIT"
 license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]
 authors = [
     { name = "Lukas Geiger" }
@@ -17,7 +17,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Win32 (MS Windows)",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -62,6 +61,8 @@ universalmailcleaner = "mail_imap_cleaner_v1:main"
 dev = [
     "pytest>=8.0",
     "ruff>=0.5",
+    "Pillow>=10.0.0",
+    "tomli>=2.0.1; python_version < '3.11'",
 ]
 
 [project.urls]
