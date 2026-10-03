@@ -12,14 +12,14 @@
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#quick-start--setup)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)
-[![Tests: 114 Passed](https://img.shields.io/badge/Tests-114%20Passed-brightgreen)](tests)
+[![Tests: 117 Passed](https://img.shields.io/badge/Tests-117%20Passed-brightgreen)](tests)
 [![Security SLA: 48h / 5d](https://img.shields.io/badge/Security%20SLA-48h%20%2F%205d-blue)](SECURITY.md)
 [![Organization: doc-bricks](https://img.shields.io/badge/organization-doc--bricks-blue)](https://github.com/doc-bricks)
 [![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blue)](https://github.com/open-bricks)
 [![Level 1 SBOM](https://img.shields.io/badge/SBOM-Level%201-success)](THIRD_PARTY_LICENSES.md)
 [![Level 1 SBOM: Plain Text](https://img.shields.io/badge/Level%201%20SBOM-Plain%20Text-success)](THIRD_PARTY_LICENSES.txt)
 [![Contributing](https://img.shields.io/badge/Contributing-Guidelines-orange)](CONTRIBUTING.md)
-[![Last Checked](https://img.shields.io/badge/Last--Checked-2026--10--01-blue)](MARKETING-LOG.txt)
+[![Last Checked](https://img.shields.io/badge/Last--Checked-2026--10--03-blue)](MARKETING-LOG.txt)
 [![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blue)](llms.txt)
 
 > [!NOTE]
@@ -99,6 +99,53 @@ flowchart TD
 
     IMAP --> SRV
     GMAIL --> GOOG
+```
+
+### ASCII Four-View Architectural Topology Projection
+
+```text
++===================================================================================================================+
+|                                UNIVERSALMAILCLEANER ARCHITECTURAL TOPOLOGY (4 VIEWS)                              |
++===================================================================================================================+
+| [VIEW 1: CALLER RUNTIMES, DESKTOP USER INTERACTION & UI CONTROLS]                                                 |
+|  * PySide6 Qt GUI Presentation Layer (mail_imap_cleaner_v1.py MainWindow) with non-blocking event dispatch        |
+|  * Multi-Tab Workspace: Account Manager Dialog, Rules Engine & Filter Editor, Large Mail & Drive Scanner,         |
+|    Scheduler Widget (scheduler_widget.py), and Gmail Label Maintenance                                           |
+|  * Unprivileged User-Mode Invocation [INV-USER-02] -- Strict RunAsInvoker, zero administrative elevation prompts|
+|  * User Safety Controls: Safe Trash Toggle [INV-SAFE-03], 1-Click Transaction Undo [INV-UNDO-04], and             |
+|    Explicit Permanent Purge Confirmation Modal Dialogs [INV-CONFIRM-05]                                           |
++-------------------------------------------------------------------------------------------------------------------+
+                                                          |
+                                                          v
++-------------------------------------------------------------------------------------------------------------------+
+| [VIEW 2: UNIVERSALMAILCLEANER CORE FILTER & ASYNCHRONOUS WORKER ENGINE]                                           |
+|  * Non-Blocking Worker Thread (workers.py WorkerThread) preventing UI freezing during large mailbox queries        |
+|    and network sweeps [INV-LAZYLOAD-08]                                                                           |
+|  * Multi-Criteria Rule Engine: Subject, sender, age (RFC 3501 IMAP-003 date formatting), size, and regex matching|
+|  * Safe-Trash & Undo Manager: Tracks message UIDs across folders and drives with atomic rollback guarantee        |
+|  * Profile Serialization Engine (profile_exchange.py) -- Secrets-free JSON rule export/import [INV-PORTABLE-09]   |
+|  * Lazy Dependency Boundary [INV-LAZYLOAD-08] -- Google client libraries loaded on-demand, zero IMAP overhead    |
++-------------------------------------------------------------------------------------------------------------------+
+                                                          |
+                                                          v
++-------------------------------------------------------------------------------------------------------------------+
+| [VIEW 3: SECURE OS KEYRING & PROTOCOL STORAGE TIERS / IMAP & GMAIL APIS]                                          |
+|  * Windows Credential Manager / DPAPI Integration via keyring library [INV-CRED-02] -- Zero plaintext credentials|
+|  * High-Performance SSL IMAP4 Client (imap_client.py) with RFC 3501 UIDPLUS and TLS transport [INV-TLS-06]       |
+|  * Google REST API Adapter (gmail_service.py) with OAuth2 browser tokens and least-privilege scopes              |
+|    (gmail.modify, drive.file) [INV-LEASTPRIV-07]                                                                  |
+|  * Local Configuration State: Atomic JSON configuration storage outside cloud sync paths (AppData)                |
++-------------------------------------------------------------------------------------------------------------------+
+                                                          |
+                                                          v
++-------------------------------------------------------------------------------------------------------------------+
+| [VIEW 4: AIR-GAP DEFENSE PERIMETER, ZERO-EGRESS & DATA SAFETY BOUNDARIES]                                         |
+|  * 100% Local-First & Zero-Egress Perimeter [INV-LOCAL-01] -- Zero cloud telemetry, metrics, or third-party egress |
+|  * Permissive Open-Source Licensing (MIT) with dynamic linking compliance for PySide6 LGPL-3.0                    |
+|  * Multi-Host Cloud-Sync & Lock Shielding -- Hardened .gitignore, conflict-copy resistance, canonical lock guards|
+|  * Statutory Liability Limitation under German Civil Code (§ 521 BGB Gefälligkeitsrecht)                         |
+|  * Dual Security Response Commitment [INV-SLA-10] -- 48h initial response SLA & 5-day triage commitment           |
++===================================================================================================================+
 ```
 
 ---

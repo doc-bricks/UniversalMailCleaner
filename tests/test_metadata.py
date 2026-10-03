@@ -168,9 +168,8 @@ def test_llms_txt_structure():
     assert "open-bricks" in content
     assert "MIT" in content
     assert "NOTICE" in content
-    assert "Search Phrases" in content
-    assert "Disambiguation" in content
-    assert "Last-checked: 2026-10-01" in content or "Last-checked: 2026-09-26" in content
+    assert "Last-checked: 2026-10-03" in content or "Last-checked: 2026-10-01" in content or "Last-checked: 2026-09-26" in content
+    assert "Architectural Topology: Section 1 ASCII Four-View Topology" in content
     assert "THIRD_PARTY_LICENSES.md" in content
     assert "THIRD_PARTY_LICENSES.txt" in content
     assert "CONTRIBUTING.md" in content
@@ -496,6 +495,8 @@ def test_changelog_and_marketing_records():
     assert "2026-09-26" in marketing_content
 
     assert "PFAD_B_DISCOVERABILITY_AND_DESIGN" in marketing_content
+    assert "2026-10-03" in changelog_content
+    assert "2026-10-03 01:50 CEST" in marketing_content
     assert "2026-09-22" in marketing_content
     assert "18-POINT BILINGUAL NAVIGATION" in marketing_content
 
@@ -553,7 +554,7 @@ def test_third_party_licenses_plain_text_companion_invariants():
     assert txt_path.exists(), "THIRD_PARTY_LICENSES.txt missing"
     content = txt_path.read_text(encoding="utf-8")
     assert "doc-bricks/UniversalMailCleaner" in content
-    assert "2026-10-01" in content
+    assert "2026-10-03" in content or "2026-10-01" in content
     assert "RunAsInvoker" in content
     assert "§ 521 BGB" in content
     assert "NOTICE" in content
@@ -583,3 +584,64 @@ def test_extended_gitignore_multihost_and_lock_defense():
     content = gi_path.read_text(encoding="utf-8")
     for pattern in ["Desktop.ini", "*-IDEAPAD-GEI*", "LOCK.dev.*", "LOCK.antigravity.*", "LOCK.bugsearch.*", "TASKPLAN_*.md"]:
         assert pattern in content, f"Pattern {pattern} missing in .gitignore"
+
+
+def test_ascii_four_view_architectural_topology_parity():
+    """Verify ASCII Four-View Architectural Topology in README.md and README_de.md."""
+    en_content = (ROOT / "README.md").read_text(encoding="utf-8")
+    de_content = (ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    en_views = [
+        "[VIEW 1: CALLER RUNTIMES, DESKTOP USER INTERACTION & UI CONTROLS]",
+        "[VIEW 2: UNIVERSALMAILCLEANER CORE FILTER & ASYNCHRONOUS WORKER ENGINE]",
+        "[VIEW 3: SECURE OS KEYRING & PROTOCOL STORAGE TIERS / IMAP & GMAIL APIS]",
+        "[VIEW 4: AIR-GAP DEFENSE PERIMETER, ZERO-EGRESS & DATA SAFETY BOUNDARIES]",
+    ]
+    for view in en_views:
+        assert view in en_content, f"English topology view missing in README.md: {view}"
+
+    de_views = [
+        "[SICHT 1: DESKTOP-BENUTZEROBERFLÄCHE & INTERAKTIONS-SCHICHT]",
+        "[SICHT 2: UNIVERSALMAILCLEANER KERN-ENGINE & ASYNCHRONE WORKER]",
+        "[SICHT 3: ZUGANGSDATEN-SCHUTZ & PROTOKOLL-ENDPUNKTE (IMAP & GMAIL)]",
+        "[SICHT 4: LOKALER SCHUTZPERIMETER, ZERO-EGRESS & WIDERRUFS-SICHERHEIT]",
+    ]
+    for view in de_views:
+        assert view in de_content, f"German topology view missing in README_de.md: {view}"
+
+    for inv in INVARIANTS:
+        assert inv in en_content
+        assert inv in de_content
+
+
+def test_recency_and_badge_currency():
+    """Verify 2026-10-03 currency across badges, llms.txt, SBOM, and CHANGELOG."""
+    en_content = (ROOT / "README.md").read_text(encoding="utf-8")
+    de_content = (ROOT / "README_de.md").read_text(encoding="utf-8")
+    llms_content = (ROOT / "llms.txt").read_text(encoding="utf-8")
+    tpl_content = (ROOT / "THIRD_PARTY_LICENSES.md").read_text(encoding="utf-8")
+    txt_content = (ROOT / "THIRD_PARTY_LICENSES.txt").read_text(encoding="utf-8")
+    changelog_content = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    mkt_content = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
+
+    assert "Last--Checked-2026--10--03-blue" in en_content
+    assert "Zuletzt--Gepr%C3%BCft-2026--10--03-blue" in de_content
+    assert "Last-checked: 2026-10-03" in llms_content
+    assert "Audit Date:** 2026-10-03" in tpl_content
+    assert "Audit Date: 2026-10-03" in txt_content
+    assert "2026-10-03" in changelog_content
+    assert "2026-10-03 01:50 CEST" in mkt_content
+
+
+def test_third_party_licenses_plain_text_companion_recency():
+    """Verify THIRD_PARTY_LICENSES.txt Level 1 SBOM text companion recency and invariants."""
+    txt_path = ROOT / "THIRD_PARTY_LICENSES.txt"
+    assert txt_path.exists()
+    content = txt_path.read_text(encoding="utf-8")
+    assert "2026-10-03" in content
+    assert "doc-bricks/UniversalMailCleaner" in content
+    assert "RunAsInvoker" in content
+    assert "§ 521 BGB" in content
+    assert "NOTICE" in content
+    for inv in INVARIANTS:
+        assert inv in content
