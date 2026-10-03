@@ -8,7 +8,7 @@
 
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green)](LICENSE)
 [![Hinweis: Urheberrecht](https://img.shields.io/badge/Hinweis-Urheberrecht-blue)](NOTICE)
-[![Version](https://img.shields.io/badge/Version-v1.2.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-v1.2.1-blue)](CHANGELOG.md)
 [![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-blue?logo=windows)](#sec-10)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)

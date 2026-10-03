@@ -5,11 +5,18 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-03
+
+> This cumulative source release gathers changes since the published `v1.2.0` (2026-05-02). The duplicate September `[1.2.0]` heading below was a historical changelog label, not a separate published release.
+
 ### Fixed
 - **RFC 3501 IMAP Date Format Locale Isolation (IMAP-003):**
   - Resolved query syntax errors (`BAD Invalid date in SEARCH command`) during `older_than_days` IMAP rule searches on non-English (e.g. German `de_DE`) host locales.
   - Implemented `format_imap_date` in `imap_client.py` using fixed RFC 3501 English month tokens (`Jan`..`Dec`) rather than runtime-locale-dependent `strftime("%d-%b-%Y")` (which produced localized abbreviations like `Mrz`, `Mai`, `Okt`, `Dez`).
   - Added test coverage in `tests/test_imap_service.py` verifying RFC 3501 date-text formatting across all 12 calendar months and explicitly under active German locale.
+- **IMAP filter control-character rejection (2026-10-03):**
+  - Rejects CR, LF, and NUL in sender and subject inputs before trimming, so malformed rules do not reach IMAP `SEARCH` or deletion.
+  - Skips the entire invalid rule while continuing other safe rules; quoted-string backslash and quote escaping remains intact.
 
 ### Added
 - **Pfad B Discoverability, Visual 4-View Architecture, Level 1 SBOM Stand 2026-10-03 & Contract Test Expansion (2026-10-03):**
@@ -69,7 +76,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
   - Authored comprehensive bilingual Security Policy (`SECURITY.md`) establishing 48-hour response SLA and 5-day triage (`INV-SLA-10`), supported versions lifecycle (1.2.x), direct security coordinator contacts, private vulnerability advisory paths, and architectural local-first / zero-egress / non-elevated user-mode guarantees.
   - Added 6 automated metadata contract tests in `tests/test_metadata.py` validating CI timeouts and concurrency, stale lifecycle automation, gitignore multi-host and lock defense, PEP 621 URL definitions and pytest options, bilingual security policy invariants, and changelog/marketing log recency.
 
-## [1.2.0] - 2026-09-12
+### Historical September work (originally labelled `[1.2.0]` on 2026-09-12)
+
+> Correction: this is a historical work entry, not a published `1.2.0` release. The published `v1.2.0` is dated 2026-05-02; this September work is included cumulatively in `1.2.1`.
 
 ### Added
 - **Pfad B Discoverability, Visual Architecture & Governance Parity (2026-09-12):**

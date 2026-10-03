@@ -9,7 +9,7 @@ UniversalMailCleaner is a local-first Windows desktop app for cleaning IMAP and 
 - Ecosystem Umbrella: open-bricks (https://github.com/open-bricks)
 - License: MIT License (SPDX: `MIT`)
 - Canonical Attribution: `NOTICE`
-- Version: 1.2.0
+- Version: 1.2.1
 - Main app entry point: `mail_imap_cleaner_v1.py`
 - Core modules: `imap_client.py`, `gmail_service.py`, `workers.py`, `models.py`, `scheduler_widget.py`, `profile_exchange.py`
 - Third-Party License Inventory & Level 1 SBOM: `THIRD_PARTY_LICENSES.md` & `THIRD_PARTY_LICENSES.txt`

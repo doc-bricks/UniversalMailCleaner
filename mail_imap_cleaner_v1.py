@@ -74,7 +74,7 @@ except ImportError:
 
 # ==================== CONFIGURATION ====================
 
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 APP_NAME = "UniversalMailCleaner"
 APP_VERSION = __version__
 BASE_DIR = Path.home() / ".mail_cleaner"

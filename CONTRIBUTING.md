@@ -29,7 +29,7 @@ UniversalMailCleaner operates entirely in standard user mode (`RunAsInvoker`). C
 
 ### Strict Version Freeze Discipline
 
-Under policy `T-20260920-167562623`, the current version `1.2.0` is strictly frozen. Routine hygiene, CI matrix, and documentation changes must not bump version numbers; all updates are recorded under `## [Unreleased]` in `CHANGELOG.md`.
+Policy `T-20260920-167562623` keeps versions frozen by default. The user-authorized versioned source release recorded in master ticket `T-20261003-933110552` sets the current source-release version to `1.2.1`. Routine hygiene, CI matrix, and documentation changes must not bump it; interim changes are recorded under `## [Unreleased]` in `CHANGELOG.md`. Further version bumps require another explicitly authorized versioned release.
 
 ### Plan D Local Development Workflow
 
@@ -89,4 +89,4 @@ Die Anwendung läuft vollständig im unprivilegierten Standard-Benutzermodus ohn
 
 ### Version-Freeze-Disziplin (T-20260920-167562623)
 
-Die Version `1.2.0` bleibt eingefroren. Alle Änderungen werden unter `## [Unreleased]` im `CHANGELOG.md` erfasst.
+Die Freeze-Richtlinie `T-20260920-167562623` hält Versionen standardmäßig eingefroren. Die im Masterticket `T-20261003-933110552` dokumentierte Nutzerautorisierung setzt `1.2.1` als aktuelle Quellrelease-Version. Alltägliche Hygiene-, CI- und Dokumentationsänderungen erhöhen sie nicht; Zwischenänderungen stehen unter `## [Unreleased]` im `CHANGELOG.md`. Weitere Versionssprünge benötigen eine ausdrücklich autorisierte Versionsveröffentlichung.
