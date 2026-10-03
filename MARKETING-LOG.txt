@@ -2,6 +2,27 @@
 # Tracked Pfad B Discoverability, Visual Architecture, Governance & Verification Milestones
 
 ================================================================================
+[2026-10-03 21:38 CEST] [VERSIONED_SOURCE_RELEASE_1_2_1_PREPARATION]
+Repository:        doc-bricks/UniversalMailCleaner
+Branch:            release/universalmailcleaner-1.2.1-20261003
+Version:           1.2.1 (user-authorized source-release candidate; master ticket T-20261003-933110552)
+License:           MIT (SPDX-License-Identifier: MIT)
+Maintainer:        Lukas Geiger (support@lukasgeiger.com)
+Security Contact:  security@open-bricks.org, security@doc-bricks.org
+
+- Prepared the 1.2.1 version surfaces and cumulative changelog from the actual
+  published v1.2.0 release dated 2026-05-02; retained the September work entry
+  while correcting its duplicate historical 1.2.0 label.
+- Recorded IMAP sender/subject control-character rejection (CR, LF, NUL) and
+  per-rule fail-closed behavior while preserving safe rules and quoted-string
+  escaping.
+- Source release packaging will use the exact reviewed release commit with
+  `git archive --format=zip`; the archive will contain tracked repository files
+  only, excluding `.git` and untracked user profiles, with a SHA256SUMS.txt sidecar.
+- This entry records release preparation; it does not claim a tag, published
+  GitHub asset, Store package, or installed application.
+
+================================================================================
 [2026-09-12 16:00 CEST] [PFAD_B_DISCOVERABILITY_AND_DESIGN]
 Repository:        doc-bricks/UniversalMailCleaner
 Local Canonical:   C:\_Local_DEV\repos\REL-PUB_UniversalMailCleaner-tasksolver-1159-current

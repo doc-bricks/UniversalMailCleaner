@@ -92,7 +92,7 @@ def test_version_parity():
     with open(pyproject_path, "rb") as f:
         pyproject_data = tomllib.load(f)
     version = pyproject_data["project"]["version"]
-    assert version == "1.2.0", f"Unexpected version in pyproject.toml: {version}"
+    assert version == "1.2.1", f"Unexpected version in pyproject.toml: {version}"
 
     # 2. mail_imap_cleaner_v1.py
     main_py = ROOT / "mail_imap_cleaner_v1.py"
@@ -113,6 +113,16 @@ def test_version_parity():
         if readme_path.exists():
             content = readme_path.read_text(encoding="utf-8")
             assert f"Version-v{version}-blue" in content or f"v{version}" in content
+
+    # 5. Machine-readable and third-party license version surfaces
+    version_markers = {
+        "llms.txt": f"- Version: {version}",
+        "THIRD_PARTY_LICENSES.md": f"**Version:** `{version}`<br>",
+        "THIRD_PARTY_LICENSES.txt": f"Version: {version}",
+    }
+    for filename, marker in version_markers.items():
+        content = (ROOT / filename).read_text(encoding="utf-8")
+        assert marker in content, f"Current version missing from {filename}"
 
 
 def test_manifest_files_exist():
@@ -338,11 +348,11 @@ def test_statutory_notice_and_version_freeze():
     assert "§ 521 BGB" in de_content
     assert "Gefälligkeitsrecht" in de_content
 
-    # Strict version freeze: version must be 1.2.0 across pyproject and main
+    # Strict version freeze after authorized versioned source release: 1.2.1
     pyproject_path = ROOT / "pyproject.toml"
     with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
-    assert data["project"]["version"] == "1.2.0"
+    assert data["project"]["version"] == "1.2.1"
 
 
 def test_utf8_hygiene():
@@ -542,7 +552,8 @@ def test_contributing_guide_present_and_invariants():
     assert "RunAsInvoker" in content
     assert "INV-USER-02" in content
     assert "T-20260920-167562623" in content
-    assert "1.2.0" in content
+    assert "T-20261003-933110552" in content
+    assert "1.2.1" in content
     assert "Plan D" in content
     for inv in INVARIANTS:
         assert inv in content, f"Invariant {inv} missing in CONTRIBUTING.md"

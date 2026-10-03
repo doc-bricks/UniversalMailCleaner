@@ -4,7 +4,7 @@
 **Canonical Project License:** MIT License (`MIT`)<br>
 **Audit Date:** 2026-10-03 (Pfad B Discoverability & Architecture; Previous: 2026-10-01, 2026-09-26, 2026-09-22)<br>
 **Auditor:** Antigravity / Gemini (via GithubBot Pfad B)<br>
-**Version:** `1.2.0`<br>
+**Version:** `1.2.1`<br>
 **Umbrella Ecosystem:** `open-bricks` / `doc-bricks`<br>
 **Notice Attribution:** See canonical root [`NOTICE`](NOTICE) file.
 
