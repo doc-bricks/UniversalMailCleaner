@@ -4,7 +4,7 @@ Project: UniversalMailCleaner (doc-bricks/UniversalMailCleaner)
 Canonical License: MIT License (SPDX: MIT)
 Audit Date: 2026-10-03 (Pfad B Discoverability & Architecture; Previous: 2026-10-01, 2026-09-26)
 Auditor: Antigravity / Gemini (via GithubBot Pfad B)
-Version: 1.2.1 (Strictly frozen per T-20260920-167562623)
+Version: 1.2.1
 Umbrella Ecosystem: open-bricks / doc-bricks
 Attribution: See canonical root NOTICE file.
 
