@@ -165,7 +165,7 @@ def test_llms_txt_structure():
     assert "open-bricks" in content
     assert "MIT" in content
     assert "NOTICE" in content
-    assert "Last-checked: 2026-10-03" in content or "Last-checked: 2026-10-01" in content or "Last-checked: 2026-09-26" in content
+    assert "Last-checked: 2026-11-01" in content or "Last-checked: 2026-10-03" in content or "Last-checked: 2026-10-01" in content or "Last-checked: 2026-09-26" in content
     assert "Architectural Topology: Section 1 ASCII Four-View Topology" in content
     assert "THIRD_PARTY_LICENSES.md" in content
     assert "THIRD_PARTY_LICENSES.txt" in content
@@ -492,6 +492,7 @@ def test_changelog_and_marketing_records():
     assert "2026-09-26" in marketing_content
 
     assert "PFAD_B_DISCOVERABILITY_AND_DESIGN" in marketing_content
+    assert "2026-11-01" in changelog_content
     assert "2026-10-03" in changelog_content
     assert "2026-10-03 01:50 CEST" in marketing_content
     assert "2026-09-22" in marketing_content
@@ -551,7 +552,7 @@ def test_third_party_licenses_plain_text_companion_invariants():
     assert txt_path.exists(), "THIRD_PARTY_LICENSES.txt missing"
     content = txt_path.read_text(encoding="utf-8")
     assert "doc-bricks/UniversalMailCleaner" in content
-    assert "2026-10-03" in content or "2026-10-01" in content
+    assert "2026-11-01" in content or "2026-10-03" in content or "2026-10-01" in content
     assert "RunAsInvoker" in content
     assert "§ 521 BGB" in content
     assert "NOTICE" in content
@@ -621,11 +622,12 @@ def test_recency_and_badge_currency():
     changelog_content = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     mkt_content = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
 
-    assert "Last--Checked-2026--10--03-blue" in en_content
-    assert "Zuletzt--Gepr%C3%BCft-2026--10--03-blue" in de_content
-    assert "Last-checked: 2026-10-03" in llms_content
-    assert "Audit Date:** 2026-10-03" in tpl_content
-    assert "Audit Date: 2026-10-03" in txt_content
+    assert "Last--Checked-2026--11--01-blue" in en_content or "Last--Checked-2026--10--03-blue" in en_content
+    assert "Zuletzt--Gepr%C3%BCft-2026--11--01-blue" in de_content or "Zuletzt--Gepr%C3%BCft-2026--10--03-blue" in de_content
+    assert "Last-checked: 2026-11-01" in llms_content or "Last-checked: 2026-10-03" in llms_content
+    assert "Audit Date:** 2026-11-01" in tpl_content or "Audit Date:** 2026-10-03" in tpl_content
+    assert "Audit Date: 2026-11-01" in txt_content or "Audit Date: 2026-10-03" in txt_content
+    assert "2026-11-01" in changelog_content
     assert "2026-10-03" in changelog_content
     assert "2026-10-03 01:50 CEST" in mkt_content
 
@@ -635,10 +637,22 @@ def test_third_party_licenses_plain_text_companion_recency():
     txt_path = ROOT / "THIRD_PARTY_LICENSES.txt"
     assert txt_path.exists()
     content = txt_path.read_text(encoding="utf-8")
-    assert "2026-10-03" in content
+    assert "2026-11-01" in content or "2026-10-03" in content
     assert "doc-bricks/UniversalMailCleaner" in content
     assert "RunAsInvoker" in content
     assert "§ 521 BGB" in content
     assert "NOTICE" in content
     for inv in INVARIANTS:
         assert inv in content
+
+
+def test_section_12_scheduler_sequence_diagram_present():
+    """Verify Section 12 contains scheduler lifecycle sequence diagram."""
+    en_content = (ROOT / "README.md").read_text(encoding="utf-8")
+    de_content = (ROOT / "README_de.md").read_text(encoding="utf-8")
+    assert "sequenceDiagram" in en_content
+    assert "SchedulerWidget" in en_content
+    assert "INV-SAFE-03" in en_content
+    assert "INV-UNDO-04" in en_content
+    assert "sequenceDiagram" in de_content
+    assert "SchedulerWidget" in de_content

@@ -12,14 +12,14 @@
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue?logo=windows)](#quick-start--setup)
 [![PySide6](https://img.shields.io/badge/UI-PySide6-41cd52)](https://pypi.org/project/PySide6/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](pyproject.toml)
-[![Tests: 117 Passed](https://img.shields.io/badge/Tests-117%20Passed-brightgreen)](tests)
+[![Tests: 118 Passed](https://img.shields.io/badge/Tests-118%20Passed-brightgreen)](tests)
 [![Security SLA: 48h / 5d](https://img.shields.io/badge/Security%20SLA-48h%20%2F%205d-blue)](SECURITY.md)
 [![Organization: doc-bricks](https://img.shields.io/badge/organization-doc--bricks-blue)](https://github.com/doc-bricks)
 [![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blue)](https://github.com/open-bricks)
 [![Level 1 SBOM](https://img.shields.io/badge/SBOM-Level%201-success)](THIRD_PARTY_LICENSES.md)
 [![Level 1 SBOM: Plain Text](https://img.shields.io/badge/Level%201%20SBOM-Plain%20Text-success)](THIRD_PARTY_LICENSES.txt)
 [![Contributing](https://img.shields.io/badge/Contributing-Guidelines-orange)](CONTRIBUTING.md)
-[![Last Checked](https://img.shields.io/badge/Last--Checked-2026--10--03-blue)](MARKETING-LOG.txt)
+[![Last Checked](https://img.shields.io/badge/Last--Checked-2026--11--01-blue)](MARKETING-LOG.txt)
 [![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blue)](llms.txt)
 
 > [!NOTE]
@@ -275,7 +275,7 @@ UniversalMailCleaner is engineered to solve acute pain points for four defined u
 ### `[PERSONA-04]` Solo Developers & System Administrators
 - **Search Queries:** `"open source python imap cleaner"`, `"pyside6 mail management tool"`, `"self hosted email retention cleaner"`
 - **Pain Point:** Frustrated by bloated proprietary tools with recurring subscriptions, broken IMAP protocol implementations, and hidden telemetry.
-- **Solution:** Permissive MIT-licensed Python codebase, modular testsuite with 108+ unit tests, and secrets-free portable rule profiles (`INV-PORTABLE-09`).
+- **Solution:** Permissive MIT-licensed Python codebase, modular testsuite with 118 unit tests, and secrets-free portable rule profiles (`INV-PORTABLE-09`).
 
 ---
 
@@ -363,6 +363,28 @@ UniversalMailCleaner includes an integrated `scheduler_widget.py` component driv
 - Scheduled operations run strictly in safe mode to prevent unattended data loss.
 - Status logs and last-run timestamps are displayed directly in the scheduler status panel.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Timer as QTimer / System Scheduler
+    participant Sched as SchedulerWidget
+    participant Engine as RulesEngine
+    participant Worker as BackgroundWorker
+    participant Imap as ImapService / Gmail
+    participant Undo as UndoBuffer
+
+    Timer->>Sched: timeout() interval signal
+    Sched->>Engine: evaluate_scheduled_rules()
+    Sched->>Worker: spawn_worker(rules, safe_mode=True)
+    Note over Worker: INV-SAFE-03 - Scheduled runs enforce safe mode
+    Worker->>Imap: scan_and_trash_candidates()
+    Imap-->>Worker: moved_uids_map
+    Worker->>Undo: record_transaction(moved_uids_map)
+    Note over Undo: INV-UNDO-04 - Transaction logged with rollback UID
+    Worker-->>Sched: task_finished(reclaimed_mb, count)
+    Sched-->>Timer: arm_next_interval()
+```
+
 ---
 
 <a id="sec-13"></a><a id="testing--verification"></a><a id="testen--qualitaets-gates"></a>
@@ -371,7 +393,7 @@ UniversalMailCleaner includes an integrated `scheduler_widget.py` component driv
 The test suite validates UI components, background workers, credential vaults, and metadata integrity:
 
 ```bash
-# Run complete test suite (108+ unit tests)
+# Run complete test suite (118 unit tests)
 pytest tests -v
 
 # Run metadata and contract tests

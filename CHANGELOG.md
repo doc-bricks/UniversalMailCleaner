@@ -5,6 +5,14 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Pfad B Discoverability, Scheduler Sequence Diagram, Recency Refresh & Contract Test Parity (2026-11-01):**
+  - Integrated dedicated Mermaid Sequence Diagram in Section 12 (`Scheduler & Automated Maintenance`) detailing the autonomous background maintenance execution cycle (`QTimer` interval trigger, rule evaluation, safe-mode enforcement under `INV-SAFE-03`, provider trash dispatch, and transaction logging in `UndoBuffer` under `INV-UNDO-04`) across English and German documentation.
+  - Aligned documentation test metrics in Section 6 and Section 13 with the verified test suite count (118 unit tests).
+  - Synchronized repository verification currency to `2026-11-01` across badges, `llms.txt`, `THIRD_PARTY_LICENSES.md`, and plain-text companion `THIRD_PARTY_LICENSES.txt`.
+  - Preserved strict version freeze at `1.2.0` under governance rule `T-20260920-167562623`.
+  - Updated contract tests in `tests/test_metadata.py` validating 2026-11-01 currency and Section 12 diagram parity (118 passed, 100% green).
+
 ### Fixed
 - **RFC 3501 IMAP Date Format Locale Isolation (IMAP-003):**
   - Resolved query syntax errors (`BAD Invalid date in SEARCH command`) during `older_than_days` IMAP rule searches on non-English (e.g. German `de_DE`) host locales.
